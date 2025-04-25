@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import UpgradeButton from '@/components/ui/UpgradeButton';
 
 interface PricingTier {
@@ -71,9 +71,9 @@ const tiers: PricingTier[] = [
 export default function PricingPage() {
   const [isYearly, setIsYearly] = useState(false);
 
-  const toggleBillingCycle = () => {
+  const toggleBillingCycle = useCallback(() => {
     setIsYearly(!isYearly);
-  };
+  }, [isYearly]);
 
   const memoizedTiers = useMemo(() => tiers, []);
 

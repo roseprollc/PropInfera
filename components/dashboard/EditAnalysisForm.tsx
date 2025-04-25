@@ -60,7 +60,7 @@ export default function EditAnalysisForm({ analysis, onSave, onCancel }: EditAna
     }
   }, [errors]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
     try {
@@ -76,7 +76,7 @@ export default function EditAnalysisForm({ analysis, onSave, onCancel }: EditAna
     } finally {
       setIsSaving(false);
     }
-  };
+  }, [analysis, title, notes, formData, onSave]);
 
   const formatValue = useCallback((key: string, value: any): string => {
     if (typeof value === 'number') {
@@ -100,16 +100,12 @@ export default function EditAnalysisForm({ analysis, onSave, onCancel }: EditAna
             <label className="block text-sm text-gray-400 mb-1">Title</label>
             <input
               type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className={`w-full px-3 py-2 bg-gray-800 border ${
-                errors.propertyName ? 'border-red-500' : 'border-gray-700'
-              } rounded focus:border-[#2ecc71] focus:ring-1 focus:ring-[#2ecc71]`}
-              disabled={isSaving}
-              placeholder="Enter analysis title"
+              value={formData.propertyName}
+              onChange={(e) => handleInputChange('propertyName', e.target.value)}
+              className="w-full px-3 py-2 bg-gray-800 rounded-md text-white"
             />
             {errors.propertyName && (
-              <p className="mt-1 text-sm text-red-500">{errors.propertyName}</p>
+              <p className="text-red-500 text-sm mt-1">{errors.propertyName}</p>
             )}
           </div>
           <div>

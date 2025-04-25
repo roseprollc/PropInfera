@@ -22,6 +22,7 @@ export function InsightsPanel({ analysis }: InsightsPanelProps) {
       setInsights(generatedInsights);
     } catch (error) {
       console.error('Failed to generate insights:', error);
+      toast.error('Failed to generate insights');
     } finally {
       setLoading(false);
     }
