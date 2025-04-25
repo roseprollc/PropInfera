@@ -133,9 +133,9 @@ export interface AnalysisResults {
 }
 
 export interface Analysis {
-  _id: ObjectId;
+  _id: string | ObjectId;
   userId: string;
-  type: AnalysisType;
+  type: 'rental' | 'airbnb' | 'wholesale' | 'mortgage';
   propertyName: string;
   address: string;
   createdAt: string;

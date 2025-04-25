@@ -1,12 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { AnalysisType } from '@/types/analysis';
-import { formatCurrency, formatPercentage } from '@/lib/utils/formatting';
+import { useCalculator } from '@/context/CalculatorContext';
+import { CalculatorInput } from '@/types/calculator';
+import { calculateAirbnbMetrics } from '@/lib/calculators/airbnb';
 import Toast from '@/components/ui/Toast';
 import ActionButtons from "@/components/ui/ActionButtons";
 import ResultsSummary from '@/components/results/ResultsSummary';
 import { saveAnalysis } from '@/lib/services/saveAnalysis';
+import { InputField } from '@/components/ui/InputField';
+import { Button } from '@/components/ui/button';
 
 interface AirbnbInputs {
   propertyAddress: string;
@@ -36,8 +39,8 @@ interface AirbnbResults {
   cashOnCashReturn: number;
 }
 
-const defaultInputs: AirbnbInputs = {
-  propertyAddress: "",
+const defaultInputs: CalculatorInput = {
+  propertyAddress: '',
   purchasePrice: 300000,
   downPaymentPercent: 20,
   interestRate: 6.5,
@@ -52,95 +55,44 @@ const defaultInputs: AirbnbInputs = {
   occupancyRate: 70,
   cleaningFee: 100,
   platformFeesPercent: 3,
+  monthlyRent: 0,
+  vacancyRatePercent: 0,
+  capExReservePercent: 0
 };
 
-export default function AirbnbCalculator() {
+export function AirbnbCalculator() {
+  const { state, dispatch } = useCalculator();
   const [activeTab, setActiveTab] = useState<'inputs' | 'results'>('inputs');
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [notes, setNotes] = useState('');
   const [title, setTitle] = useState('');
-  const [inputs, setInputs] = useState<AirbnbInputs>(defaultInputs);
-  const [results, setResults] = useState<AirbnbResults | null>(null);
+  const [monthlyPlatformFees, setMonthlyPlatformFees] = useState(0);
+  const [loading, setLoading] = useState(false);
 
-  const handleInputChange = (field: keyof AirbnbInputs, value: string) => {
-    setInputs((prev) => ({
-      ...prev,
-      [field]: field === "propertyAddress" ? value : Number(value),
-    }));
-  };
-
-  const calculateResults = () => {
-    const {
-      purchasePrice,
-      downPaymentPercent,
-      interestRate,
-      loanTerm,
-      propertyTaxAnnual,
-      insuranceAnnual,
-      utilitiesMonthly,
-      maintenancePercent,
-      propertyManagementPercent,
-      nightlyRate,
-      occupancyRate,
-      cleaningFee,
-      platformFeesPercent,
-    } = inputs;
-
-    // Calculate loan amount and monthly mortgage payment
-    const downPayment = (purchasePrice * downPaymentPercent) / 100;
-    const loanAmount = purchasePrice - downPayment;
-    const monthlyInterestRate = interestRate / 100 / 12;
-    const numberOfPayments = loanTerm * 12;
-    const monthlyMortgagePayment =
-      (loanAmount *
-        (monthlyInterestRate * Math.pow(1 + monthlyInterestRate, numberOfPayments))) /
-      (Math.pow(1 + monthlyInterestRate, numberOfPayments) - 1);
-
-    // Calculate monthly operating expenses
-    const monthlyPropertyTax = propertyTaxAnnual / 12;
-    const monthlyInsurance = insuranceAnnual / 12;
-    const monthlyMaintenance = (purchasePrice * maintenancePercent) / 100 / 12;
-
-    // Calculate monthly revenue
-    const nightsBooked = (30 * occupancyRate) / 100;
-    const monthlyCleaningFees = cleaningFee * nightsBooked;
-    const monthlyRevenue = nightlyRate * nightsBooked + monthlyCleaningFees;
-    const monthlyPlatformFees = (monthlyRevenue * platformFeesPercent) / 100;
-    const monthlyPropertyManagement = (monthlyRevenue * propertyManagementPercent) / 100;
-
-    const monthlyOperatingExpenses =
-      monthlyPropertyTax +
-      monthlyInsurance +
-      utilitiesMonthly +
-      monthlyMaintenance +
-      monthlyPropertyManagement;
-
-    // Calculate cash flow and returns
-    const monthlyCashFlow = monthlyRevenue - monthlyMortgagePayment - monthlyOperatingExpenses;
-    const annualCashFlow = monthlyCashFlow * 12;
-    const capRate = (annualCashFlow / purchasePrice) * 100;
-    const cashOnCashReturn = (annualCashFlow / downPayment) * 100;
-
-    setResults({
-      monthlyMortgagePayment,
-      monthlyOperatingExpenses,
-      monthlyRevenue,
-      monthlyCashFlow,
-      annualCashFlow,
-      capRate,
-      cashOnCashReturn,
+  const handleInputChange = (field: keyof CalculatorInput, value: string) => {
+    dispatch({
+      type: 'SET_INPUT',
+      field,
+      value: parseFloat(value) || 0
     });
   };
 
-  const resetCalculator = () => {
-    setInputs(defaultInputs);
-    setResults(null);
+  const handleCalculate = async () => {
+    setLoading(true);
+    try {
+      const results = calculateAirbnbMetrics(state.calculatorInputs as CalculatorInput);
+      dispatch({ type: 'SET_RESULTS', results });
+    } catch (error) {
+      console.error('Error calculating metrics:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSaveAnalysis = async () => {
-    if (!results) {
+    if (!state.results) {
       return;
     }
 
@@ -148,10 +100,10 @@ export default function AirbnbCalculator() {
     try {
       const result = await saveAnalysis({
         userId: 'mock-user-123',
-        type: 'airbnb' as AnalysisType,
-        inputs,
-        results,
-        title: title || inputs.propertyAddress || 'Untitled Analysis',
+        type: 'airbnb',
+        inputs: state.calculatorInputs,
+        results: state.results,
+        title: title || state.calculatorInputs.propertyAddress || 'Untitled Analysis',
         notes,
       });
 
@@ -181,8 +133,8 @@ export default function AirbnbCalculator() {
             </label>
             <input
               type="text"
-              value={inputs.propertyAddress}
-              onChange={(e) => handleInputChange("propertyAddress", e.target.value)}
+              value={state.calculatorInputs.propertyAddress}
+              onChange={(e) => handleInputChange('propertyAddress', e.target.value)}
               className="w-full px-3 py-2 bg-[#111] text-white placeholder-gray-400 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
@@ -192,8 +144,8 @@ export default function AirbnbCalculator() {
             </label>
             <input
               type="number"
-              value={inputs.purchasePrice}
-              onChange={(e) => handleInputChange("purchasePrice", e.target.value)}
+              value={state.calculatorInputs.purchasePrice}
+              onChange={(e) => handleInputChange('purchasePrice', e.target.value)}
               className="w-full px-3 py-2 bg-[#111] text-white placeholder-gray-400 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
@@ -203,8 +155,8 @@ export default function AirbnbCalculator() {
             </label>
             <input
               type="number"
-              value={inputs.downPaymentPercent}
-              onChange={(e) => handleInputChange("downPaymentPercent", e.target.value)}
+              value={state.calculatorInputs.downPaymentPercent}
+              onChange={(e) => handleInputChange('downPaymentPercent', e.target.value)}
               className="w-full px-3 py-2 bg-[#111] text-white placeholder-gray-400 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
@@ -214,8 +166,8 @@ export default function AirbnbCalculator() {
             </label>
             <input
               type="number"
-              value={inputs.interestRate}
-              onChange={(e) => handleInputChange("interestRate", e.target.value)}
+              value={state.calculatorInputs.interestRate}
+              onChange={(e) => handleInputChange('interestRate', e.target.value)}
               className="w-full px-3 py-2 bg-[#111] text-white placeholder-gray-400 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
@@ -225,8 +177,8 @@ export default function AirbnbCalculator() {
             </label>
             <input
               type="number"
-              value={inputs.loanTerm}
-              onChange={(e) => handleInputChange("loanTerm", e.target.value)}
+              value={state.calculatorInputs.loanTerm}
+              onChange={(e) => handleInputChange('loanTerm', e.target.value)}
               className="w-full px-3 py-2 bg-[#111] text-white placeholder-gray-400 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
@@ -242,8 +194,8 @@ export default function AirbnbCalculator() {
             </label>
             <input
               type="number"
-              value={inputs.nightlyRate}
-              onChange={(e) => handleInputChange("nightlyRate", e.target.value)}
+              value={state.calculatorInputs.nightlyRate}
+              onChange={(e) => handleInputChange('nightlyRate', e.target.value)}
               className="w-full px-3 py-2 bg-[#111] text-white placeholder-gray-400 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
@@ -253,8 +205,8 @@ export default function AirbnbCalculator() {
             </label>
             <input
               type="number"
-              value={inputs.occupancyRate}
-              onChange={(e) => handleInputChange("occupancyRate", e.target.value)}
+              value={state.calculatorInputs.occupancyRate}
+              onChange={(e) => handleInputChange('occupancyRate', e.target.value)}
               className="w-full px-3 py-2 bg-[#111] text-white placeholder-gray-400 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
@@ -264,8 +216,8 @@ export default function AirbnbCalculator() {
             </label>
             <input
               type="number"
-              value={inputs.cleaningFee}
-              onChange={(e) => handleInputChange("cleaningFee", e.target.value)}
+              value={state.calculatorInputs.cleaningFee}
+              onChange={(e) => handleInputChange('cleaningFee', e.target.value)}
               className="w-full px-3 py-2 bg-[#111] text-white placeholder-gray-400 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
@@ -275,8 +227,8 @@ export default function AirbnbCalculator() {
             </label>
             <input
               type="number"
-              value={inputs.platformFeesPercent}
-              onChange={(e) => handleInputChange("platformFeesPercent", e.target.value)}
+              value={state.calculatorInputs.platformFeesPercent}
+              onChange={(e) => handleInputChange('platformFeesPercent', e.target.value)}
               className="w-full px-3 py-2 bg-[#111] text-white placeholder-gray-400 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
@@ -286,8 +238,8 @@ export default function AirbnbCalculator() {
             </label>
             <input
               type="number"
-              value={inputs.propertyTaxAnnual}
-              onChange={(e) => handleInputChange("propertyTaxAnnual", e.target.value)}
+              value={state.calculatorInputs.propertyTaxAnnual}
+              onChange={(e) => handleInputChange('propertyTaxAnnual', e.target.value)}
               className="w-full px-3 py-2 bg-[#111] text-white placeholder-gray-400 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
@@ -297,8 +249,8 @@ export default function AirbnbCalculator() {
             </label>
             <input
               type="number"
-              value={inputs.insuranceAnnual}
-              onChange={(e) => handleInputChange("insuranceAnnual", e.target.value)}
+              value={state.calculatorInputs.insuranceAnnual}
+              onChange={(e) => handleInputChange('insuranceAnnual', e.target.value)}
               className="w-full px-3 py-2 bg-[#111] text-white placeholder-gray-400 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
@@ -308,8 +260,8 @@ export default function AirbnbCalculator() {
             </label>
             <input
               type="number"
-              value={inputs.utilitiesMonthly}
-              onChange={(e) => handleInputChange("utilitiesMonthly", e.target.value)}
+              value={state.calculatorInputs.utilitiesMonthly}
+              onChange={(e) => handleInputChange('utilitiesMonthly', e.target.value)}
               className="w-full px-3 py-2 bg-[#111] text-white placeholder-gray-400 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
@@ -319,8 +271,8 @@ export default function AirbnbCalculator() {
             </label>
             <input
               type="number"
-              value={inputs.maintenancePercent}
-              onChange={(e) => handleInputChange("maintenancePercent", e.target.value)}
+              value={state.calculatorInputs.maintenancePercent}
+              onChange={(e) => handleInputChange('maintenancePercent', e.target.value)}
               className="w-full px-3 py-2 bg-[#111] text-white placeholder-gray-400 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
@@ -330,8 +282,8 @@ export default function AirbnbCalculator() {
             </label>
             <input
               type="number"
-              value={inputs.propertyManagementPercent}
-              onChange={(e) => handleInputChange("propertyManagementPercent", e.target.value)}
+              value={state.calculatorInputs.propertyManagementPercent}
+              onChange={(e) => handleInputChange('propertyManagementPercent', e.target.value)}
               className="w-full px-3 py-2 bg-[#111] text-white placeholder-gray-400 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
@@ -343,35 +295,35 @@ export default function AirbnbCalculator() {
         <div className="space-y-4">
           <div className="flex justify-between">
             <span className="text-gray-300">Monthly Mortgage Payment</span>
-            <span className="text-white font-medium">{formatCurrency(results?.monthlyMortgagePayment || 0)}</span>
+            <span className="text-white font-medium">{state.results?.monthlyMortgagePayment.toLocaleString()}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-gray-300">Monthly Operating Expenses</span>
-            <span className="text-white font-medium">{formatCurrency(results?.monthlyOperatingExpenses || 0)}</span>
+            <span className="text-white font-medium">{state.results?.monthlyOperatingExpenses.toLocaleString()}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-gray-300">Monthly Revenue</span>
-            <span className="text-white font-medium">{formatCurrency(results?.monthlyRevenue || 0)}</span>
+            <span className="text-white font-medium">{state.results?.monthlyRevenue.toLocaleString()}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-gray-300">Monthly Cash Flow</span>
-            <span className="text-white font-medium">{formatCurrency(results?.monthlyCashFlow || 0)}</span>
+            <span className="text-white font-medium">{state.results?.monthlyCashFlow.toLocaleString()}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-gray-300">Annual Cash Flow</span>
-            <span className="text-white font-medium">{formatCurrency(results?.annualCashFlow || 0)}</span>
+            <span className="text-white font-medium">{state.results?.annualCashFlow.toLocaleString()}</span>
           </div>
           <div className="border-t border-gray-700 pt-4 mt-4">
             <div className="flex justify-between">
               <span className="text-white font-semibold">Cap Rate</span>
               <span className="text-[#2ecc71] font-bold text-xl">
-                {formatPercentage(results?.capRate || 0)}
+                {state.results?.capRate.toLocaleString()}%
               </span>
             </div>
             <div className="flex justify-between mt-2">
               <span className="text-white font-semibold">Cash on Cash Return</span>
               <span className="text-[#2ecc71] font-bold text-xl">
-                {formatPercentage(results?.cashOnCashReturn || 0)}
+                {state.results?.cashOnCashReturn.toLocaleString()}%
               </span>
             </div>
           </div>
@@ -379,7 +331,7 @@ export default function AirbnbCalculator() {
       </div>
 
       {/* Notes and Title Inputs */}
-      {activeTab === 'results' && results && (
+      {activeTab === 'results' && state.results && (
         <div className="p-6 border-t border-gray-700">
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-300 mb-1">
@@ -389,7 +341,7 @@ export default function AirbnbCalculator() {
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder={inputs.propertyAddress || 'Untitled Analysis'}
+              placeholder={state.calculatorInputs.propertyAddress || 'Untitled Analysis'}
               className="w-full px-3 py-2 bg-[#111] text-white placeholder-gray-400 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
@@ -418,19 +370,20 @@ export default function AirbnbCalculator() {
 
       <div className="p-6 border-t border-gray-700">
         <div className="flex justify-center">
-          <button
-            type="submit"
+          <Button
+            onClick={handleCalculate}
+            disabled={loading}
             className="px-6 py-3 bg-[#2ecc71] text-white rounded-md hover:bg-[#27ae60] focus:outline-none focus:ring-2 focus:ring-[#2ecc71] focus:ring-offset-2 focus:ring-offset-gray-900 transition-all duration-200 shadow-lg hover:shadow-[#2ecc71]/50"
           >
-            Calculate Analysis
-          </button>
+            {loading ? 'Calculating...' : 'Calculate'}
+          </Button>
         </div>
       </div>
 
       <ActionButtons
-        onReset={resetCalculator}
+        onReset={() => dispatch({ type: 'RESET_CALCULATOR' })}
         onSave={handleSaveAnalysis}
-        saveDisabled={!results || isSaving}
+        saveDisabled={!state.results || isSaving}
       />
     </div>
   );

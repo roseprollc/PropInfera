@@ -16,20 +16,19 @@ declare global {
 }
 
 // Initialize client outside to ensure proper typing
-let client: MongoClient;
+const client = new MongoClient(uri, options);
 let clientPromise: Promise<MongoClient>;
 
 if (process.env.NODE_ENV === 'development') {
   // In development mode, use a global variable to preserve the value
   // across module reloads caused by HMR (Hot Module Replacement).
   if (!global._mongoClientPromise) {
-    client = new MongoClient(uri, options);
-    global._mongoClientPromise = client.connect();
+    clientPromise = client.connect();
+    global._mongoClientPromise = clientPromise;
   }
   clientPromise = global._mongoClientPromise;
 } else {
   // In production mode, it's best to not use a global variable.
-  client = new MongoClient(uri, options);
   clientPromise = client.connect();
 }
 

@@ -1,4 +1,4 @@
-import { CalculatorInputs } from '@/types/analysis';
+import { CalculatorInputs, Analysis } from '@/types/analysis';
 
 export interface SavedAnalysis {
   id: string;
@@ -33,4 +33,26 @@ export function deleteSavedAnalysis(id: string): void {
   const analyses = getSavedAnalyses();
   const updatedAnalyses = analyses.filter(analysis => analysis.id !== id);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedAnalyses));
+}
+
+export function formatAnalysisForDisplay(analysis: Analysis): Record<string, unknown> {
+  return {
+    ...analysis,
+    createdAt: new Date(analysis.createdAt).toLocaleDateString(),
+    updatedAt: new Date(analysis.updatedAt).toLocaleDateString(),
+  };
+}
+
+export function validateAnalysisData(data: unknown): data is Analysis {
+  if (!data || typeof data !== 'object') return false;
+  
+  const analysis = data as Partial<Analysis>;
+  return (
+    typeof analysis._id === 'string' &&
+    typeof analysis.type === 'string' &&
+    typeof analysis.createdAt === 'string' &&
+    typeof analysis.updatedAt === 'string' &&
+    typeof analysis.inputs === 'object' &&
+    typeof analysis.results === 'object'
+  );
 } 

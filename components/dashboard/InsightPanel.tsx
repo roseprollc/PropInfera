@@ -33,8 +33,9 @@ export default function InsightPanel({ analysis }: InsightPanelProps) {
       const data = await response.json();
       setInsights(data.insights);
       toast.success('Insights generated successfully');
-    } catch (err) {
-      setError('Failed to generate insights. Please try again.');
+    } catch (error) {
+      console.error('Failed to fetch insights:', error);
+      setError('Failed to load insights. Please try again.');
       toast.error('Failed to generate insights');
     } finally {
       setIsLoading(false);

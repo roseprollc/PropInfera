@@ -184,7 +184,11 @@ export default function PricingPage() {
                   Get Started
                 </Link>
               ) : (
-                <UpgradeButton tier={tier.tier} className="w-full" />
+                <UpgradeButton 
+                  tier={tier.tier} 
+                  billingCycle={isYearly ? 'yearly' : 'monthly'}
+                  className="w-full" 
+                />
               )}
             </div>
           ))}

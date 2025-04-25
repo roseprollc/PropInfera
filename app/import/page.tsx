@@ -60,8 +60,9 @@ export default function SmartImport() {
       // Store mock property data in sessionStorage
       sessionStorage.setItem("importedProperty", JSON.stringify(mockPropertyData));
       router.push('/renters');
-    } catch (err) {
-      setError('Failed to import property. Please try again.');
+    } catch (error) {
+      console.error('Import failed:', error);
+      setError('Failed to import property data. Please try again.');
     } finally {
       setIsLoading(false);
     }
