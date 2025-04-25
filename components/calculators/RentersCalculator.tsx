@@ -5,23 +5,31 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { CalculatorInput, CalculatorResults } from '@/types/calculator';
-import { calculateAirbnbMetrics } from '@/lib/calculators/airbnb';
+import { calculateRentersMetrics } from '@/lib/calculators/renters';
 import { cn } from '@/lib/utils';
 
 const defaultInputs: CalculatorInput = {
+  propertyAddress: '',
   purchasePrice: 0,
   downPaymentPercent: 20,
   interestRate: 7.5,
   loanTerm: 30,
-  nightlyRate: 0,
-  occupancyRate: 0,
-  cleaningFee: 0,
-  platformFeesPercent: 3,
+  closingCosts: 0,
   propertyTaxAnnual: 0,
   insuranceAnnual: 0,
   utilitiesMonthly: 0,
   maintenancePercent: 1,
-  propertyManagementPercent: 10
+  propertyManagementPercent: 10,
+  monthlyRent: 0,
+  vacancyRatePercent: 5,
+  capExReservePercent: 5,
+  annualAppreciationPercent: 3,
+  annualRentIncreasePercent: 2,
+  holdingPeriodYears: 5,
+  nightlyRate: 0,
+  occupancyRate: 0,
+  cleaningFee: 0,
+  platformFeesPercent: 3
 };
 
 export function RentersCalculator() {
@@ -36,7 +44,7 @@ export function RentersCalculator() {
   };
 
   const handleCalculate = () => {
-    const calculatedResults = calculateAirbnbMetrics(inputs);
+    const calculatedResults = calculateRentersMetrics(inputs);
     setResults(calculatedResults);
   };
 
