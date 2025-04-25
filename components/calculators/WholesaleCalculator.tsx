@@ -14,10 +14,9 @@ interface WholesaleInputs {
 }
 
 interface WholesaleResults {
-  maximumAllowableOffer: number;
-  totalCosts: number;
-  projectedProfit: number;
-  returnOnInvestment: number;
+  totalInvestment: number;
+  profit: number;
+  roi: number;
 }
 
 const defaultInputs: WholesaleInputs = {
@@ -50,16 +49,14 @@ export default function WholesaleCalculator() {
       miscHoldingCosts,
     } = inputs;
 
-    const totalCosts = repairCosts + assignmentFee + closingCosts + miscHoldingCosts;
-    const maximumAllowableOffer = afterRepairValue * 0.7 - totalCosts;
-    const projectedProfit = afterRepairValue - purchasePrice - totalCosts;
-    const returnOnInvestment = (projectedProfit / totalCosts) * 100;
+    const totalInvestment = purchasePrice + repairCosts + assignmentFee + closingCosts + miscHoldingCosts;
+    const profit = afterRepairValue - totalInvestment;
+    const roi = (profit / totalInvestment) * 100;
 
     setResults({
-      maximumAllowableOffer,
-      totalCosts,
-      projectedProfit,
-      returnOnInvestment,
+      totalInvestment,
+      profit,
+      roi,
     });
   };
 
@@ -89,7 +86,7 @@ export default function WholesaleCalculator() {
             <h3 className="text-lg font-semibold text-white">Property Details</h3>
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-1">
-                After Repair Value (ARV)
+                After Repair Value
               </label>
               <input
                 type="number"
@@ -165,7 +162,7 @@ export default function WholesaleCalculator() {
             type="submit"
             className="px-6 py-3 bg-[#2ecc71] text-white rounded-md hover:bg-[#27ae60] focus:outline-none focus:ring-2 focus:ring-[#2ecc71] focus:ring-offset-2 focus:ring-offset-gray-900 transition-all duration-200 shadow-lg hover:shadow-[#2ecc71]/50"
           >
-            Calculate Deal
+            Calculate
           </button>
         </div>
 
@@ -178,31 +175,25 @@ export default function WholesaleCalculator() {
 
       {results && (
         <div className="mt-8 p-6 bg-gray-800 rounded-lg">
-          <h3 className="text-lg font-semibold text-white mb-4">Deal Analysis</h3>
+          <h3 className="text-lg font-semibold text-white mb-4">Investment Analysis</h3>
           <div className="space-y-4">
             <div className="flex justify-between">
-              <span className="text-gray-300">Maximum Allowable Offer (MAO)</span>
-              <span className="text-[#2ecc71] font-bold">{formatCurrency(results.maximumAllowableOffer)}</span>
+              <span className="text-gray-300">Total Investment</span>
+              <span className="text-white font-medium">{formatCurrency(results.totalInvestment)}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-300">Total Costs</span>
-              <span className="text-white font-medium">{formatCurrency(results.totalCosts)}</span>
+              <span className="text-gray-300">Profit</span>
+              <span className="text-white font-medium">{formatCurrency(results.profit)}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-300">Projected Profit</span>
-              <span className="text-white font-medium">{formatCurrency(results.projectedProfit)}</span>
-            </div>
-            <div className="border-t border-gray-700 pt-4 mt-4">
-              <div className="flex justify-between">
-                <span className="text-white font-semibold">Return on Investment</span>
-                <span className="text-[#2ecc71] font-bold text-xl">
-                  {formatPercentage(results.returnOnInvestment)}
-                </span>
-              </div>
+              <span className="text-gray-300">ROI</span>
+              <span className="text-[#2ecc71] font-bold">{formatPercentage(results.roi)}</span>
             </div>
           </div>
         </div>
       )}
     </div>
   );
+}
+WholesaleCalculator.displayName = "WholesaleCalculator"; 
 } 

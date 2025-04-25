@@ -37,4 +37,5 @@ export default function CalculatorLayout({
       </div>
     </main>
   );
-} 
+}
+CalculatorLayout.displayName = "CalculatorLayout"; 

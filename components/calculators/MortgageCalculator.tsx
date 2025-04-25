@@ -238,4 +238,5 @@ export default function MortgageCalculator() {
       )}
     </div>
   );
-} 
+}
+MortgageCalculator.displayName = "MortgageCalculator"; 

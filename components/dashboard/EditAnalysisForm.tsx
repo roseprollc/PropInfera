@@ -191,4 +191,6 @@ export default function EditAnalysisForm({ analysis, onSave, onCancel }: EditAna
       </div>
     </form>
   );
-} 
+}
+
+EditAnalysisForm.displayName = "EditAnalysisForm"; 

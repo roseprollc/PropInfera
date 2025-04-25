@@ -60,4 +60,5 @@ export default function ResultsSummary({ results, title, highlightKeys = [] }: R
       </div>
     </div>
   );
-} 
+}
+ResultsSummary.displayName = "ResultsSummary"; 

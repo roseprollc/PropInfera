@@ -22,6 +22,8 @@ export const TierProvider: React.FC<{ children: React.ReactNode }> = ({ children
   );
 };
 
+TierProvider.displayName = "TierProvider";
+
 export const useTierContext = () => {
   const context = useContext(TierContext);
   if (context === undefined) {

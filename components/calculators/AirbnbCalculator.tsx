@@ -73,19 +73,21 @@ export default function AirbnbCalculator() {
   const [title, setTitle] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleInputChange = (field: keyof CalculatorInput, value: string) => {
+  const handleInputChange = (field: keyof AirbnbInputs, value: string | number) => {
     dispatch({
       type: 'SET_INPUT',
-      field,
-      value: parseFloat(value) || 0
+      payload: {
+        field,
+        value: typeof value === 'string' ? value : Number(value)
+      }
     });
   };
 
   const handleCalculate = async () => {
     setLoading(true);
     try {
-      const results = calculateAirbnbMetrics(state.calculatorInputs);
-      dispatch({ type: 'SET_RESULTS', results });
+      const results = calculateAirbnbMetrics(state.calculatorInputs as AirbnbInputs);
+      dispatch({ type: 'SET_RESULTS', payload: results });
     } catch (error) {
       console.error('Error calculating metrics:', error);
     } finally {
@@ -389,4 +391,6 @@ export default function AirbnbCalculator() {
       />
     </div>
   );
-} 
+}
+
+AirbnbCalculator.displayName = "AirbnbCalculator"; 
