@@ -9,7 +9,7 @@ interface CalculatorState {
 }
 
 type CalculatorAction = 
-  | { type: 'SET_INPUT'; field: keyof CalculatorInput; value: any }
+  | { type: 'SET_INPUT'; field: keyof CalculatorInput; value: string | number }
   | { type: 'SET_RESULTS'; results: CalculatorResults }
   | { type: 'RESET_CALCULATOR' };
 
