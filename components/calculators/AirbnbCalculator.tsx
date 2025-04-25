@@ -71,7 +71,6 @@ export default function AirbnbCalculator() {
   const [isSaving, setIsSaving] = useState(false);
   const [notes, setNotes] = useState('');
   const [title, setTitle] = useState('');
-  const [monthlyPlatformFees, setMonthlyPlatformFees] = useState(0);
   const [loading, setLoading] = useState(false);
 
   const handleInputChange = (field: keyof CalculatorInput, value: string) => {
