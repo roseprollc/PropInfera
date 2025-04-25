@@ -1,159 +1,198 @@
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
-import { useCalculator } from '@/context/CalculatorContext';
-import { calculateRentersMetrics } from '@/lib/calculators/renters';
-import { InputField } from '@/components/ui/InputField';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { CalculatorInput, CalculatorResults } from '@/types/calculator';
+import { calculateAirbnbMetrics } from '@/lib/calculators/airbnb';
+import { cn } from '@/lib/utils';
 
 const defaultInputs: CalculatorInput = {
-  propertyAddress: '',
-  purchasePrice: 300000,
+  purchasePrice: 0,
   downPaymentPercent: 20,
-  interestRate: 6.5,
+  interestRate: 7.5,
   loanTerm: 30,
-  closingCosts: 9000,
-  propertyTaxAnnual: 3600,
-  insuranceAnnual: 1200,
-  utilitiesMonthly: 200,
-  maintenancePercent: 5,
-  propertyManagementPercent: 8,
   nightlyRate: 0,
   occupancyRate: 0,
   cleaningFee: 0,
-  platformFeesPercent: 0,
-  monthlyRent: 2000,
-  vacancyRatePercent: 5,
-  capExReservePercent: 5
+  platformFeesPercent: 3,
+  propertyTaxAnnual: 0,
+  insuranceAnnual: 0,
+  utilitiesMonthly: 0,
+  maintenancePercent: 1,
+  propertyManagementPercent: 10
 };
 
 export function RentersCalculator() {
-  const { state, dispatch } = useCalculator();
-  const [loading, setLoading] = useState(false);
+  const [inputs, setInputs] = useState<CalculatorInput>(defaultInputs);
+  const [results, setResults] = useState<CalculatorResults | null>(null);
 
-  const handleInputChange = useCallback((field: keyof CalculatorInput, value: string) => {
-    dispatch({
-      type: 'SET_INPUT',
-      field,
-      value: parseFloat(value) || 0
-    });
-  }, [dispatch]);
+  const handleInputChange = (field: keyof CalculatorInput, value: string) => {
+    setInputs(prev => ({
+      ...prev,
+      [field]: parseFloat(value) || 0
+    }));
+  };
 
-  const handleCalculate = useCallback(async () => {
-    setLoading(true);
-    try {
-      const results: CalculatorResults = calculateRentersMetrics(state.calculatorInputs);
-      dispatch({ type: 'SET_RESULTS', results });
-    } catch (error) {
-      console.error('Error calculating metrics:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, [state.calculatorInputs, dispatch]);
-
-  useEffect(() => {
-    handleCalculate();
-  }, [handleCalculate]);
+  const handleCalculate = () => {
+    const calculatedResults = calculateAirbnbMetrics(inputs);
+    setResults(calculatedResults);
+  };
 
   return (
-    <div className="p-4">
-      <h2 className="text-xl font-bold mb-4">Rental Calculator</h2>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-        <InputField
-          label="Property Address"
-          type="text"
-          value={state.calculatorInputs.propertyAddress || ''}
-          onChange={(e) => handleInputChange('propertyAddress', e.target.value)}
-        />
-        <InputField
-          label="Purchase Price"
-          type="number"
-          value={state.calculatorInputs.purchasePrice || ''}
-          onChange={(e) => handleInputChange('purchasePrice', e.target.value)}
-        />
-        <InputField
-          label="Down Payment %"
-          type="number"
-          value={state.calculatorInputs.downPaymentPercent || ''}
-          onChange={(e) => handleInputChange('downPaymentPercent', e.target.value)}
-        />
-        <InputField
-          label="Interest Rate %"
-          type="number"
-          value={state.calculatorInputs.interestRate || ''}
-          onChange={(e) => handleInputChange('interestRate', e.target.value)}
-        />
-        <InputField
-          label="Loan Term (years)"
-          type="number"
-          value={state.calculatorInputs.loanTerm || ''}
-          onChange={(e) => handleInputChange('loanTerm', e.target.value)}
-        />
-        <InputField
-          label="Closing Costs"
-          type="number"
-          value={state.calculatorInputs.closingCosts || ''}
-          onChange={(e) => handleInputChange('closingCosts', e.target.value)}
-        />
-        <InputField
-          label="Property Tax (annual)"
-          type="number"
-          value={state.calculatorInputs.propertyTaxAnnual || ''}
-          onChange={(e) => handleInputChange('propertyTaxAnnual', e.target.value)}
-        />
-        <InputField
-          label="Insurance (annual)"
-          type="number"
-          value={state.calculatorInputs.insuranceAnnual || ''}
-          onChange={(e) => handleInputChange('insuranceAnnual', e.target.value)}
-        />
-        <InputField
-          label="Utilities (monthly)"
-          type="number"
-          value={state.calculatorInputs.utilitiesMonthly || ''}
-          onChange={(e) => handleInputChange('utilitiesMonthly', e.target.value)}
-        />
-        <InputField
-          label="Maintenance %"
-          type="number"
-          value={state.calculatorInputs.maintenancePercent || ''}
-          onChange={(e) => handleInputChange('maintenancePercent', e.target.value)}
-        />
-        <InputField
-          label="Property Management %"
-          type="number"
-          value={state.calculatorInputs.propertyManagementPercent || ''}
-          onChange={(e) => handleInputChange('propertyManagementPercent', e.target.value)}
-        />
-        <InputField
-          label="Monthly Rent"
-          type="number"
-          value={state.calculatorInputs.monthlyRent || ''}
-          onChange={(e) => handleInputChange('monthlyRent', e.target.value)}
-        />
-        <InputField
-          label="Vacancy Rate %"
-          type="number"
-          value={state.calculatorInputs.vacancyRatePercent || ''}
-          onChange={(e) => handleInputChange('vacancyRatePercent', e.target.value)}
-        />
-        <InputField
-          label="CapEx Reserve %"
-          type="number"
-          value={state.calculatorInputs.capExReservePercent || ''}
-          onChange={(e) => handleInputChange('capExReservePercent', e.target.value)}
-        />
+    <div className="w-full max-w-4xl mx-auto p-6 space-y-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-4">
+          <div>
+            <Label htmlFor="purchasePrice">Purchase Price</Label>
+            <Input
+              id="purchasePrice"
+              type="number"
+              value={inputs.purchasePrice}
+              onChange={(e) => handleInputChange('purchasePrice', e.target.value)}
+              className={cn(
+                "mt-1",
+                inputs.purchasePrice === 0 && "border-red-500"
+              )}
+            />
+          </div>
+          
+          <div>
+            <Label htmlFor="downPaymentPercent">Down Payment %</Label>
+            <Input
+              id="downPaymentPercent"
+              type="number"
+              value={inputs.downPaymentPercent}
+              onChange={(e) => handleInputChange('downPaymentPercent', e.target.value)}
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="interestRate">Interest Rate %</Label>
+            <Input
+              id="interestRate"
+              type="number"
+              value={inputs.interestRate}
+              onChange={(e) => handleInputChange('interestRate', e.target.value)}
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="nightlyRate">Nightly Rate</Label>
+            <Input
+              id="nightlyRate"
+              type="number"
+              value={inputs.nightlyRate}
+              onChange={(e) => handleInputChange('nightlyRate', e.target.value)}
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="occupancyRate">Occupancy Rate %</Label>
+            <Input
+              id="occupancyRate"
+              type="number"
+              value={inputs.occupancyRate}
+              onChange={(e) => handleInputChange('occupancyRate', e.target.value)}
+            />
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <div>
+            <Label htmlFor="propertyTaxAnnual">Annual Property Tax</Label>
+            <Input
+              id="propertyTaxAnnual"
+              type="number"
+              value={inputs.propertyTaxAnnual}
+              onChange={(e) => handleInputChange('propertyTaxAnnual', e.target.value)}
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="insuranceAnnual">Annual Insurance</Label>
+            <Input
+              id="insuranceAnnual"
+              type="number"
+              value={inputs.insuranceAnnual}
+              onChange={(e) => handleInputChange('insuranceAnnual', e.target.value)}
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="utilitiesMonthly">Monthly Utilities</Label>
+            <Input
+              id="utilitiesMonthly"
+              type="number"
+              value={inputs.utilitiesMonthly}
+              onChange={(e) => handleInputChange('utilitiesMonthly', e.target.value)}
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="maintenancePercent">Maintenance %</Label>
+            <Input
+              id="maintenancePercent"
+              type="number"
+              value={inputs.maintenancePercent}
+              onChange={(e) => handleInputChange('maintenancePercent', e.target.value)}
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="propertyManagementPercent">Property Management %</Label>
+            <Input
+              id="propertyManagementPercent"
+              type="number"
+              value={inputs.propertyManagementPercent}
+              onChange={(e) => handleInputChange('propertyManagementPercent', e.target.value)}
+            />
+          </div>
+        </div>
       </div>
 
-      <Button
-        onClick={handleCalculate}
-        disabled={loading}
-        className="w-full"
-      >
-        {loading ? 'Calculating...' : 'Calculate'}
-      </Button>
+      <div className="flex justify-center">
+        <Button 
+          onClick={handleCalculate}
+          className="w-full md:w-auto"
+          disabled={inputs.purchasePrice === 0}
+        >
+          Calculate
+        </Button>
+      </div>
+
+      {results && (
+        <div className="mt-8 p-6 bg-gray-100 dark:bg-gray-800 rounded-lg">
+          <h3 className="text-xl font-semibold mb-4">Results</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Monthly Mortgage Payment</p>
+              <p className="text-lg font-medium">${results.monthlyMortgagePayment.toFixed(2)}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Monthly Cash Flow</p>
+              <p className="text-lg font-medium">${results.monthlyCashFlow.toFixed(2)}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Annual Cash Flow</p>
+              <p className="text-lg font-medium">${results.annualCashFlow.toFixed(2)}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Cash on Cash Return</p>
+              <p className="text-lg font-medium">{results.cashOnCashReturn.toFixed(2)}%</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Cap Rate</p>
+              <p className="text-lg font-medium">{results.capRate.toFixed(2)}%</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Monthly Revenue</p>
+              <p className="text-lg font-medium">${results.monthlyRevenue?.toFixed(2)}</p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 } 

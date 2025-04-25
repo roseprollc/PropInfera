@@ -51,16 +51,19 @@ const defaultInputs: CalculatorInput = {
   utilitiesMonthly: 200,
   maintenancePercent: 5,
   propertyManagementPercent: 8,
+  monthlyRent: 0,
+  vacancyRatePercent: 0,
+  capExReservePercent: 0,
+  annualAppreciationPercent: 3,
+  annualRentIncreasePercent: 2,
+  holdingPeriodYears: 5,
   nightlyRate: 150,
   occupancyRate: 70,
   cleaningFee: 100,
-  platformFeesPercent: 3,
-  monthlyRent: 0,
-  vacancyRatePercent: 0,
-  capExReservePercent: 0
+  platformFeesPercent: 3
 };
 
-export function AirbnbCalculator() {
+export default function AirbnbCalculator() {
   const { state, dispatch } = useCalculator();
   const [activeTab, setActiveTab] = useState<'inputs' | 'results'>('inputs');
   const [showToast, setShowToast] = useState(false);
@@ -82,7 +85,7 @@ export function AirbnbCalculator() {
   const handleCalculate = async () => {
     setLoading(true);
     try {
-      const results = calculateAirbnbMetrics(state.calculatorInputs as CalculatorInput);
+      const results = calculateAirbnbMetrics(state.calculatorInputs);
       dispatch({ type: 'SET_RESULTS', results });
     } catch (error) {
       console.error('Error calculating metrics:', error);
@@ -299,11 +302,11 @@ export function AirbnbCalculator() {
           </div>
           <div className="flex justify-between">
             <span className="text-gray-300">Monthly Operating Expenses</span>
-            <span className="text-white font-medium">{state.results?.monthlyOperatingExpenses.toLocaleString()}</span>
+            <span className="text-white font-medium">{state.results?.monthlyOperatingExpenses?.toLocaleString()}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-gray-300">Monthly Revenue</span>
-            <span className="text-white font-medium">{state.results?.monthlyRevenue.toLocaleString()}</span>
+            <span className="text-white font-medium">{state.results?.monthlyRevenue?.toLocaleString()}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-gray-300">Monthly Cash Flow</span>

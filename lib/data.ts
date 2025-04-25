@@ -1,6 +1,8 @@
 import { MongoClient, ObjectId } from 'mongodb';
 import { Analysis } from '@/types/analysis';
 
+export type { Analysis };
+
 const client = new MongoClient(process.env.MONGODB_URI || '');
 const db = client.db('propinfera');
 

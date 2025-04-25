@@ -1,20 +1,20 @@
-import { CalculatorInput } from '@/types/calculator';
+import { CalculatorInput, CalculatorResults } from '@/types/calculator';
 
-export function calculateAirbnbMetrics(inputs: CalculatorInput): Record<string, number> {
-  // Placeholder calculations - implement real logic later
+export function calculateAirbnbMetrics(inputs: CalculatorInput): CalculatorResults {
   const {
     purchasePrice,
     downPaymentPercent,
     interestRate,
     loanTerm,
-    monthlyRent,
+    nightlyRate = 0,
+    occupancyRate = 0,
+    cleaningFee = 0,
+    platformFeesPercent = 0,
     propertyTaxAnnual,
     insuranceAnnual,
     utilitiesMonthly,
     maintenancePercent,
-    propertyManagementPercent,
-    vacancyRatePercent,
-    capExReservePercent
+    propertyManagementPercent
   } = inputs;
 
   const downPayment = purchasePrice * (downPaymentPercent / 100);
@@ -26,33 +26,40 @@ export function calculateAirbnbMetrics(inputs: CalculatorInput): Record<string, 
     (monthlyInterestRate * Math.pow(1 + monthlyInterestRate, numberOfPayments)) / 
     (Math.pow(1 + monthlyInterestRate, numberOfPayments) - 1);
 
+  // Calculate monthly revenue
+  const daysPerMonth = 30.44; // Average days per month
+  const occupancyDecimal = occupancyRate / 100;
+  const averageBookedNightsPerMonth = daysPerMonth * occupancyDecimal;
+  const monthlyCleaningFeeRevenue = cleaningFee * (averageBookedNightsPerMonth / 3); // Assume average 3-night stays
+  const monthlyRoomRevenue = nightlyRate * averageBookedNightsPerMonth;
+  const platformFees = (monthlyRoomRevenue + monthlyCleaningFeeRevenue) * (platformFeesPercent / 100);
+  const monthlyRevenue = monthlyRoomRevenue + monthlyCleaningFeeRevenue - platformFees;
+
+  // Calculate monthly operating expenses
   const monthlyPropertyTax = propertyTaxAnnual / 12;
   const monthlyInsurance = insuranceAnnual / 12;
   const monthlyMaintenance = purchasePrice * (maintenancePercent / 100) / 12;
-  const monthlyManagement = monthlyRent * (propertyManagementPercent / 100);
-  const monthlyVacancy = monthlyRent * (vacancyRatePercent / 100);
-  const monthlyCapEx = purchasePrice * (capExReservePercent / 100) / 12;
-
-  const totalMonthlyExpenses = 
-    monthlyMortgagePayment +
+  const monthlyManagement = monthlyRevenue * (propertyManagementPercent / 100);
+  const monthlyOperatingExpenses = 
     monthlyPropertyTax +
     monthlyInsurance +
     utilitiesMonthly +
     monthlyMaintenance +
-    monthlyManagement +
-    monthlyVacancy +
-    monthlyCapEx;
+    monthlyManagement;
 
-  const monthlyCashFlow = monthlyRent - totalMonthlyExpenses;
+  // Calculate cash flow metrics
+  const monthlyCashFlow = monthlyRevenue - monthlyOperatingExpenses - monthlyMortgagePayment;
   const annualCashFlow = monthlyCashFlow * 12;
   const cashOnCashReturn = (annualCashFlow / downPayment) * 100;
-  const capRate = (annualCashFlow / purchasePrice) * 100;
+  const capRate = ((monthlyRevenue - monthlyOperatingExpenses) * 12 / purchasePrice) * 100;
 
   return {
     monthlyMortgagePayment,
     monthlyCashFlow,
     annualCashFlow,
     cashOnCashReturn,
-    capRate
+    capRate,
+    monthlyOperatingExpenses,
+    monthlyRevenue
   };
 } 
