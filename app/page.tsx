@@ -1,8 +1,15 @@
+import Hero from '@/components/sections/Hero';
+import CalculatorTiles from '@/components/sections/CalculatorTiles';
+import HowItWorks from '@/components/sections/HowItWorks';
+import Footer from '@/components/layout/Footer';
+
 export default function Home() {
   return (
-    <div style={{ padding: 40 }}>
-      <h1 style={{ fontSize: 24 }}>🚧 PropInfera is under construction</h1>
-      <p>We're resetting the project structure and cleaning the dev environment.</p>
-    </div>
-  )
-}
+    <main className="min-h-screen bg-black">
+      <Hero />
+      <CalculatorTiles />
+      <HowItWorks />
+      <Footer />
+    </main>
+  );
+} 

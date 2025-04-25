@@ -4,6 +4,7 @@ import '../styles/global.css';
 import { TierProvider } from '@/context/TierContext'
 import { AnalysisProvider } from '@/context/AnalysisContext'
 import { Toaster } from 'react-hot-toast'
+import Navbar from '@/components/layout/Navbar'
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -22,6 +23,7 @@ export default function RootLayout({
       <body className={`${inter.className} bg-[#111] text-white min-h-screen`}>
         <TierProvider>
           <AnalysisProvider>
+            <Navbar />
             {children}
           </AnalysisProvider>
         </TierProvider>
