@@ -73,21 +73,19 @@ export default function AirbnbCalculator() {
   const [title, setTitle] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleInputChange = (field: keyof AirbnbInputs, value: string | number) => {
+  const handleInputChange = (field: keyof CalculatorInput, value: string | number) => {
     dispatch({
       type: 'SET_INPUT',
-      payload: {
-        field,
-        value: typeof value === 'string' ? value : Number(value)
-      }
+      field,
+      value: typeof value === 'string' ? value : Number(value)
     });
   };
 
-  const handleCalculate = async () => {
+  const calculateResults = async () => {
     setLoading(true);
     try {
-      const results = calculateAirbnbMetrics(state.calculatorInputs as AirbnbInputs);
-      dispatch({ type: 'SET_RESULTS', payload: results });
+      const results = calculateAirbnbMetrics(state.calculatorInputs);
+      dispatch({ type: 'SET_RESULTS', results });
     } catch (error) {
       console.error('Error calculating metrics:', error);
     } finally {
@@ -375,7 +373,7 @@ export default function AirbnbCalculator() {
       <div className="p-6 border-t border-gray-700">
         <div className="flex justify-center">
           <Button
-            onClick={handleCalculate}
+            onClick={calculateResults}
             disabled={loading}
             className="px-6 py-3 bg-[#2ecc71] text-white rounded-md hover:bg-[#27ae60] focus:outline-none focus:ring-2 focus:ring-[#2ecc71] focus:ring-offset-2 focus:ring-offset-gray-900 transition-all duration-200 shadow-lg hover:shadow-[#2ecc71]/50"
           >
