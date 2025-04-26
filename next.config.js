@@ -2,7 +2,10 @@
 const nextConfig = {
   output: 'standalone',
   experimental: {
-    serverActions: true,
+    serverActions: {
+      enabled: true,
+      allowedOrigins: ['propinfera.vercel.app']
+    }
   },
   images: {
     domains: ['lh3.googleusercontent.com'],

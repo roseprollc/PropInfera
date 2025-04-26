@@ -2,13 +2,13 @@
 
 import { useState } from "react";
 import SavedAnalysesList from "@/components/dashboard/SavedAnalysesList";
-import { Analysis } from "@/types/analysis";
+import { Analysis, CalculatorType } from "@/types/analysis";
 
 export default function SavedAnalysesPage() {
-  const [analyses, setAnalyses] = useState<Analysis[]>([]);
-  const [selectedAnalysis, setSelectedAnalysis] = useState<Analysis | null>(null);
+  const [analyses] = useState<Analysis<CalculatorType>[]>([]);
+  const [selectedAnalysis, setSelectedAnalysis] = useState<Analysis<CalculatorType> | null>(null);
 
-  const handleSelectAnalysis = (analysis: Analysis) => {
+  const handleSelectAnalysis = (analysis: Analysis<CalculatorType>) => {
     setSelectedAnalysis(analysis);
   };
 

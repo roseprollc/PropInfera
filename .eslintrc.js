@@ -1,12 +1,6 @@
 module.exports = {
-  extends: [
-    "next/core-web-vitals",
-    "eslint:recommended",
-    "plugin:react/recommended",
-    "plugin:react-hooks/recommended"
-  ],
+  extends: ['next/core-web-vitals'],
   rules: {
-    "react/react-in-jsx-scope": "off",
-    "react/prop-types": "off"
+    '@typescript-eslint/no-unused-vars': 'warn'
   }
 };
