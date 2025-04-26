@@ -6,6 +6,28 @@ import { ObjectId } from 'mongodb';
 export type CalculatorType = 'rental' | 'airbnb' | 'wholesale' | 'mortgage' | 'renters';
 
 /**
+ * Type mapping for calculator inputs
+ */
+export type CalculatorInputsMap = {
+  rental: RentalInputs;
+  airbnb: AirbnbInputs;
+  wholesale: WholesaleInputs;
+  mortgage: MortgageInputs;
+  renters: RentersInputs;
+};
+
+/**
+ * Type mapping for analysis results
+ */
+export type AnalysisResultsMap = {
+  rental: RentalAnalysisResults;
+  airbnb: AirbnbAnalysisResults;
+  wholesale: WholesaleAnalysisResults;
+  mortgage: MortgageAnalysisResults;
+  renters: RentersAnalysisResults;
+};
+
+/**
  * Base interface for all calculator inputs
  */
 export interface BaseCalculatorInputs {
@@ -57,16 +79,6 @@ export interface RentersInputs extends BaseCalculatorInputs {
   leaseTerm: number;
   utilitiesIncluded: boolean;
 }
-
-/**
- * Union type of all calculator inputs
- */
-export type CalculatorInputs = 
-  | RentalInputs 
-  | AirbnbInputs 
-  | WholesaleInputs 
-  | MortgageInputs 
-  | RentersInputs;
 
 /**
  * Analysis results for each calculator type
@@ -191,8 +203,8 @@ export function isRentersResults(results: AnalysisResults): results is RentersAn
  */
 export interface AnalysisState<T extends CalculatorType> {
   currentAnalysis: Analysis<T> | null;
-  calculatorInputs: CalculatorInputs;
-  results: AnalysisResults | null;
+  calculatorInputs: CalculatorInputsMap[T];
+  results: AnalysisResultsMap[T] | null;
   isLoading: boolean;
   error: string | null;
 }
@@ -200,9 +212,9 @@ export interface AnalysisState<T extends CalculatorType> {
 /**
  * Action types for the calculator reducer
  */
-export type AnalysisAction =
-  | { type: 'SET_INPUTS'; payload: { type: CalculatorType; inputs: CalculatorInputs } }
-  | { type: 'SET_RESULTS'; payload: AnalysisResults }
+export type AnalysisAction<T extends CalculatorType> =
+  | { type: 'SET_INPUTS'; payload: { type: T; inputs: CalculatorInputsMap[T] } }
+  | { type: 'SET_RESULTS'; payload: AnalysisResultsMap[T] }
   | { type: 'SET_LOADING'; payload: boolean }
   | { type: 'SET_ERROR'; payload: string | null }
   | { type: 'RESET_CALCULATOR' };
@@ -217,8 +229,8 @@ export interface Analysis<T extends CalculatorType> {
   title: string;
   propertyName: string;
   propertyAddress: string;
-  inputs: CalculatorInputs;
-  results: AnalysisResults;
+  inputs: CalculatorInputsMap[T];
+  results: AnalysisResultsMap[T];
   notes?: string;
   createdAt: Date;
   updatedAt: Date;
