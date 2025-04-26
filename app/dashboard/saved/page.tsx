@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
 import SavedAnalysesList from "@/components/dashboard/SavedAnalysesList";
 import { Analysis, CalculatorType } from "@/types/analysis";
 
 export default function SavedAnalysesPage() {
-  const [analyses] = useState<Analysis<CalculatorType>[]>([]);
+  // Replace useState with a constant since you're not updating the state
+  const analyses: Analysis<CalculatorType>[] = [];
 
   return (
     <div className="container mx-auto px-4 py-8">
