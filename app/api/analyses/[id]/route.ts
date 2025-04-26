@@ -1,10 +1,10 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { ObjectId } from 'mongodb';
 import clientPromise from '@/lib/mongodb';
-import { Analysis } from '@/lib/data';
+import { Analysis, CalculatorType } from '@/types/analysis';
 
 export async function PATCH(
-  request: Request,
+  request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
@@ -20,7 +20,7 @@ export async function PATCH(
     const db = client.db('propinfera');
     
     // Get the request body
-    const updates: Partial<Analysis> = await request.json();
+    const updates: Partial<Analysis<CalculatorType>> = await request.json();
 
     // Validate required fields
     if (!updates.propertyName?.trim()) {
