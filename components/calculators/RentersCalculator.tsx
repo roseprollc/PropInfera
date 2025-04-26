@@ -7,200 +7,147 @@ import { Label } from '@/components/ui/label';
 import { CalculatorInput, CalculatorResults } from '@/types/calculator';
 import { calculateRentersMetrics } from '@/lib/calculators/renters';
 import { cn } from '@/lib/utils';
+import { useCalculator } from "@/context/CalculatorContext";
+import { CalculatorInputs, RentersAnalysisResults, CalculatorType } from "@/types/analysis";
 
-const defaultInputs: CalculatorInput = {
-  propertyAddress: '',
+interface RentersInputs extends CalculatorInputs {
+  monthlyRent: number;
+  securityDeposit: number;
+  leaseTerm: number;
+  utilitiesIncluded: boolean;
+}
+
+const defaultInputs: RentersInputs = {
+  propertyAddress: "",
   purchasePrice: 0,
-  downPaymentPercent: 20,
-  interestRate: 7.5,
-  loanTerm: 30,
+  downPaymentPercent: 0,
+  interestRate: 0,
+  loanTerm: 0,
   closingCosts: 0,
   propertyTaxAnnual: 0,
   insuranceAnnual: 0,
   utilitiesMonthly: 0,
-  maintenancePercent: 1,
-  propertyManagementPercent: 10,
+  maintenancePercent: 0,
+  propertyManagementPercent: 0,
   monthlyRent: 0,
-  vacancyRatePercent: 5,
-  capExReservePercent: 5,
-  annualAppreciationPercent: 3,
-  annualRentIncreasePercent: 2,
-  holdingPeriodYears: 5,
-  nightlyRate: 0,
-  occupancyRate: 0,
-  cleaningFee: 0,
-  platformFeesPercent: 3
+  securityDeposit: 0,
+  leaseTerm: 12,
+  utilitiesIncluded: false,
 };
 
 export function RentersCalculator() {
-  const [inputs, setInputs] = useState<CalculatorInput>(defaultInputs);
-  const [results, setResults] = useState<CalculatorResults | null>(null);
+  const { state, dispatch } = useCalculator();
+  const [isSaving, setIsSaving] = useState(false);
 
-  const handleInputChange = (field: keyof CalculatorInput, value: string) => {
-    setInputs(prev => ({
-      ...prev,
-      [field]: parseFloat(value) || 0
-    }));
+  const handleInputChange = (field: keyof RentersInputs, value: string | number) => {
+    dispatch({ type: "SET_INPUT", field, value });
   };
 
-  const handleCalculate = () => {
-    const calculatedResults = calculateRentersMetrics(inputs);
-    setResults(calculatedResults);
+  const calculateResults = () => {
+    const inputs = state.calculatorInputs as RentersInputs;
+    const results: RentersAnalysisResults = {
+      monthlyCashFlow: inputs.monthlyRent,
+      annualCashFlow: inputs.monthlyRent * 12,
+      monthlyRevenue: inputs.monthlyRent,
+    };
+    dispatch({ type: "SET_RESULTS", results: { type: "renters", data: results } });
   };
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      const analysis = {
+        type: "renters" as const,
+        inputs: state.calculatorInputs,
+        results: state.results,
+      };
+      // TODO: Implement save functionality
+    } catch (error) {
+      console.error("Error saving analysis:", error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const results = state.results?.type === "renters" ? state.results.data : null;
 
   return (
-    <div className="w-full max-w-4xl mx-auto p-6 space-y-8">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-4">
           <div>
-            <Label htmlFor="purchasePrice">Purchase Price</Label>
-            <Input
-              id="purchasePrice"
+            <label className="block text-sm font-medium text-gray-700">Monthly Rent</label>
+            <input
               type="number"
-              value={inputs.purchasePrice}
-              onChange={(e) => handleInputChange('purchasePrice', e.target.value)}
-              className={cn(
-                "mt-1",
-                inputs.purchasePrice === 0 && "border-red-500"
-              )}
+              value={state.calculatorInputs.monthlyRent}
+              onChange={(e) => handleInputChange("monthlyRent", Number(e.target.value))}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             />
           </div>
-          
           <div>
-            <Label htmlFor="downPaymentPercent">Down Payment %</Label>
-            <Input
-              id="downPaymentPercent"
+            <label className="block text-sm font-medium text-gray-700">Security Deposit</label>
+            <input
               type="number"
-              value={inputs.downPaymentPercent}
-              onChange={(e) => handleInputChange('downPaymentPercent', e.target.value)}
+              value={state.calculatorInputs.securityDeposit}
+              onChange={(e) => handleInputChange("securityDeposit", Number(e.target.value))}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             />
           </div>
-
           <div>
-            <Label htmlFor="interestRate">Interest Rate %</Label>
-            <Input
-              id="interestRate"
+            <label className="block text-sm font-medium text-gray-700">Lease Term (months)</label>
+            <input
               type="number"
-              value={inputs.interestRate}
-              onChange={(e) => handleInputChange('interestRate', e.target.value)}
+              value={state.calculatorInputs.leaseTerm}
+              onChange={(e) => handleInputChange("leaseTerm", Number(e.target.value))}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             />
           </div>
-
           <div>
-            <Label htmlFor="nightlyRate">Nightly Rate</Label>
-            <Input
-              id="nightlyRate"
-              type="number"
-              value={inputs.nightlyRate}
-              onChange={(e) => handleInputChange('nightlyRate', e.target.value)}
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="occupancyRate">Occupancy Rate %</Label>
-            <Input
-              id="occupancyRate"
-              type="number"
-              value={inputs.occupancyRate}
-              onChange={(e) => handleInputChange('occupancyRate', e.target.value)}
-            />
+            <label className="flex items-center">
+              <input
+                type="checkbox"
+                checked={state.calculatorInputs.utilitiesIncluded}
+                onChange={(e) => handleInputChange("utilitiesIncluded", e.target.checked ? 1 : 0)}
+                className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              />
+              <span className="ml-2 text-sm text-gray-700">Utilities Included</span>
+            </label>
           </div>
         </div>
-
         <div className="space-y-4">
-          <div>
-            <Label htmlFor="propertyTaxAnnual">Annual Property Tax</Label>
-            <Input
-              id="propertyTaxAnnual"
-              type="number"
-              value={inputs.propertyTaxAnnual}
-              onChange={(e) => handleInputChange('propertyTaxAnnual', e.target.value)}
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="insuranceAnnual">Annual Insurance</Label>
-            <Input
-              id="insuranceAnnual"
-              type="number"
-              value={inputs.insuranceAnnual}
-              onChange={(e) => handleInputChange('insuranceAnnual', e.target.value)}
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="utilitiesMonthly">Monthly Utilities</Label>
-            <Input
-              id="utilitiesMonthly"
-              type="number"
-              value={inputs.utilitiesMonthly}
-              onChange={(e) => handleInputChange('utilitiesMonthly', e.target.value)}
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="maintenancePercent">Maintenance %</Label>
-            <Input
-              id="maintenancePercent"
-              type="number"
-              value={inputs.maintenancePercent}
-              onChange={(e) => handleInputChange('maintenancePercent', e.target.value)}
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="propertyManagementPercent">Property Management %</Label>
-            <Input
-              id="propertyManagementPercent"
-              type="number"
-              value={inputs.propertyManagementPercent}
-              onChange={(e) => handleInputChange('propertyManagementPercent', e.target.value)}
-            />
-          </div>
+          {results && (
+            <>
+              <div>
+                <h3 className="text-lg font-medium text-gray-900">Monthly Cash Flow</h3>
+                <p className="text-2xl font-bold text-green-600">${results.monthlyCashFlow.toFixed(2)}</p>
+              </div>
+              <div>
+                <h3 className="text-lg font-medium text-gray-900">Annual Cash Flow</h3>
+                <p className="text-2xl font-bold text-green-600">${results.annualCashFlow.toFixed(2)}</p>
+              </div>
+              <div>
+                <h3 className="text-lg font-medium text-gray-900">Monthly Revenue</h3>
+                <p className="text-2xl font-bold text-blue-600">${results.monthlyRevenue.toFixed(2)}</p>
+              </div>
+            </>
+          )}
         </div>
       </div>
-
-      <div className="flex justify-center">
-        <Button 
-          onClick={handleCalculate}
-          className="w-full md:w-auto"
-          disabled={inputs.purchasePrice === 0}
+      <div className="flex justify-end space-x-4">
+        <button
+          onClick={calculateResults}
+          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
         >
           Calculate
-        </Button>
+        </button>
+        <button
+          onClick={handleSave}
+          disabled={isSaving}
+          className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50"
+        >
+          {isSaving ? "Saving..." : "Save Analysis"}
+        </button>
       </div>
-
-      {results && (
-        <div className="mt-8 p-6 bg-gray-100 dark:bg-gray-800 rounded-lg">
-          <h3 className="text-xl font-semibold mb-4">Results</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Monthly Mortgage Payment</p>
-              <p className="text-lg font-medium">${results.monthlyMortgagePayment.toFixed(2)}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Monthly Cash Flow</p>
-              <p className="text-lg font-medium">${results.monthlyCashFlow.toFixed(2)}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Annual Cash Flow</p>
-              <p className="text-lg font-medium">${results.annualCashFlow.toFixed(2)}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Cash on Cash Return</p>
-              <p className="text-lg font-medium">{results.cashOnCashReturn.toFixed(2)}%</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Cap Rate</p>
-              <p className="text-lg font-medium">{results.capRate.toFixed(2)}%</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Monthly Revenue</p>
-              <p className="text-lg font-medium">${results.monthlyRevenue?.toFixed(2)}</p>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

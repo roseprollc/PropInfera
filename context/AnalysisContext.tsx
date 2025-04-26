@@ -1,66 +1,66 @@
 "use client";
 
-import React, { createContext, useContext, useReducer } from 'react';
-import { AnalysisState, AnalysisAction, CalculatorInputs } from '@/types/analysis';
+import { createContext, useContext, useReducer, ReactNode } from 'react';
+import { Analysis, CalculatorType } from '@/types/analysis';
 
-interface AnalysisContextType {
-  state: AnalysisState;
-  dispatch: React.Dispatch<AnalysisAction>;
-}
-
-const initialState: AnalysisState = {
-  calculatorInputs: {
-    propertyAddress: '',
-    purchasePrice: 0,
-    downPaymentPercent: 0,
-    interestRate: 0,
-    loanTerm: 0,
-    closingCosts: 0,
-    propertyTaxAnnual: 0,
-    insuranceAnnual: 0,
-    utilitiesMonthly: 0,
-    maintenancePercent: 0,
-    propertyManagementPercent: 0,
-    monthlyRent: 0,
-    vacancyRatePercent: 0,
-    capExReservePercent: 0,
-    annualAppreciationPercent: 0,
-    annualRentIncreasePercent: 0,
-    holdingPeriodYears: 0,
-    nightlyRate: 0,
-    occupancyRate: 0,
-    cleaningFee: 0,
-    platformFeesPercent: 0
-  },
-  results: null
+type AnalysisState<T extends CalculatorType> = {
+  currentAnalysis: Analysis<T> | null;
+  savedAnalyses: Analysis<T>[];
 };
 
-const AnalysisContext = createContext<AnalysisContextType | undefined>(undefined);
+type AnalysisAction<T extends CalculatorType> =
+  | { type: 'SET_CURRENT_ANALYSIS'; payload: Analysis<T> | null }
+  | { type: 'ADD_SAVED_ANALYSIS'; payload: Analysis<T> }
+  | { type: 'UPDATE_SAVED_ANALYSIS'; payload: Analysis<T> }
+  | { type: 'DELETE_SAVED_ANALYSIS'; payload: string }
+  | { type: 'SET_SAVED_ANALYSES'; payload: Analysis<T>[] };
 
-function analysisReducer(state: AnalysisState, action: AnalysisAction): AnalysisState {
+const initialState = <T extends CalculatorType>(): AnalysisState<T> => ({
+  currentAnalysis: null,
+  savedAnalyses: [],
+});
+
+const AnalysisContext = createContext<{
+  state: AnalysisState<CalculatorType>;
+  dispatch: React.Dispatch<AnalysisAction<CalculatorType>>;
+} | undefined>(undefined);
+
+function analysisReducer<T extends CalculatorType>(
+  state: AnalysisState<T>,
+  action: AnalysisAction<T>
+): AnalysisState<T> {
   switch (action.type) {
-    case 'SET_INPUT':
+    case 'SET_CURRENT_ANALYSIS':
+      return { ...state, currentAnalysis: action.payload };
+    case 'ADD_SAVED_ANALYSIS':
+      return { ...state, savedAnalyses: [...state.savedAnalyses, action.payload] };
+    case 'UPDATE_SAVED_ANALYSIS':
       return {
         ...state,
-        calculatorInputs: {
-          ...state.calculatorInputs,
-          [action.field]: action.value
-        }
+        savedAnalyses: state.savedAnalyses.map((analysis) =>
+          analysis.id === action.payload.id ? action.payload : analysis
+        ),
       };
-    case 'SET_RESULTS':
+    case 'DELETE_SAVED_ANALYSIS':
       return {
         ...state,
-        results: action.results
+        savedAnalyses: state.savedAnalyses.filter(
+          (analysis) => analysis.id !== action.payload
+        ),
       };
-    case 'RESET_CALCULATOR':
-      return initialState;
+    case 'SET_SAVED_ANALYSES':
+      return { ...state, savedAnalyses: action.payload };
     default:
       return state;
   }
 }
 
-export function AnalysisProvider({ children }: { children: React.ReactNode }) {
-  const [state, dispatch] = useReducer(analysisReducer, initialState);
+interface AnalysisProviderProps {
+  children: ReactNode;
+}
+
+export function AnalysisProvider({ children }: AnalysisProviderProps) {
+  const [state, dispatch] = useReducer(analysisReducer, initialState());
 
   return (
     <AnalysisContext.Provider value={{ state, dispatch }}>

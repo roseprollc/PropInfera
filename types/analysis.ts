@@ -1,14 +1,14 @@
 import { ObjectId } from 'mongodb';
 
-export type CalculatorType = 'rental' | 'airbnb' | 'wholesale' | 'mortgage';
+export type CalculatorType = 'rental' | 'airbnb' | 'wholesale' | 'mortgage' | 'renters';
 
 // Property Analysis Types
 export interface PropertyAnalysis {
   id: string;
   address: string;
-  analysis: RentalAnalysisResults | AirbnbAnalysisResults | WholesaleAnalysisResults | MortgageAnalysisResults;
+  analysis: RentalAnalysisResults | AirbnbAnalysisResults | WholesaleAnalysisResults | MortgageAnalysisResults | RentersAnalysisResults;
   inputs: CalculatorInputs;
-  analysisType: 'RENTAL' | 'AIRBNB' | 'WHOLESALE' | 'MORTGAGE';
+  analysisType: 'RENTAL' | 'AIRBNB' | 'WHOLESALE' | 'MORTGAGE' | 'RENTERS';
 }
 
 // Calculator Input Types
@@ -48,6 +48,11 @@ export interface CalculatorInputs {
 
   // Mortgage specific fields
   hoaFees?: number;
+
+  // Renters specific fields
+  securityDeposit?: number;
+  leaseTerm?: number;
+  utilitiesIncluded?: boolean;
 }
 
 // Analysis Results Types
@@ -97,6 +102,12 @@ export interface MortgageAnalysisResults {
   totalMonthlyPayment: number;
 }
 
+export interface RentersAnalysisResults {
+  monthlyCashFlow: number;
+  annualCashFlow: number;
+  monthlyRevenue: number;
+}
+
 export interface MonthlyBreakdown {
   month: string;
   income: number;
@@ -122,7 +133,8 @@ export type AnalysisResults =
   | { type: 'rental'; data: RentalAnalysisResults }
   | { type: 'airbnb'; data: AirbnbAnalysisResults }
   | { type: 'wholesale'; data: WholesaleAnalysisResults }
-  | { type: 'mortgage'; data: MortgageAnalysisResults };
+  | { type: 'mortgage'; data: MortgageAnalysisResults }
+  | { type: 'renters'; data: RentersAnalysisResults };
 
 // Generic Analysis State
 export interface AnalysisState<T extends CalculatorType> {
