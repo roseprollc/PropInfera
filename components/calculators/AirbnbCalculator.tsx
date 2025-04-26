@@ -2,9 +2,8 @@
 
 import { useState } from "react";
 import { useCalculator } from '@/context/CalculatorContext';
-import { CalculatorInputs, AnalysisResults } from '@/types/analysis';
+import { CalculatorInputs, AirbnbAnalysisResults } from '@/types/analysis';
 import { calculateAirbnbMetrics } from '@/lib/calculators/airbnb';
-import Toast from '@/components/ui/Toast';
 import ActionButtons from "@/components/ui/ActionButtons";
 import { Button } from '@/components/ui/button';
 import { saveAnalysis } from '@/lib/services/saveAnalysis';
@@ -16,41 +15,9 @@ interface AirbnbInputs extends CalculatorInputs {
   platformFeesPercent: number;
 }
 
-const defaultInputs: AirbnbInputs = {
-  propertyAddress: '',
-  purchasePrice: 300000,
-  downPaymentPercent: 20,
-  interestRate: 6.5,
-  loanTerm: 30,
-  closingCosts: 9000,
-  propertyTaxAnnual: 3600,
-  insuranceAnnual: 1200,
-  utilitiesMonthly: 200,
-  maintenancePercent: 5,
-  propertyManagementPercent: 8,
-  monthlyRent: 0,
-  vacancyRatePercent: 0,
-  capExReservePercent: 0,
-  annualAppreciationPercent: 3,
-  annualRentIncreasePercent: 2,
-  holdingPeriodYears: 5,
-  nightlyRate: 150,
-  occupancyRate: 70,
-  cleaningFee: 100,
-  platformFeesPercent: 3,
-  afterRepairValue: 0,
-  repairCosts: 0,
-  assignmentFee: 0,
-  miscHoldingCosts: 0
-};
-
 export function AirbnbCalculator() {
   const { state, dispatch } = useCalculator();
-  const [showToast, setShowToast] = useState(false);
-  const [toastMessage, setToastMessage] = useState('');
   const [isSaving, setIsSaving] = useState(false);
-  const [notes, setNotes] = useState('');
-  const [title, setTitle] = useState('');
 
   const handleInputChange = (field: keyof AirbnbInputs, value: number | string) => {
     dispatch({ type: 'SET_INPUT', field, value });
@@ -58,7 +25,7 @@ export function AirbnbCalculator() {
 
   const calculateResults = () => {
     const results = calculateAirbnbMetrics(state.calculatorInputs as AirbnbInputs);
-    dispatch({ type: 'SET_RESULTS', results });
+    dispatch({ type: 'SET_RESULTS', results: { type: 'airbnb', data: results } });
   };
 
   const handleSaveAnalysis = async () => {
@@ -68,21 +35,16 @@ export function AirbnbCalculator() {
 
     setIsSaving(true);
     try {
-      const result = await saveAnalysis({
+      await saveAnalysis({
         userId: 'mock-user-123',
         type: 'airbnb',
         inputs: state.calculatorInputs,
         results: state.results,
-        title: title || state.calculatorInputs.propertyAddress || 'Untitled Analysis',
-        notes,
+        title: state.calculatorInputs.propertyAddress || 'Untitled Analysis',
+        notes: '',
       });
-
-      setToastMessage(result.message);
-      setShowToast(true);
     } catch (error) {
       console.error('Error saving analysis:', error);
-      setToastMessage('Failed to save analysis');
-      setShowToast(true);
     } finally {
       setIsSaving(false);
     }

@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import MortgageCalculator from '@/components/calculators/MortgageCalculator';
+import { MortgageCalculator } from '@/components/calculators/MortgageCalculator';
 import CalculatorLayout from '@/components/layout/CalculatorLayout';
 
 export const metadata: Metadata = {
