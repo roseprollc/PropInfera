@@ -137,16 +137,18 @@ export interface AnalysisResults {
 }
 
 export interface Analysis {
-  _id: string | ObjectId;
+  _id: string;
   userId: string;
-  type: 'rental' | 'airbnb' | 'wholesale' | 'mortgage';
+  type: AnalysisType;
+  title: string;
   propertyName: string;
   address: string;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: Date;
+  updatedAt: Date;
   notes?: string;
   inputs: Record<string, any>;
   results: Record<string, number>;
   insights?: string;
-  insightsLastGeneratedAt?: string;
+  insightsLastGeneratedAt?: Date;
+  insightsUpdatedAt?: Date;
 } 

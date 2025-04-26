@@ -19,14 +19,14 @@ interface Analysis {
 }
 
 interface EditAnalysisFormProps {
-  analysis: Analysis;
-  onSave: (analysis: Analysis) => Promise<void>;
+  initialData: Analysis;
+  onSave: (updatedData: Partial<Analysis>) => Promise<void>;
   onCancel: () => void;
 }
 
-export default function EditAnalysisForm({ analysis, onSave, onCancel }: EditAnalysisFormProps) {
+export function EditAnalysisForm({ initialData, onSave, onCancel }: EditAnalysisFormProps) {
   const router = useRouter();
-  const [formData, setFormData] = useState<Analysis>(analysis);
+  const [formData, setFormData] = useState<Analysis>(initialData);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSaving, setIsSaving] = useState(false);
 
@@ -124,12 +124,12 @@ export default function EditAnalysisForm({ analysis, onSave, onCancel }: EditAna
       <div className="p-4 bg-gray-900 rounded-lg">
         <h2 className="text-lg font-semibold mb-4">Current Results</h2>
         <ResultsSummary
-          results={analysis.results}
+          results={initialData.results}
           highlightKeys={['monthlyCashFlow', 'cashOnCash', 'roi']}
         />
       </div>
     </div>
-  ), [formData, errors, isSaving, handleInputChange, analysis.results]);
+  ), [formData, errors, isSaving, handleInputChange, initialData.results]);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
