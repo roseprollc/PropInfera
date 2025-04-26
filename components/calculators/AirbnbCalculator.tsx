@@ -6,10 +6,8 @@ import { CalculatorInput } from '@/types/calculator';
 import { calculateAirbnbMetrics } from '@/lib/calculators/airbnb';
 import Toast from '@/components/ui/Toast';
 import ActionButtons from "@/components/ui/ActionButtons";
-import ResultsSummary from '@/components/results/ResultsSummary';
-import { saveAnalysis } from '@/lib/services/saveAnalysis';
-import { InputField } from '@/components/ui/InputField';
 import { Button } from '@/components/ui/button';
+import { saveAnalysis } from '@/lib/services/saveAnalysis';
 
 interface AirbnbInputs extends CalculatorInput {
   nightlyRate: number;
@@ -54,13 +52,11 @@ const defaultInputs: AirbnbInputs = {
 
 export function AirbnbCalculator() {
   const { state, dispatch } = useCalculator();
-  const [activeTab, setActiveTab] = useState<'inputs' | 'results'>('inputs');
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [notes, setNotes] = useState('');
   const [title, setTitle] = useState('');
-  const [loading, setLoading] = useState(false);
 
   const handleInputChange = (field: keyof AirbnbInputs, value: number | string) => {
     dispatch({ type: 'SET_INPUT', field, value });
@@ -212,150 +208,16 @@ export function AirbnbCalculator() {
               className="w-full px-3 py-2 bg-[#111] text-white placeholder-gray-400 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
-              Property Tax (annual)
-            </label>
-            <input
-              type="number"
-              value={state.calculatorInputs.propertyTaxAnnual}
-              onChange={(e) => handleInputChange('propertyTaxAnnual', Number(e.target.value))}
-              className="w-full px-3 py-2 bg-[#111] text-white placeholder-gray-400 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
-              Insurance (annual)
-            </label>
-            <input
-              type="number"
-              value={state.calculatorInputs.insuranceAnnual}
-              onChange={(e) => handleInputChange('insuranceAnnual', Number(e.target.value))}
-              className="w-full px-3 py-2 bg-[#111] text-white placeholder-gray-400 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
-              Utilities (monthly)
-            </label>
-            <input
-              type="number"
-              value={state.calculatorInputs.utilitiesMonthly}
-              onChange={(e) => handleInputChange('utilitiesMonthly', Number(e.target.value))}
-              className="w-full px-3 py-2 bg-[#111] text-white placeholder-gray-400 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
-              Maintenance (%)
-            </label>
-            <input
-              type="number"
-              value={state.calculatorInputs.maintenancePercent}
-              onChange={(e) => handleInputChange('maintenancePercent', Number(e.target.value))}
-              className="w-full px-3 py-2 bg-[#111] text-white placeholder-gray-400 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
-              Property Management (%)
-            </label>
-            <input
-              type="number"
-              value={state.calculatorInputs.propertyManagementPercent}
-              onChange={(e) => handleInputChange('propertyManagementPercent', Number(e.target.value))}
-              className="w-full px-3 py-2 bg-[#111] text-white placeholder-gray-400 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
         </div>
       </div>
-
-      <div className="p-6 border-b border-gray-700">
-        <h3 className="text-lg font-semibold text-white mb-4">Investment Analysis</h3>
-        <div className="space-y-4">
-          <div className="flex justify-between">
-            <span className="text-gray-300">Monthly Mortgage Payment</span>
-            <span className="text-white font-medium">{state.results?.monthlyMortgagePayment.toLocaleString()}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-300">Monthly Operating Expenses</span>
-            <span className="text-white font-medium">{state.results?.monthlyOperatingExpenses?.toLocaleString()}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-300">Monthly Revenue</span>
-            <span className="text-white font-medium">{state.results?.monthlyRevenue?.toLocaleString()}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-300">Monthly Cash Flow</span>
-            <span className="text-white font-medium">{state.results?.monthlyCashFlow.toLocaleString()}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-300">Annual Cash Flow</span>
-            <span className="text-white font-medium">{state.results?.annualCashFlow.toLocaleString()}</span>
-          </div>
-          <div className="border-t border-gray-700 pt-4 mt-4">
-            <div className="flex justify-between">
-              <span className="text-white font-semibold">Cap Rate</span>
-              <span className="text-[#2ecc71] font-bold text-xl">
-                {state.results?.capRate.toLocaleString()}%
-              </span>
-            </div>
-            <div className="flex justify-between mt-2">
-              <span className="text-white font-semibold">Cash on Cash Return</span>
-              <span className="text-[#2ecc71] font-bold text-xl">
-                {state.results?.cashOnCashReturn.toLocaleString()}%
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Notes and Title Inputs */}
-      {activeTab === 'results' && state.results && (
-        <div className="p-6 border-t border-gray-700">
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-300 mb-1">
-              Analysis Title
-            </label>
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder={state.calculatorInputs.propertyAddress || 'Untitled Analysis'}
-              className="w-full px-3 py-2 bg-[#111] text-white placeholder-gray-400 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-300 mb-1">
-              Notes
-            </label>
-            <textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Add any notes about this analysis..."
-              className="w-full px-3 py-2 bg-[#111] text-white placeholder-gray-400 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              rows={3}
-            />
-          </div>
-        </div>
-      )}
-
-      {/* Toast Notification */}
-      {showToast && (
-        <Toast
-          message={toastMessage}
-          onClose={() => setShowToast(false)}
-        />
-      )}
 
       <div className="p-6 border-t border-gray-700">
         <div className="flex justify-center">
           <Button
             onClick={calculateResults}
-            disabled={loading}
             className="px-6 py-3 bg-[#2ecc71] text-white rounded-md hover:bg-[#27ae60] focus:outline-none focus:ring-2 focus:ring-[#2ecc71] focus:ring-offset-2 focus:ring-offset-gray-900 transition-all duration-200 shadow-lg hover:shadow-[#2ecc71]/50"
           >
-            {loading ? 'Calculating...' : 'Calculate'}
+            Calculate
           </Button>
         </div>
       </div>

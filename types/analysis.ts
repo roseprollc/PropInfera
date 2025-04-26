@@ -22,20 +22,16 @@ export interface CalculatorInputs {
   utilitiesMonthly: number;
   maintenancePercent: number;
   propertyManagementPercent: number;
-  monthlyRent?: number;
-  vacancyRatePercent?: number;
-  capExReservePercent?: number;
-  annualAppreciationPercent?: number;
-  annualRentIncreasePercent?: number;
-  holdingPeriodYears?: number;
-  nightlyRate?: number;
-  occupancyRate?: number;
-  cleaningFee?: number;
-  platformFeesPercent?: number;
-  afterRepairValue?: number;
-  repairCosts?: number;
-  assignmentFee?: number;
-  miscHoldingCosts?: number;
+  monthlyRent: number;
+  vacancyRatePercent: number;
+  capExReservePercent: number;
+  annualAppreciationPercent: number;
+  annualRentIncreasePercent: number;
+  holdingPeriodYears: number;
+  nightlyRate: number;
+  occupancyRate: number;
+  cleaningFee: number;
+  platformFeesPercent: number;
 }
 
 // Analysis Results Types
@@ -104,6 +100,7 @@ export interface AnalysisState {
   properties: PropertyAnalysis[];
   currentProperty: PropertyAnalysis | null;
   calculatorInputs: CalculatorInputs;
+  results: AnalysisResults | null;
   isLoading: boolean;
   error: string | null;
 }
@@ -112,8 +109,8 @@ export interface AnalysisState {
 export type AnalysisAction =
   | { type: 'SET_PROPERTIES'; payload: PropertyAnalysis[] }
   | { type: 'SET_CURRENT_PROPERTY'; payload: PropertyAnalysis | null }
-  | { type: 'UPDATE_CALCULATOR_INPUTS'; payload: Partial<CalculatorInputs> }
-  | { type: 'SET_ANALYSIS_RESULT'; payload: PropertyAnalysis }
+  | { type: 'SET_INPUT'; field: keyof CalculatorInputs; value: number | string }
+  | { type: 'SET_RESULTS'; results: AnalysisResults }
   | { type: 'SET_LOADING'; payload: boolean }
   | { type: 'SET_ERROR'; payload: string | null }
   | { type: 'RESET_CALCULATOR' };
@@ -121,34 +118,25 @@ export type AnalysisAction =
 export type AnalysisType = 'rental' | 'airbnb' | 'wholesale' | 'mortgage';
 
 export interface AnalysisResults {
-  monthlyCashFlow?: number;
-  annualCashFlow?: number;
-  capRate?: number;
-  cashOnCash?: number;
-  roi?: number;
-  totalCashInvestment?: number;
-  netOperatingIncome?: number;
-  totalOperatingExpenses?: number;
-  monthlyMortgagePayment?: number;
-  breakEvenOccupancy?: number;
-  irr?: number;
-  grossRentMultiplier?: number;
-  debtServiceCoverageRatio?: number;
+  monthlyMortgagePayment: number;
+  monthlyOperatingExpenses: number;
+  monthlyRevenue: number;
+  monthlyCashFlow: number;
+  annualCashFlow: number;
+  capRate: number;
+  cashOnCashReturn: number;
 }
 
 export interface Analysis {
-  _id: string;
+  id: string;
   userId: string;
-  type: AnalysisType;
+  type: 'RENTAL' | 'AIRBNB' | 'WHOLESALE';
   title: string;
   propertyName: string;
-  address: string;
+  propertyAddress: string;
+  inputs: CalculatorInputs;
+  results: AnalysisResults;
+  notes?: string;
   createdAt: Date;
   updatedAt: Date;
-  notes?: string;
-  inputs: Record<string, any>;
-  results: Record<string, number>;
-  insights?: string;
-  insightsLastGeneratedAt?: Date;
-  insightsUpdatedAt?: Date;
 } 

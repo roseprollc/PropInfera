@@ -8,13 +8,13 @@ import { Label } from "@/components/ui/label";
 import { useRouter } from "next/navigation";
 
 interface EditAnalysisFormProps {
-  analysis: Analysis;
-  onSave: (updatedAnalysis: Analysis) => Promise<void>;
+  initialData: Analysis;
+  onSave: (updatedData: Partial<Analysis>) => Promise<void>;
 }
 
-export function EditAnalysisForm({ analysis, onSave }: EditAnalysisFormProps) {
-  const [title, setTitle] = useState(analysis.title);
-  const [notes, setNotes] = useState(analysis.notes || "");
+export function EditAnalysisForm({ initialData, onSave }: EditAnalysisFormProps) {
+  const [title, setTitle] = useState(initialData.title);
+  const [notes, setNotes] = useState(initialData.notes || "");
   const [isSaving, setIsSaving] = useState(false);
   const router = useRouter();
 
@@ -22,7 +22,7 @@ export function EditAnalysisForm({ analysis, onSave }: EditAnalysisFormProps) {
     try {
       setIsSaving(true);
       await onSave({
-        ...analysis,
+        ...initialData,
         title,
         notes,
       });
