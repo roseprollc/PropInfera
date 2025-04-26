@@ -1,9 +1,10 @@
 "use client";
 
-import React from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Analysis, CalculatorType } from "@/types/analysis";
 
@@ -17,62 +18,61 @@ export function EditAnalysisForm<T extends CalculatorType>({
   onSave,
 }: EditAnalysisFormProps<T>) {
   const router = useRouter();
-  const [title, setTitle] = React.useState(initialData.title);
-  const [notes, setNotes] = React.useState(initialData.notes || "");
-  const [isSaving, setIsSaving] = React.useState(false);
+  const [title, setTitle] = useState(initialData.title);
+  const [notes, setNotes] = useState(initialData.notes || "");
+  const [isSaving, setIsSaving] = useState(false);
 
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSave = async () => {
     setIsSaving(true);
     try {
-      await onSave({ title, notes });
+      await onSave({
+        title,
+        notes,
+      });
       router.push("/dashboard");
     } catch (error) {
-      console.error("Failed to save analysis:", error);
+      console.error("Error saving analysis:", error);
     } finally {
       setIsSaving(false);
     }
   };
 
   return (
-    <form onSubmit={handleSave} className="space-y-4">
-      <div className="space-y-2">
-        <label htmlFor="title" className="text-sm font-medium">
-          Title
-        </label>
-        <Input
-          id="title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="Enter analysis title"
-          required
-        />
+    <div className="space-y-6">
+      <div className="space-y-4">
+        <div>
+          <Label htmlFor="title">Title</Label>
+          <Input
+            id="title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            className="mt-1"
+          />
+        </div>
+        <div>
+          <Label htmlFor="notes">Notes</Label>
+          <Textarea
+            id="notes"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            className="mt-1"
+            rows={4}
+          />
+        </div>
       </div>
-      <div className="space-y-2">
-        <label htmlFor="notes" className="text-sm font-medium">
-          Notes
-        </label>
-        <Textarea
-          id="notes"
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          placeholder="Enter analysis notes"
-          rows={4}
-        />
-      </div>
-      <div className="flex justify-end space-x-2">
+      <div className="flex justify-end space-x-4">
         <Button
-          type="button"
           variant="outline"
           onClick={() => router.push("/dashboard")}
+          disabled={isSaving}
         >
           Cancel
         </Button>
-        <Button type="submit" disabled={isSaving}>
+        <Button onClick={handleSave} disabled={isSaving}>
           {isSaving ? "Saving..." : "Save Changes"}
         </Button>
       </div>
-    </form>
+    </div>
   );
 }
 

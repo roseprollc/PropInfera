@@ -1,12 +1,6 @@
 "use client";
 
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { CalculatorInput, CalculatorResults } from '@/types/calculator';
-import { calculateRentersMetrics } from '@/lib/calculators/renters';
-import { cn } from '@/lib/utils';
+import { useState } from "react";
 import { useCalculator } from "@/context/CalculatorContext";
 import { CalculatorInputs, RentersAnalysisResults, CalculatorType } from "@/types/analysis";
 
@@ -16,24 +10,6 @@ interface RentersInputs extends CalculatorInputs {
   leaseTerm: number;
   utilitiesIncluded: boolean;
 }
-
-const defaultInputs: RentersInputs = {
-  propertyAddress: "",
-  purchasePrice: 0,
-  downPaymentPercent: 0,
-  interestRate: 0,
-  loanTerm: 0,
-  closingCosts: 0,
-  propertyTaxAnnual: 0,
-  insuranceAnnual: 0,
-  utilitiesMonthly: 0,
-  maintenancePercent: 0,
-  propertyManagementPercent: 0,
-  monthlyRent: 0,
-  securityDeposit: 0,
-  leaseTerm: 12,
-  utilitiesIncluded: false,
-};
 
 export function RentersCalculator() {
   const { state, dispatch } = useCalculator();
