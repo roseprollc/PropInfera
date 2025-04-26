@@ -3,8 +3,7 @@ const nextConfig = {
   output: 'standalone',
   experimental: {
     serverActions: {
-      enabled: true,
-      allowedOrigins: ['propinfera.vercel.app']
+      enabled: true
     }
   },
   images: {
