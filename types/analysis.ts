@@ -222,16 +222,36 @@ export type AnalysisAction<T extends CalculatorType> =
 /**
  * Generic analysis interface
  */
-export interface Analysis<T extends CalculatorType> {
-  id: string;
-  userId: string;
-  type: T;
-  title: string;
-  propertyName: string;
-  propertyAddress: string;
-  inputs: CalculatorInputsMap[T];
-  results: AnalysisResultsMap[T];
-  notes?: string;
+export type Analysis<T extends AnalysisResults> = {
+  _id?: string;
+  type: T['type'];
+  data: T;
   createdAt: Date;
   updatedAt: Date;
+  userId: string;
+  name: string;
+  description?: string;
+  isPublic: boolean;
+  tags?: string[];
+};
+
+// Type guards for each calculator type
+export function isRentalAnalysis(analysis: Analysis<AnalysisResults>): analysis is Analysis<RentalAnalysisResults> {
+  return analysis.type === 'rental';
+}
+
+export function isAirbnbAnalysis(analysis: Analysis<AnalysisResults>): analysis is Analysis<AirbnbAnalysisResults> {
+  return analysis.type === 'airbnb';
+}
+
+export function isWholesaleAnalysis(analysis: Analysis<AnalysisResults>): analysis is Analysis<WholesaleAnalysisResults> {
+  return analysis.type === 'wholesale';
+}
+
+export function isMortgageAnalysis(analysis: Analysis<AnalysisResults>): analysis is Analysis<MortgageAnalysisResults> {
+  return analysis.type === 'mortgage';
+}
+
+export function isRentersAnalysis(analysis: Analysis<AnalysisResults>): analysis is Analysis<RentersAnalysisResults> {
+  return analysis.type === 'renters';
 } 

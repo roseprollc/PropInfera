@@ -1,61 +1,57 @@
 'use client';
 
-import { createContext, useContext, useReducer, ReactNode } from 'react';
+import React, { createContext, useContext, useReducer, ReactNode } from 'react';
 import { CalculatorType, CalculatorInputs, AnalysisResults } from '@/types/analysis';
 
 interface CalculatorState<T extends CalculatorType> {
   type: T;
-  inputs: CalculatorInputs;
-  results: AnalysisResults | null;
+  inputs: CalculatorInputs[T];
+  results: AnalysisResults[T] | null;
 }
 
-type CalculatorAction =
-  | { type: 'SET_INPUTS'; payload: { type: CalculatorType; inputs: CalculatorInputs } }
-  | { type: 'SET_RESULTS'; payload: AnalysisResults };
+type CalculatorAction<T extends CalculatorType> =
+  | { type: 'SET_INPUTS'; payload: Partial<CalculatorInputs[T]> }
+  | { type: 'SET_RESULTS'; payload: AnalysisResults[T] | null };
 
 const initialState: CalculatorState<CalculatorType> = {
   type: 'rental',
   inputs: {
-    propertyAddress: '',
     purchasePrice: 0,
-    downPaymentPercent: 0,
+    downPayment: 0,
     interestRate: 0,
-    loanTerm: 30,
-    closingCosts: 0,
-    propertyTaxAnnual: 0,
-    insuranceAnnual: 0,
-    utilitiesMonthly: 0,
-    maintenancePercent: 0,
-    propertyManagementPercent: 0,
+    loanTerm: 0,
     monthlyRent: 0,
-    vacancyRatePercent: 0,
-    capExReservePercent: 0,
-    annualAppreciationPercent: 0,
-    annualRentIncreasePercent: 0,
-    holdingPeriodYears: 0,
-    nightlyRate: 0,
-    occupancyRate: 0,
-    cleaningFee: 0,
-    platformFeesPercent: 0,
-    afterRepairValue: 0,
-    repairCosts: 0,
-    assignmentFee: 0,
-    miscHoldingCosts: 0,
-    hoaFees: 0,
-    securityDeposit: 0,
-    leaseTerm: 0,
-    utilitiesIncluded: false
+    propertyTaxes: 0,
+    insurance: 0,
+    maintenance: 0,
+    vacancyRate: 0,
+    managementFee: 0,
+    utilities: 0,
+    otherExpenses: 0,
+    appreciationRate: 0,
+    inflationRate: 0,
+    taxRate: 0,
+    depreciationPeriod: 0,
+    exitStrategy: 'sell',
+    exitYear: 0,
+    exitPrice: 0,
+    exitCosts: 0
   },
   results: null
 };
 
-function calculatorReducer(state: CalculatorState<CalculatorType>, action: CalculatorAction): CalculatorState<CalculatorType> {
+function calculatorReducer<T extends CalculatorType>(
+  state: CalculatorState<T>,
+  action: CalculatorAction<T>
+): CalculatorState<T> {
   switch (action.type) {
     case 'SET_INPUTS':
       return {
         ...state,
-        type: action.payload.type,
-        inputs: action.payload.inputs
+        inputs: {
+          ...state.inputs,
+          ...action.payload
+        }
       };
     case 'SET_RESULTS':
       return {
@@ -69,7 +65,7 @@ function calculatorReducer(state: CalculatorState<CalculatorType>, action: Calcu
 
 const CalculatorContext = createContext<{
   state: CalculatorState<CalculatorType>;
-  dispatch: React.Dispatch<CalculatorAction>;
+  dispatch: React.Dispatch<CalculatorAction<CalculatorType>>;
 } | null>(null);
 
 export function CalculatorProvider({ children }: { children: ReactNode }) {
