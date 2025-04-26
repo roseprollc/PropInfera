@@ -24,6 +24,10 @@ export interface CalculatorInputs {
   propertyManagementPercent: number;
   monthlyRent?: number;
   vacancyRatePercent?: number;
+  capExReservePercent?: number;
+  annualAppreciationPercent?: number;
+  annualRentIncreasePercent?: number;
+  holdingPeriodYears?: number;
   nightlyRate?: number;
   occupancyRate?: number;
   cleaningFee?: number;

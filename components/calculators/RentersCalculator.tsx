@@ -203,4 +203,6 @@ export function RentersCalculator() {
       )}
     </div>
   );
-} 
+}
+
+RentersCalculator.displayName = "RentersCalculator"; 
