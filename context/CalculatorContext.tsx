@@ -1,38 +1,38 @@
 'use client';
 
 import { createContext, useContext, useReducer, ReactNode } from 'react';
-import { CalculatorInputs, AnalysisResults, CalculatorType } from '@/types/analysis';
+import { CalculatorType, CalculatorInputs, AnalysisResults } from '@/types/analysis';
 
 interface CalculatorState<T extends CalculatorType> {
-  calculatorInputs: CalculatorInputs;
-  results: AnalysisResults | null;
   type: T;
+  inputs: CalculatorInputs;
+  results: AnalysisResults | null;
 }
 
-type CalculatorAction = 
-  | { type: 'SET_INPUT'; field: keyof CalculatorInputs; value: string | number }
-  | { type: 'SET_RESULTS'; results: AnalysisResults }
-  | { type: 'RESET_CALCULATOR' };
+type CalculatorAction =
+  | { type: 'SET_INPUTS'; payload: { type: CalculatorType; inputs: CalculatorInputs } }
+  | { type: 'SET_RESULTS'; payload: AnalysisResults };
 
-const initialState = <T extends CalculatorType>(type: T): CalculatorState<T> => ({
-  calculatorInputs: {
+const initialState: CalculatorState<CalculatorType> = {
+  type: 'rental',
+  inputs: {
     propertyAddress: '',
-    purchasePrice: 300000,
-    downPaymentPercent: 20,
-    interestRate: 6.5,
+    purchasePrice: 0,
+    downPaymentPercent: 0,
+    interestRate: 0,
     loanTerm: 30,
-    closingCosts: 9000,
-    propertyTaxAnnual: 3600,
-    insuranceAnnual: 1200,
-    utilitiesMonthly: 200,
-    maintenancePercent: 5,
-    propertyManagementPercent: 8,
-    monthlyRent: 2000,
-    vacancyRatePercent: 5,
-    capExReservePercent: 5,
-    annualAppreciationPercent: 3,
-    annualRentIncreasePercent: 2,
-    holdingPeriodYears: 5,
+    closingCosts: 0,
+    propertyTaxAnnual: 0,
+    insuranceAnnual: 0,
+    utilitiesMonthly: 0,
+    maintenancePercent: 0,
+    propertyManagementPercent: 0,
+    monthlyRent: 0,
+    vacancyRatePercent: 0,
+    capExReservePercent: 0,
+    annualAppreciationPercent: 0,
+    annualRentIncreasePercent: 0,
+    holdingPeriodYears: 0,
     nightlyRate: 0,
     occupancyRate: 0,
     cleaningFee: 0,
@@ -40,46 +40,40 @@ const initialState = <T extends CalculatorType>(type: T): CalculatorState<T> => 
     afterRepairValue: 0,
     repairCosts: 0,
     assignmentFee: 0,
-    miscHoldingCosts: 0
+    miscHoldingCosts: 0,
+    hoaFees: 0,
+    securityDeposit: 0,
+    leaseTerm: 0,
+    utilitiesIncluded: false
   },
-  results: null,
-  type
-});
-
-const CalculatorContext = createContext<{
-  state: CalculatorState<CalculatorType>;
-  dispatch: React.Dispatch<CalculatorAction>;
-} | undefined>(undefined);
+  results: null
+};
 
 function calculatorReducer(state: CalculatorState<CalculatorType>, action: CalculatorAction): CalculatorState<CalculatorType> {
   switch (action.type) {
-    case 'SET_INPUT':
+    case 'SET_INPUTS':
       return {
         ...state,
-        calculatorInputs: {
-          ...state.calculatorInputs,
-          [action.field]: action.value
-        }
+        type: action.payload.type,
+        inputs: action.payload.inputs
       };
     case 'SET_RESULTS':
       return {
         ...state,
-        results: action.results
+        results: action.payload
       };
-    case 'RESET_CALCULATOR':
-      return initialState(state.type);
     default:
       return state;
   }
 }
 
-interface CalculatorProviderProps {
-  children: ReactNode;
-  type: CalculatorType;
-}
+const CalculatorContext = createContext<{
+  state: CalculatorState<CalculatorType>;
+  dispatch: React.Dispatch<CalculatorAction>;
+} | null>(null);
 
-export function CalculatorProvider({ children, type }: CalculatorProviderProps) {
-  const [state, dispatch] = useReducer(calculatorReducer, initialState(type));
+export function CalculatorProvider({ children }: { children: ReactNode }) {
+  const [state, dispatch] = useReducer(calculatorReducer, initialState);
 
   return (
     <CalculatorContext.Provider value={{ state, dispatch }}>
@@ -90,7 +84,7 @@ export function CalculatorProvider({ children, type }: CalculatorProviderProps) 
 
 export function useCalculator() {
   const context = useContext(CalculatorContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useCalculator must be used within a CalculatorProvider');
   }
   return context;

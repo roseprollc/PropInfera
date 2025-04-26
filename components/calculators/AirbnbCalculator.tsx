@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useCalculator } from '@/context/CalculatorContext';
-import { CalculatorInputs, AirbnbAnalysisResults } from '@/types/analysis';
+import { CalculatorInputs } from '@/types/analysis';
 import { calculateAirbnbMetrics } from '@/lib/calculators/airbnb';
 import ActionButtons from "@/components/ui/ActionButtons";
 import { Button } from '@/components/ui/button';
