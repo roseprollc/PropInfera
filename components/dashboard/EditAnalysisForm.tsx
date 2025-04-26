@@ -8,17 +8,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { Analysis, CalculatorType } from "@/types/analysis";
 
 interface EditAnalysisFormProps<T extends CalculatorType> {
-  analysis: Analysis<T>;
-  onSave: (data: { title: string; notes: string }) => Promise<void>;
+  initialData: Analysis<T>;
+  onSave: (updatedData: Partial<Analysis<T>>) => Promise<void>;
 }
 
 export function EditAnalysisForm<T extends CalculatorType>({
-  analysis,
+  initialData,
   onSave,
 }: EditAnalysisFormProps<T>) {
   const router = useRouter();
-  const [title, setTitle] = React.useState(analysis.title);
-  const [notes, setNotes] = React.useState(analysis.notes || "");
+  const [title, setTitle] = React.useState(initialData.title);
+  const [notes, setNotes] = React.useState(initialData.notes || "");
   const [isSaving, setIsSaving] = React.useState(false);
 
   const handleSave = async (e: React.FormEvent) => {

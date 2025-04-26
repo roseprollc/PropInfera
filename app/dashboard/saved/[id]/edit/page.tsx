@@ -24,8 +24,8 @@ export default async function EditAnalysisPage({ params }: { params: { id: strin
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-4xl mx-auto">
-        <EditAnalysisForm
-          initialData={analysis as Analysis<CalculatorType>}
+        <EditAnalysisForm<CalculatorType>
+          initialData={analysis}
           onSave={handleSave}
         />
       </div>
