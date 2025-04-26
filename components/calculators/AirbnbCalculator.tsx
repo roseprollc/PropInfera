@@ -11,18 +11,7 @@ import { saveAnalysis } from '@/lib/services/saveAnalysis';
 import { InputField } from '@/components/ui/InputField';
 import { Button } from '@/components/ui/button';
 
-interface AirbnbInputs {
-  propertyAddress: string;
-  purchasePrice: number;
-  downPaymentPercent: number;
-  interestRate: number;
-  loanTerm: number;
-  closingCosts: number;
-  propertyTaxAnnual: number;
-  insuranceAnnual: number;
-  utilitiesMonthly: number;
-  maintenancePercent: number;
-  propertyManagementPercent: number;
+interface AirbnbInputs extends CalculatorInput {
   nightlyRate: number;
   occupancyRate: number;
   cleaningFee: number;
@@ -39,7 +28,7 @@ interface AirbnbResults {
   cashOnCashReturn: number;
 }
 
-const defaultInputs: CalculatorInput = {
+const defaultInputs: AirbnbInputs = {
   propertyAddress: '',
   purchasePrice: 300000,
   downPaymentPercent: 20,
@@ -73,12 +62,12 @@ export function AirbnbCalculator() {
   const [title, setTitle] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleInputChange = (field: keyof AirbnbInputs, value: number) => {
+  const handleInputChange = (field: keyof AirbnbInputs, value: number | string) => {
     dispatch({ type: 'SET_INPUT', field, value });
   };
 
   const calculateResults = () => {
-    const results = calculateAirbnbMetrics(state.calculatorInputs);
+    const results = calculateAirbnbMetrics(state.calculatorInputs as AirbnbInputs);
     dispatch({ type: 'SET_RESULTS', results });
   };
 
@@ -125,7 +114,7 @@ export function AirbnbCalculator() {
             <input
               type="text"
               value={state.calculatorInputs.propertyAddress}
-              onChange={(e) => handleInputChange('propertyAddress', Number(e.target.value))}
+              onChange={(e) => handleInputChange('propertyAddress', e.target.value)}
               className="w-full px-3 py-2 bg-[#111] text-white placeholder-gray-400 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
