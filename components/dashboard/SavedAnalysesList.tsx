@@ -3,14 +3,17 @@
 import { useState } from 'react';
 import { format } from 'date-fns';
 import { formatCurrency, formatPercentage, capitalizeWords } from '@/lib/utils/formatting';
-import { Analysis } from '@/types/analysis';
+import { Analysis, CalculatorType, AnalysisResultsMap } from '@/types/analysis';
 
-interface SavedAnalysesListProps {
-  analyses: Analysis[];
-  onSelect: (analysis: Analysis) => void;
+interface SavedAnalysesListProps<T extends CalculatorType> {
+  analyses: Analysis<T>[];
+  onSelect: (analysis: Analysis<T>) => void;
 }
 
-export default function SavedAnalysesList({ analyses, onSelect }: SavedAnalysesListProps) {
+export default function SavedAnalysesList<T extends CalculatorType>({ 
+  analyses, 
+  onSelect 
+}: SavedAnalysesListProps<T>) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   // Defensive check for invalid data
@@ -44,14 +47,14 @@ export default function SavedAnalysesList({ analyses, onSelect }: SavedAnalysesL
     <div className="space-y-2">
       {analyses.map((analysis) => (
         <div
-          key={analysis._id}
+          key={analysis.id}
           className={`p-4 rounded-lg cursor-pointer ${
-            selectedId === analysis._id
+            selectedId === analysis.id
               ? 'bg-indigo-600 text-white'
               : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
           }`}
           onClick={() => {
-            setSelectedId(analysis._id);
+            setSelectedId(analysis.id);
             onSelect(analysis);
           }}
         >

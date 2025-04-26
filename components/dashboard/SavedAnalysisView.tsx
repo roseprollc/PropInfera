@@ -1,15 +1,15 @@
 'use client';
 
 import { format } from 'date-fns';
-import { Analysis } from '@/types/analysis';
+import { Analysis, CalculatorType, AnalysisResultsMap } from '@/types/analysis';
 import { ExportPDFButton } from '@/components/dashboard/ExportPDFButton';
 import ResultsSummary from '@/components/results/ResultsSummary';
 
-interface SavedAnalysisViewProps {
-  analysis: Analysis;
+interface SavedAnalysisViewProps<T extends CalculatorType> {
+  analysis: Analysis<T>;
 }
 
-export function SavedAnalysisView({ analysis }: SavedAnalysisViewProps) {
+export function SavedAnalysisView<T extends CalculatorType>({ analysis }: SavedAnalysisViewProps<T>) {
   return (
     <div className="p-4">
       <div className="flex justify-between items-center mb-4">

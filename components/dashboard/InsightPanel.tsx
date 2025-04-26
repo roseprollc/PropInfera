@@ -2,13 +2,13 @@
 
 import { useState, useCallback } from 'react';
 import { toast } from 'react-hot-toast';
-import { Analysis } from '@/lib/data';
+import { Analysis, CalculatorType } from '@/types/analysis';
 
-interface InsightPanelProps {
-  analysis: Analysis;
+interface InsightPanelProps<T extends CalculatorType> {
+  analysis: Analysis<T>;
 }
 
-export default function InsightPanel({ analysis }: InsightPanelProps) {
+export default function InsightPanel<T extends CalculatorType>({ analysis }: InsightPanelProps<T>) {
   const [insights, setInsights] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
