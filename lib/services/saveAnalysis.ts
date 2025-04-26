@@ -1,17 +1,4 @@
-import { 
-  Analysis, 
-  AnalysisType, 
-  CalculatorInputs, 
-  AnalysisResults,
-  MortgageInputs,
-  AirbnbInputs,
-  WholesaleInputs,
-  RentersInputs,
-  MortgageResults,
-  AirbnbResults,
-  WholesaleResults,
-  RentersResults
-} from '@/types/analysis';
+import { Analysis, CalculatorInputs, AnalysisResults, CalculatorType } from '@/types/analysis';
 
 // API URL from environment variables with fallback
 const API_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
@@ -24,7 +11,7 @@ const MAX_RETRIES = 3;
 
 export interface SaveAnalysisParams {
   userId: string;
-  type: AnalysisType;
+  type: Analysis<CalculatorType>['type']; // Use the type property from Analysis with correct type constraint
   inputs: CalculatorInputs;
   results: AnalysisResults;
   title?: string;
@@ -37,86 +24,6 @@ export interface SaveAnalysisResponse {
   analysisId?: string;
   error?: string;
   errorCode?: string;
-}
-
-// Type guard functions to validate inputs and results match the specified type
-function isMortgageInputs(inputs: CalculatorInputs, type: AnalysisType): inputs is MortgageInputs {
-  return type === 'mortgage';
-}
-
-function isAirbnbInputs(inputs: CalculatorInputs, type: AnalysisType): inputs is AirbnbInputs {
-  return type === 'airbnb';
-}
-
-function isWholesaleInputs(inputs: CalculatorInputs, type: AnalysisType): inputs is WholesaleInputs {
-  return type === 'wholesale';
-}
-
-function isRentersInputs(inputs: CalculatorInputs, type: AnalysisType): inputs is RentersInputs {
-  return type === 'renters';
-}
-
-function isMortgageResults(results: AnalysisResults, type: AnalysisType): results is MortgageResults {
-  return type === 'mortgage';
-}
-
-function isAirbnbResults(results: AnalysisResults, type: AnalysisType): results is AirbnbResults {
-  return type === 'airbnb';
-}
-
-function isWholesaleResults(results: AnalysisResults, type: AnalysisType): results is WholesaleResults {
-  return type === 'wholesale';
-}
-
-function isRentersResults(results: AnalysisResults, type: AnalysisType): results is RentersResults {
-  return type === 'renters';
-}
-
-// Validate that inputs and results match the specified type
-function validateInputsAndResults(params: SaveAnalysisParams): string | null {
-  const { type, inputs, results } = params;
-  
-  // Validate inputs based on type
-  if (type === 'mortgage' && !isMortgageInputs(inputs, type)) {
-    return 'Invalid inputs for mortgage analysis';
-  } else if (type === 'airbnb' && !isAirbnbInputs(inputs, type)) {
-    return 'Invalid inputs for Airbnb analysis';
-  } else if (type === 'wholesale' && !isWholesaleInputs(inputs, type)) {
-    return 'Invalid inputs for wholesale analysis';
-  } else if (type === 'renters' && !isRentersInputs(inputs, type)) {
-    return 'Invalid inputs for renters analysis';
-  }
-  
-  // Validate results based on type
-  if (type === 'mortgage' && !isMortgageResults(results, type)) {
-    return 'Invalid results for mortgage analysis';
-  } else if (type === 'airbnb' && !isAirbnbResults(results, type)) {
-    return 'Invalid results for Airbnb analysis';
-  } else if (type === 'wholesale' && !isWholesaleResults(results, type)) {
-    return 'Invalid results for wholesale analysis';
-  } else if (type === 'renters' && !isRentersResults(results, type)) {
-    return 'Invalid results for renters analysis';
-  }
-  
-  return null;
-}
-
-// Fetch with timeout functionality
-async function fetchWithTimeout(url: string, options: RequestInit, timeout: number): Promise<Response> {
-  const controller = new AbortController();
-  const id = setTimeout(() => controller.abort(), timeout);
-  
-  try {
-    const response = await fetch(url, {
-      ...options,
-      signal: controller.signal
-    });
-    clearTimeout(id);
-    return response;
-  } catch (error) {
-    clearTimeout(id);
-    throw error;
-  }
 }
 
 // Main function to save analysis with retry capability
@@ -135,16 +42,6 @@ export async function saveAnalysis(params: SaveAnalysisParams): Promise<SaveAnal
       success: false,
       message: 'Analysis type is required',
       errorCode: 'MISSING_TYPE'
-    };
-  }
-  
-  // Validate type-specific inputs and results
-  const validationError = validateInputsAndResults(params);
-  if (validationError) {
-    return {
-      success: false,
-      message: validationError,
-      errorCode: 'VALIDATION_ERROR'
     };
   }
   
@@ -229,4 +126,22 @@ export async function saveAnalysis(params: SaveAnalysisParams): Promise<SaveAnal
     message: 'Failed to save analysis after multiple attempts',
     errorCode: 'MAX_RETRIES_EXCEEDED'
   };
+}
+
+// Fetch with timeout functionality
+async function fetchWithTimeout(url: string, options: RequestInit, timeout: number): Promise<Response> {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeout);
+  
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal
+    });
+    clearTimeout(id);
+    return response;
+  } catch (error) {
+    clearTimeout(id);
+    throw error;
+  }
 } 
