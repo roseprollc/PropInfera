@@ -18,33 +18,26 @@ export interface SaveAnalysisResponse {
 
 /**
  * Saves an analysis to the database
- * @param params Analysis data to save
- * @returns Response indicating success or failure
  */
 export async function saveAnalysis(params: SaveAnalysisParams): Promise<SaveAnalysisResponse> {
   if (!params.userId) {
-    return {
-      success: false,
-      message: 'User ID is required'
-    };
+    return { success: false, message: 'User ID is required' };
   }
   
   try {
     const response = await fetch('/api/analyses', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(params),
     });
 
     const data = await response.json();
 
     if (!response.ok) {
-      return {
-        success: false,
-        message: data.error || 'Failed to save analysis',
-        error: data.error
+      return { 
+        success: false, 
+        message: data.error || 'Failed to save analysis', 
+        error: data.error 
       };
     }
 
