@@ -1,4 +1,3 @@
-// Import required types from analysis module
 import { Analysis, CalculatorInputs, AnalysisResults, CalculatorType } from '@/types/analysis';
 
 export interface SaveAnalysisParams {
