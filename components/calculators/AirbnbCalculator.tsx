@@ -2,28 +2,18 @@
 
 import { useState } from "react";
 import { useCalculator } from '@/context/CalculatorContext';
-import { CalculatorInput } from '@/types/calculator';
+import { CalculatorInputs, AnalysisResults } from '@/types/analysis';
 import { calculateAirbnbMetrics } from '@/lib/calculators/airbnb';
 import Toast from '@/components/ui/Toast';
 import ActionButtons from "@/components/ui/ActionButtons";
 import { Button } from '@/components/ui/button';
 import { saveAnalysis } from '@/lib/services/saveAnalysis';
 
-interface AirbnbInputs extends CalculatorInput {
+interface AirbnbInputs extends CalculatorInputs {
   nightlyRate: number;
   occupancyRate: number;
   cleaningFee: number;
   platformFeesPercent: number;
-}
-
-interface AirbnbResults {
-  monthlyMortgagePayment: number;
-  monthlyOperatingExpenses: number;
-  monthlyRevenue: number;
-  monthlyCashFlow: number;
-  annualCashFlow: number;
-  capRate: number;
-  cashOnCashReturn: number;
 }
 
 const defaultInputs: AirbnbInputs = {
@@ -47,7 +37,11 @@ const defaultInputs: AirbnbInputs = {
   nightlyRate: 150,
   occupancyRate: 70,
   cleaningFee: 100,
-  platformFeesPercent: 3
+  platformFeesPercent: 3,
+  afterRepairValue: 0,
+  repairCosts: 0,
+  assignmentFee: 0,
+  miscHoldingCosts: 0
 };
 
 export function AirbnbCalculator() {

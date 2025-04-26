@@ -1,45 +1,10 @@
-export interface CalculatorInput {
-  propertyAddress: string;
-  purchasePrice: number;
-  downPaymentPercent: number;
-  interestRate: number;
-  loanTerm: number;
-  closingCosts: number;
-  propertyTaxAnnual: number;
-  insuranceAnnual: number;
-  utilitiesMonthly: number;
-  maintenancePercent: number;
-  propertyManagementPercent: number;
-  monthlyRent: number;
-  vacancyRatePercent: number;
-  capExReservePercent: number;
-  annualAppreciationPercent: number;
-  annualRentIncreasePercent: number;
-  holdingPeriodYears: number;
-  nightlyRate?: number;
-  occupancyRate?: number;
-  cleaningFee?: number;
-  platformFeesPercent?: number;
-}
+// This file is deprecated. All types have been moved to types/analysis.ts
+// Please use the types from types/analysis.ts instead
 
-export interface CalculatorResults {
-  monthlyMortgagePayment: number;
-  monthlyCashFlow: number;
-  annualCashFlow: number;
-  cashOnCashReturn: number;
-  capRate: number;
-  monthlyOperatingExpenses?: number;
-  monthlyRevenue?: number;
-  fiveYearProjection?: Array<{
-    year: number;
-    propertyValue: number;
-    annualRent: number;
-    annualExpenses: number;
-    annualMortgage: number;
-    annualCashFlow: number;
-    equityGrowth: number;
-    totalReturn: number;
-  }>;
-}
+import { 
+  CalculatorInputs as CalculatorInput,
+  AnalysisResults as CalculatorResults,
+  CalculatorType
+} from './analysis';
 
-export type CalculatorType = 'airbnb' | 'rental' | 'flip'; 
+export type { CalculatorInput, CalculatorResults, CalculatorType }; 

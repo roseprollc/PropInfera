@@ -1,57 +1,66 @@
 "use client";
 
 import { useState } from "react";
+import { useCalculator } from '@/context/CalculatorContext';
+import { CalculatorInputs, MortgageAnalysisResults } from '@/types/analysis';
 import ActionButtons from "@/components/ui/ActionButtons";
+import { saveAnalysis } from '@/lib/services/saveAnalysis';
 
-interface MortgageInputs {
-  homePrice: number;
-  downPayment: number;
-  loanTerm: number;
-  interestRate: number;
-  propertyTax: number;
-  homeInsurance: number;
+interface MortgageInputs extends CalculatorInputs {
   hoaFees: number;
 }
 
-interface MortgageResults {
-  monthlyPayment: number;
-  principalAndInterest: number;
-  totalMonthlyPayment: number;
-}
-
 const defaultInputs: MortgageInputs = {
-  homePrice: 300000,
-  downPayment: 60000,
-  loanTerm: 30,
+  propertyAddress: '',
+  purchasePrice: 300000,
+  downPaymentPercent: 20,
   interestRate: 6.5,
-  propertyTax: 3000,
-  homeInsurance: 1200,
-  hoaFees: 0,
+  loanTerm: 30,
+  closingCosts: 9000,
+  propertyTaxAnnual: 3000,
+  insuranceAnnual: 1200,
+  utilitiesMonthly: 200,
+  maintenancePercent: 5,
+  propertyManagementPercent: 8,
+  monthlyRent: 0,
+  vacancyRatePercent: 0,
+  capExReservePercent: 0,
+  annualAppreciationPercent: 3,
+  annualRentIncreasePercent: 2,
+  holdingPeriodYears: 5,
+  nightlyRate: 0,
+  occupancyRate: 0,
+  cleaningFee: 0,
+  platformFeesPercent: 0,
+  afterRepairValue: 0,
+  repairCosts: 0,
+  assignmentFee: 0,
+  miscHoldingCosts: 0,
+  hoaFees: 0
 };
 
-export default function MortgageCalculator() {
-  const [inputs, setInputs] = useState<MortgageInputs>(defaultInputs);
-  const [results, setResults] = useState<MortgageResults | null>(null);
+export function MortgageCalculator() {
+  const { state, dispatch } = useCalculator();
+  const [results, setResults] = useState<MortgageAnalysisResults | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
-  const handleInputChange = (field: keyof MortgageInputs, value: string) => {
-    setInputs((prev) => ({
-      ...prev,
-      [field]: Number(value),
-    }));
+  const handleInputChange = (field: keyof CalculatorInputs, value: number | string) => {
+    dispatch({ type: 'SET_INPUT', field, value });
   };
 
   const calculateResults = () => {
     const {
-      homePrice,
-      downPayment,
+      purchasePrice,
+      downPaymentPercent,
       loanTerm,
       interestRate,
-      propertyTax,
-      homeInsurance,
+      propertyTaxAnnual,
+      insuranceAnnual,
       hoaFees,
-    } = inputs;
+    } = state.calculatorInputs as MortgageInputs;
 
-    const loanAmount = homePrice - downPayment;
+    const downPayment = (purchasePrice * downPaymentPercent) / 100;
+    const loanAmount = purchasePrice - downPayment;
     const monthlyInterestRate = interestRate / 100 / 12;
     const numberOfPayments = loanTerm * 12;
 
@@ -62,27 +71,38 @@ export default function MortgageCalculator() {
       (Math.pow(1 + monthlyInterestRate, numberOfPayments) - 1);
 
     // Calculate total monthly payment
-    const monthlyPropertyTax = propertyTax / 12;
-    const monthlyInsurance = homeInsurance / 12;
+    const monthlyPropertyTax = propertyTaxAnnual / 12;
+    const monthlyInsurance = insuranceAnnual / 12;
     const totalMonthlyPayment =
       principalAndInterest + monthlyPropertyTax + monthlyInsurance + hoaFees;
 
-    setResults({
+    const mortgageResults: MortgageAnalysisResults = {
       monthlyPayment: totalMonthlyPayment,
       principalAndInterest,
       totalMonthlyPayment,
-    });
+    };
+
+    setResults(mortgageResults);
+    dispatch({ type: 'SET_RESULTS', results: { type: 'mortgage', data: mortgageResults } });
   };
 
-  const resetCalculator = () => {
-    setInputs(defaultInputs);
-    setResults(null);
-  };
+  const handleSave = async () => {
+    if (!results) return;
 
-  const handleSave = () => {
-    if (results) {
-      console.log("Saving analysis:", { inputs, results });
-      // TODO: Implement save functionality
+    setIsSaving(true);
+    try {
+      await saveAnalysis({
+        userId: 'mock-user-123',
+        type: 'mortgage',
+        inputs: state.calculatorInputs,
+        results: { type: 'mortgage', data: results },
+        title: state.calculatorInputs.propertyAddress || 'Untitled Analysis',
+        notes: '',
+      });
+    } catch (error) {
+      console.error('Error saving analysis:', error);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -107,23 +127,34 @@ export default function MortgageCalculator() {
             <h3 className="text-lg font-semibold text-white">Loan Details</h3>
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-1">
-                Home Price
+                Property Address
               </label>
               <input
-                type="number"
-                value={inputs.homePrice}
-                onChange={(e) => handleInputChange("homePrice", e.target.value)}
+                type="text"
+                value={state.calculatorInputs.propertyAddress}
+                onChange={(e) => handleInputChange('propertyAddress', e.target.value)}
                 className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md text-white focus:ring-2 focus:ring-green-500 focus:border-transparent"
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-1">
-                Down Payment
+                Purchase Price
               </label>
               <input
                 type="number"
-                value={inputs.downPayment}
-                onChange={(e) => handleInputChange("downPayment", e.target.value)}
+                value={state.calculatorInputs.purchasePrice}
+                onChange={(e) => handleInputChange('purchasePrice', Number(e.target.value))}
+                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md text-white focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">
+                Down Payment (%)
+              </label>
+              <input
+                type="number"
+                value={state.calculatorInputs.downPaymentPercent}
+                onChange={(e) => handleInputChange('downPaymentPercent', Number(e.target.value))}
                 className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md text-white focus:ring-2 focus:ring-green-500 focus:border-transparent"
               />
             </div>
@@ -133,8 +164,8 @@ export default function MortgageCalculator() {
               </label>
               <input
                 type="number"
-                value={inputs.loanTerm}
-                onChange={(e) => handleInputChange("loanTerm", e.target.value)}
+                value={state.calculatorInputs.loanTerm}
+                onChange={(e) => handleInputChange('loanTerm', Number(e.target.value))}
                 className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md text-white focus:ring-2 focus:ring-green-500 focus:border-transparent"
               />
             </div>
@@ -144,8 +175,8 @@ export default function MortgageCalculator() {
               </label>
               <input
                 type="number"
-                value={inputs.interestRate}
-                onChange={(e) => handleInputChange("interestRate", e.target.value)}
+                value={state.calculatorInputs.interestRate}
+                onChange={(e) => handleInputChange('interestRate', Number(e.target.value))}
                 className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md text-white focus:ring-2 focus:ring-green-500 focus:border-transparent"
               />
             </div>
@@ -159,8 +190,8 @@ export default function MortgageCalculator() {
               </label>
               <input
                 type="number"
-                value={inputs.propertyTax}
-                onChange={(e) => handleInputChange("propertyTax", e.target.value)}
+                value={state.calculatorInputs.propertyTaxAnnual}
+                onChange={(e) => handleInputChange('propertyTaxAnnual', Number(e.target.value))}
                 className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md text-white focus:ring-2 focus:ring-green-500 focus:border-transparent"
               />
             </div>
@@ -170,8 +201,8 @@ export default function MortgageCalculator() {
               </label>
               <input
                 type="number"
-                value={inputs.homeInsurance}
-                onChange={(e) => handleInputChange("homeInsurance", e.target.value)}
+                value={state.calculatorInputs.insuranceAnnual}
+                onChange={(e) => handleInputChange('insuranceAnnual', Number(e.target.value))}
                 className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md text-white focus:ring-2 focus:ring-green-500 focus:border-transparent"
               />
             </div>
@@ -181,8 +212,8 @@ export default function MortgageCalculator() {
               </label>
               <input
                 type="number"
-                value={inputs.hoaFees}
-                onChange={(e) => handleInputChange("hoaFees", e.target.value)}
+                value={(state.calculatorInputs as MortgageInputs).hoaFees}
+                onChange={(e) => handleInputChange('hoaFees', Number(e.target.value))}
                 className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md text-white focus:ring-2 focus:ring-green-500 focus:border-transparent"
               />
             </div>
@@ -199,9 +230,9 @@ export default function MortgageCalculator() {
         </div>
 
         <ActionButtons
-          onReset={resetCalculator}
+          onReset={() => dispatch({ type: 'RESET_CALCULATOR' })}
           onSave={handleSave}
-          saveDisabled={!results}
+          saveDisabled={!results || isSaving}
         />
       </form>
 
@@ -215,16 +246,16 @@ export default function MortgageCalculator() {
             </div>
             <div className="flex justify-between">
               <span className="text-gray-300">Property Tax</span>
-              <span className="text-white font-medium">{formatCurrency(inputs.propertyTax / 12)}</span>
+              <span className="text-white font-medium">{formatCurrency(state.calculatorInputs.propertyTaxAnnual / 12)}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-300">Home Insurance</span>
-              <span className="text-white font-medium">{formatCurrency(inputs.homeInsurance / 12)}</span>
+              <span className="text-white font-medium">{formatCurrency(state.calculatorInputs.insuranceAnnual / 12)}</span>
             </div>
-            {inputs.hoaFees > 0 && (
+            {(state.calculatorInputs as MortgageInputs).hoaFees > 0 && (
               <div className="flex justify-between">
                 <span className="text-gray-300">HOA Fees</span>
-                <span className="text-white font-medium">{formatCurrency(inputs.hoaFees)}</span>
+                <span className="text-white font-medium">{formatCurrency((state.calculatorInputs as MortgageInputs).hoaFees)}</span>
               </div>
             )}
             <div className="border-t border-gray-700 pt-4 mt-4">
@@ -239,4 +270,5 @@ export default function MortgageCalculator() {
     </div>
   );
 }
+
 MortgageCalculator.displayName = "MortgageCalculator"; 

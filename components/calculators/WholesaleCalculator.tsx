@@ -1,74 +1,102 @@
 "use client";
 
 import { useState } from "react";
+import { useCalculator } from '@/context/CalculatorContext';
+import { CalculatorInputs, WholesaleAnalysisResults } from '@/types/analysis';
 import ActionButtons from "@/components/ui/ActionButtons";
 import { formatCurrency, formatPercentage } from '@/lib/utils/formatting';
+import { saveAnalysis } from '@/lib/services/saveAnalysis';
 
-interface WholesaleInputs {
+interface WholesaleInputs extends CalculatorInputs {
   afterRepairValue: number;
-  purchasePrice: number;
   repairCosts: number;
   assignmentFee: number;
-  closingCosts: number;
   miscHoldingCosts: number;
 }
 
-interface WholesaleResults {
-  totalInvestment: number;
-  profit: number;
-  roi: number;
-}
-
 const defaultInputs: WholesaleInputs = {
-  afterRepairValue: 300000,
+  propertyAddress: '',
   purchasePrice: 200000,
+  downPaymentPercent: 0,
+  interestRate: 0,
+  loanTerm: 0,
+  closingCosts: 5000,
+  propertyTaxAnnual: 0,
+  insuranceAnnual: 0,
+  utilitiesMonthly: 0,
+  maintenancePercent: 0,
+  propertyManagementPercent: 0,
+  monthlyRent: 0,
+  vacancyRatePercent: 0,
+  capExReservePercent: 0,
+  annualAppreciationPercent: 0,
+  annualRentIncreasePercent: 0,
+  holdingPeriodYears: 0,
+  nightlyRate: 0,
+  occupancyRate: 0,
+  cleaningFee: 0,
+  platformFeesPercent: 0,
+  afterRepairValue: 300000,
   repairCosts: 30000,
   assignmentFee: 10000,
-  closingCosts: 5000,
   miscHoldingCosts: 0,
+  hoaFees: 0
 };
 
-export default function WholesaleCalculator() {
-  const [inputs, setInputs] = useState<WholesaleInputs>(defaultInputs);
-  const [results, setResults] = useState<WholesaleResults | null>(null);
+export function WholesaleCalculator() {
+  const { state, dispatch } = useCalculator();
+  const [results, setResults] = useState<WholesaleAnalysisResults | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
-  const handleInputChange = (field: keyof WholesaleInputs, value: string) => {
-    setInputs((prev) => ({
-      ...prev,
-      [field]: Number(value),
-    }));
+  const handleInputChange = (field: keyof CalculatorInputs, value: number | string) => {
+    dispatch({ type: 'SET_INPUT', field, value });
   };
 
   const calculateResults = () => {
     const {
-      afterRepairValue,
       purchasePrice,
+      closingCosts,
+      afterRepairValue,
       repairCosts,
       assignmentFee,
-      closingCosts,
       miscHoldingCosts,
-    } = inputs;
+    } = state.calculatorInputs as WholesaleInputs;
 
     const totalInvestment = purchasePrice + repairCosts + assignmentFee + closingCosts + miscHoldingCosts;
     const profit = afterRepairValue - totalInvestment;
     const roi = (profit / totalInvestment) * 100;
 
-    setResults({
+    const wholesaleResults: WholesaleAnalysisResults = {
       totalInvestment,
       profit,
       roi,
-    });
+      holdingCosts: miscHoldingCosts,
+      netProfit: profit,
+      returnOnInvestment: roi,
+      assignmentFee
+    };
+
+    setResults(wholesaleResults);
+    dispatch({ type: 'SET_RESULTS', results: { type: 'wholesale', data: wholesaleResults } });
   };
 
-  const resetCalculator = () => {
-    setInputs(defaultInputs);
-    setResults(null);
-  };
+  const handleSave = async () => {
+    if (!results) return;
 
-  const handleSave = () => {
-    if (results) {
-      console.log("Saving analysis:", { inputs, results });
-      // TODO: Implement save functionality
+    setIsSaving(true);
+    try {
+      await saveAnalysis({
+        userId: 'mock-user-123',
+        type: 'wholesale',
+        inputs: state.calculatorInputs,
+        results: { type: 'wholesale', data: results },
+        title: state.calculatorInputs.propertyAddress || 'Untitled Analysis',
+        notes: '',
+      });
+    } catch (error) {
+      console.error('Error saving analysis:', error);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -86,12 +114,23 @@ export default function WholesaleCalculator() {
             <h3 className="text-lg font-semibold text-white">Property Details</h3>
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-1">
+                Property Address
+              </label>
+              <input
+                type="text"
+                value={state.calculatorInputs.propertyAddress}
+                onChange={(e) => handleInputChange('propertyAddress', e.target.value)}
+                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md text-white focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">
                 After Repair Value
               </label>
               <input
                 type="number"
-                value={inputs.afterRepairValue}
-                onChange={(e) => handleInputChange("afterRepairValue", e.target.value)}
+                value={(state.calculatorInputs as WholesaleInputs).afterRepairValue}
+                onChange={(e) => handleInputChange('afterRepairValue', Number(e.target.value))}
                 className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md text-white focus:ring-2 focus:ring-green-500 focus:border-transparent"
               />
             </div>
@@ -101,8 +140,8 @@ export default function WholesaleCalculator() {
               </label>
               <input
                 type="number"
-                value={inputs.purchasePrice}
-                onChange={(e) => handleInputChange("purchasePrice", e.target.value)}
+                value={state.calculatorInputs.purchasePrice}
+                onChange={(e) => handleInputChange('purchasePrice', Number(e.target.value))}
                 className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md text-white focus:ring-2 focus:ring-green-500 focus:border-transparent"
               />
             </div>
@@ -112,8 +151,8 @@ export default function WholesaleCalculator() {
               </label>
               <input
                 type="number"
-                value={inputs.repairCosts}
-                onChange={(e) => handleInputChange("repairCosts", e.target.value)}
+                value={(state.calculatorInputs as WholesaleInputs).repairCosts}
+                onChange={(e) => handleInputChange('repairCosts', Number(e.target.value))}
                 className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md text-white focus:ring-2 focus:ring-green-500 focus:border-transparent"
               />
             </div>
@@ -127,8 +166,8 @@ export default function WholesaleCalculator() {
               </label>
               <input
                 type="number"
-                value={inputs.assignmentFee}
-                onChange={(e) => handleInputChange("assignmentFee", e.target.value)}
+                value={(state.calculatorInputs as WholesaleInputs).assignmentFee}
+                onChange={(e) => handleInputChange('assignmentFee', Number(e.target.value))}
                 className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md text-white focus:ring-2 focus:ring-green-500 focus:border-transparent"
               />
             </div>
@@ -138,8 +177,8 @@ export default function WholesaleCalculator() {
               </label>
               <input
                 type="number"
-                value={inputs.closingCosts}
-                onChange={(e) => handleInputChange("closingCosts", e.target.value)}
+                value={state.calculatorInputs.closingCosts}
+                onChange={(e) => handleInputChange('closingCosts', Number(e.target.value))}
                 className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md text-white focus:ring-2 focus:ring-green-500 focus:border-transparent"
               />
             </div>
@@ -149,8 +188,8 @@ export default function WholesaleCalculator() {
               </label>
               <input
                 type="number"
-                value={inputs.miscHoldingCosts}
-                onChange={(e) => handleInputChange("miscHoldingCosts", e.target.value)}
+                value={(state.calculatorInputs as WholesaleInputs).miscHoldingCosts}
+                onChange={(e) => handleInputChange('miscHoldingCosts', Number(e.target.value))}
                 className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md text-white focus:ring-2 focus:ring-green-500 focus:border-transparent"
               />
             </div>
@@ -167,9 +206,9 @@ export default function WholesaleCalculator() {
         </div>
 
         <ActionButtons
-          onReset={resetCalculator}
+          onReset={() => dispatch({ type: 'RESET_CALCULATOR' })}
           onSave={handleSave}
-          saveDisabled={!results}
+          saveDisabled={!results || isSaving}
         />
       </form>
 
@@ -195,4 +234,5 @@ export default function WholesaleCalculator() {
     </div>
   );
 }
+
 WholesaleCalculator.displayName = "WholesaleCalculator"; 

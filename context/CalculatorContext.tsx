@@ -1,19 +1,20 @@
 'use client';
 
 import { createContext, useContext, useReducer, ReactNode } from 'react';
-import { CalculatorInput, CalculatorResults } from '@/types/calculator';
+import { CalculatorInputs, AnalysisResults, CalculatorType } from '@/types/analysis';
 
-interface CalculatorState {
-  calculatorInputs: CalculatorInput;
-  results: CalculatorResults | null;
+interface CalculatorState<T extends CalculatorType> {
+  calculatorInputs: CalculatorInputs;
+  results: AnalysisResults | null;
+  type: T;
 }
 
 type CalculatorAction = 
-  | { type: 'SET_INPUT'; field: keyof CalculatorInput; value: string | number }
-  | { type: 'SET_RESULTS'; results: CalculatorResults }
+  | { type: 'SET_INPUT'; field: keyof CalculatorInputs; value: string | number }
+  | { type: 'SET_RESULTS'; results: AnalysisResults }
   | { type: 'RESET_CALCULATOR' };
 
-const initialState: CalculatorState = {
+const initialState = <T extends CalculatorType>(type: T): CalculatorState<T> => ({
   calculatorInputs: {
     propertyAddress: '',
     purchasePrice: 300000,
@@ -35,17 +36,22 @@ const initialState: CalculatorState = {
     nightlyRate: 0,
     occupancyRate: 0,
     cleaningFee: 0,
-    platformFeesPercent: 0
+    platformFeesPercent: 0,
+    afterRepairValue: 0,
+    repairCosts: 0,
+    assignmentFee: 0,
+    miscHoldingCosts: 0
   },
-  results: null
-};
+  results: null,
+  type
+});
 
 const CalculatorContext = createContext<{
-  state: CalculatorState;
+  state: CalculatorState<CalculatorType>;
   dispatch: React.Dispatch<CalculatorAction>;
 } | undefined>(undefined);
 
-function calculatorReducer(state: CalculatorState, action: CalculatorAction): CalculatorState {
+function calculatorReducer(state: CalculatorState<CalculatorType>, action: CalculatorAction): CalculatorState<CalculatorType> {
   switch (action.type) {
     case 'SET_INPUT':
       return {
@@ -61,14 +67,19 @@ function calculatorReducer(state: CalculatorState, action: CalculatorAction): Ca
         results: action.results
       };
     case 'RESET_CALCULATOR':
-      return initialState;
+      return initialState(state.type);
     default:
       return state;
   }
 }
 
-export function CalculatorProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(calculatorReducer, initialState);
+interface CalculatorProviderProps {
+  children: ReactNode;
+  type: CalculatorType;
+}
+
+export function CalculatorProvider({ children, type }: CalculatorProviderProps) {
+  const [state, dispatch] = useReducer(calculatorReducer, initialState(type));
 
   return (
     <CalculatorContext.Provider value={{ state, dispatch }}>
@@ -83,4 +94,6 @@ export function useCalculator() {
     throw new Error('useCalculator must be used within a CalculatorProvider');
   }
   return context;
-} 
+}
+
+CalculatorProvider.displayName = "CalculatorProvider"; 

@@ -6,9 +6,9 @@ export type CalculatorType = 'rental' | 'airbnb' | 'wholesale' | 'mortgage';
 export interface PropertyAnalysis {
   id: string;
   address: string;
-  analysis: RentalAnalysisResults | AirbnbAnalysisResults | WholesaleAnalysisResults;
+  analysis: RentalAnalysisResults | AirbnbAnalysisResults | WholesaleAnalysisResults | MortgageAnalysisResults;
   inputs: CalculatorInputs;
-  analysisType: 'RENTAL' | 'AIRBNB' | 'WHOLESALE';
+  analysisType: 'RENTAL' | 'AIRBNB' | 'WHOLESALE' | 'MORTGAGE';
 }
 
 // Calculator Input Types
@@ -45,6 +45,9 @@ export interface CalculatorInputs {
   repairCosts?: number;
   assignmentFee?: number;
   miscHoldingCosts?: number;
+
+  // Mortgage specific fields
+  hoaFees?: number;
 }
 
 // Analysis Results Types
@@ -88,6 +91,12 @@ export interface WholesaleAnalysisResults {
   returnOnInvestment: number;
 }
 
+export interface MortgageAnalysisResults {
+  monthlyPayment: number;
+  principalAndInterest: number;
+  totalMonthlyPayment: number;
+}
+
 export interface MonthlyBreakdown {
   month: string;
   income: number;
@@ -112,7 +121,8 @@ export interface ProjectionYear {
 export type AnalysisResults = 
   | { type: 'rental'; data: RentalAnalysisResults }
   | { type: 'airbnb'; data: AirbnbAnalysisResults }
-  | { type: 'wholesale'; data: WholesaleAnalysisResults };
+  | { type: 'wholesale'; data: WholesaleAnalysisResults }
+  | { type: 'mortgage'; data: MortgageAnalysisResults };
 
 // Generic Analysis State
 export interface AnalysisState<T extends CalculatorType> {
