@@ -1,5 +1,7 @@
 import { ObjectId } from 'mongodb';
 
+export type CalculatorType = 'rental' | 'airbnb' | 'wholesale' | 'mortgage';
+
 // Property Analysis Types
 export interface PropertyAnalysis {
   id: string;
@@ -11,6 +13,7 @@ export interface PropertyAnalysis {
 
 // Calculator Input Types
 export interface CalculatorInputs {
+  // Common fields
   propertyAddress: string;
   purchasePrice: number;
   downPaymentPercent: number;
@@ -22,16 +25,26 @@ export interface CalculatorInputs {
   utilitiesMonthly: number;
   maintenancePercent: number;
   propertyManagementPercent: number;
-  monthlyRent: number;
-  vacancyRatePercent: number;
-  capExReservePercent: number;
-  annualAppreciationPercent: number;
-  annualRentIncreasePercent: number;
-  holdingPeriodYears: number;
-  nightlyRate: number;
-  occupancyRate: number;
-  cleaningFee: number;
-  platformFeesPercent: number;
+  
+  // Rental specific fields
+  monthlyRent?: number;
+  vacancyRatePercent?: number;
+  capExReservePercent?: number;
+  annualAppreciationPercent?: number;
+  annualRentIncreasePercent?: number;
+  holdingPeriodYears?: number;
+  
+  // Airbnb specific fields
+  nightlyRate?: number;
+  occupancyRate?: number;
+  cleaningFee?: number;
+  platformFeesPercent?: number;
+  
+  // Wholesale specific fields
+  afterRepairValue?: number;
+  repairCosts?: number;
+  assignmentFee?: number;
+  miscHoldingCosts?: number;
 }
 
 // Analysis Results Types
@@ -95,10 +108,15 @@ export interface ProjectionYear {
   totalReturn: number;
 }
 
-// State Management Types
-export interface AnalysisState {
-  properties: PropertyAnalysis[];
-  currentProperty: PropertyAnalysis | null;
+// Discriminated Union for Analysis Results
+export type AnalysisResults = 
+  | { type: 'rental'; data: RentalAnalysisResults }
+  | { type: 'airbnb'; data: AirbnbAnalysisResults }
+  | { type: 'wholesale'; data: WholesaleAnalysisResults };
+
+// Generic Analysis State
+export interface AnalysisState<T extends CalculatorType> {
+  currentAnalysis: Analysis<T> | null;
   calculatorInputs: CalculatorInputs;
   results: AnalysisResults | null;
   isLoading: boolean;
@@ -107,30 +125,17 @@ export interface AnalysisState {
 
 // Action Types for Reducer
 export type AnalysisAction =
-  | { type: 'SET_PROPERTIES'; payload: PropertyAnalysis[] }
-  | { type: 'SET_CURRENT_PROPERTY'; payload: PropertyAnalysis | null }
   | { type: 'SET_INPUT'; field: keyof CalculatorInputs; value: number | string }
   | { type: 'SET_RESULTS'; results: AnalysisResults }
   | { type: 'SET_LOADING'; payload: boolean }
   | { type: 'SET_ERROR'; payload: string | null }
   | { type: 'RESET_CALCULATOR' };
 
-export type AnalysisType = 'rental' | 'airbnb' | 'wholesale' | 'mortgage';
-
-export interface AnalysisResults {
-  monthlyMortgagePayment: number;
-  monthlyOperatingExpenses: number;
-  monthlyRevenue: number;
-  monthlyCashFlow: number;
-  annualCashFlow: number;
-  capRate: number;
-  cashOnCashReturn: number;
-}
-
-export interface Analysis {
+// Generic Analysis Type
+export interface Analysis<T extends CalculatorType> {
   id: string;
   userId: string;
-  type: 'RENTAL' | 'AIRBNB' | 'WHOLESALE';
+  type: T;
   title: string;
   propertyName: string;
   propertyAddress: string;
