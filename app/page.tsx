@@ -5,7 +5,7 @@ import Footer from '@/components/layout/Footer';
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-black">
+    <main className="min-h-screen bg-background text-foreground">
       <Hero />
       <CalculatorTiles />
       <HowItWorks />

@@ -1,16 +1,17 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
-import '../styles/global.css';
+import './globals.css';
 import { TierProvider } from '@/context/TierContext'
 import { AnalysisProvider } from '@/context/AnalysisContext'
 import { Toaster } from 'react-hot-toast'
+import { ThemeProvider } from '@/components/providers/theme-provider'
 import Navbar from '@/components/layout/Navbar'
 
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'PropInfera - Real Estate Investment Analysis',
-  description: 'Advanced real estate investment analysis tools and calculators',
+  title: 'PropInfera - Property Inference Attack Detection',
+  description: 'Advanced machine learning model security analysis and inference attack detection',
 };
 
 export default function RootLayout({
@@ -19,47 +20,54 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body className={`${inter.className} bg-[#111] text-white min-h-screen`}>
-        <TierProvider>
-          <AnalysisProvider>
-            <Navbar />
-            {children}
-          </AnalysisProvider>
-        </TierProvider>
-        <Toaster
-          position="top-right"
-          toastOptions={{
-            className: '',
-            style: {
-              background: '#111',
-              color: '#fff',
-              border: '1px solid #2ecc71',
-            },
-            success: {
+    <html lang="en" suppressHydrationWarning>
+      <body className={inter.className}>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <TierProvider>
+            <AnalysisProvider>
+              <Navbar />
+              {children}
+            </AnalysisProvider>
+          </TierProvider>
+          <Toaster
+            position="top-right"
+            toastOptions={{
+              className: '',
               style: {
-                background: '#111',
-                color: '#2ecc71',
-                border: '1px solid #2ecc71',
+                background: 'hsl(var(--background))',
+                color: 'hsl(var(--foreground))',
+                border: '1px solid hsl(var(--border))',
               },
-              iconTheme: {
-                primary: '#2ecc71',
-                secondary: '#111',
+              success: {
+                style: {
+                  background: 'hsl(var(--background))',
+                  color: 'hsl(var(--primary))',
+                  border: '1px solid hsl(var(--primary))',
+                },
+                iconTheme: {
+                  primary: 'hsl(var(--primary))',
+                  secondary: 'hsl(var(--background))',
+                },
               },
-            },
-            error: {
-              style: {
-                background: '#111',
-                color: '#e74c3c',
-                border: '1px solid #e74c3c',
+              error: {
+                style: {
+                  background: 'hsl(var(--background))',
+                  color: 'hsl(var(--destructive))',
+                  border: '1px solid hsl(var(--destructive))',
+                },
+                iconTheme: {
+                  primary: 'hsl(var(--destructive))',
+                  secondary: 'hsl(var(--background))',
+                },
               },
-              iconTheme: {
-                primary: '#e74c3c',
-                secondary: '#111',
-              },
-            },
-          }}
-        />
+            }}
+          />
+        </ThemeProvider>
       </body>
     </html>
   );
