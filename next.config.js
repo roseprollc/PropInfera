@@ -8,7 +8,11 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   experimental: {
-    serverComponentsExternalPackages: ['mongodb', '@netlify/functions']
+    serverComponentsExternalPackages: ['@netlify/functions'],
+    isrMemoryCacheSize: 50
+  },
+  images: {
+    domains: ['avatars.githubusercontent.com', 'lh3.googleusercontent.com']
   }
 };
 

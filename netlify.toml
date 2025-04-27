@@ -10,9 +10,9 @@
   NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY = "pk_test_placeholder"
   OPENAI_API_KEY = "dummy-key"
 
+[functions]
+  directory = ".next/serverless"
+  node_bundler = "esbuild"
+
 [[plugins]]
   package = "@netlify/plugin-nextjs"
-
-[functions]
-  included_files = ["node_modules/**/*"]
-  node_bundler = "esbuild"
