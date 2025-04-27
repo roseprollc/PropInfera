@@ -1,10 +1,9 @@
 import OpenAI from 'openai';
 
-// Check for environment variables during initialization
-const apiKey = process.env.OPENAI_API_KEY;
-
-// Create a function that gets the OpenAI client
+// Function to get the OpenAI client
 export function getOpenAIClient() {
+  const apiKey = process.env.OPENAI_API_KEY;
+  
   if (!apiKey) {
     console.warn("OpenAI API key not found. AI features will be disabled.");
     return null;
@@ -13,8 +12,12 @@ export function getOpenAIClient() {
   return new OpenAI({ apiKey });
 }
 
-// Use this in place of direct client instantiation
-// This defers the error until the client is actually used
+// Helper function to check if OpenAI is configured
+export function isOpenAIConfigured(): boolean {
+  return !!process.env.OPENAI_API_KEY;
+}
+
+// Wrapper function for completions that handles missing API key
 export async function getCompletion(prompt: string) {
   const openai = getOpenAIClient();
   
@@ -23,7 +26,7 @@ export async function getCompletion(prompt: string) {
   }
   
   return openai.chat.completions.create({
-    model: "gpt-4",
+    model: "gpt-4o",
     messages: [{ role: "user", content: prompt }],
   });
 } 

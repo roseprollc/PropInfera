@@ -1,52 +1,72 @@
 'use client';
 
-import React, { createContext, useContext, useReducer, ReactNode } from 'react';
-import { CalculatorType, CalculatorInputsMap, AnalysisResultsMap } from '@/types/analysis';
+import React, { createContext, useContext, useReducer } from 'react';
+import { CalculatorInputs, AnalysisResults, CalculatorType } from '@/types/analysis';
 
-interface CalculatorState<T extends CalculatorType> {
-  type: T;
-  inputs: CalculatorInputsMap[T];
-  results: AnalysisResultsMap[T] | null;
+// Define action types as a discriminated union
+type CalculatorAction = 
+  | { type: 'SET_INPUTS'; inputs: CalculatorInputs }
+  | { type: 'SET_RESULTS'; results: AnalysisResults }
+  | { type: 'RESET' }
+  | { type: 'SET_TYPE'; calculatorType: CalculatorType };
+
+// Define state interface that properly matches reducer
+interface CalculatorState {
+  calculatorType: CalculatorType;
+  inputs: CalculatorInputs | null;
+  results: AnalysisResults | null;
 }
 
-type CalculatorAction<T extends CalculatorType> =
-  | { type: 'SET_INPUTS'; payload: Partial<CalculatorInputsMap[T]> }
-  | { type: 'SET_RESULTS'; payload: AnalysisResultsMap[T] | null };
+const initialState: CalculatorState = {
+  calculatorType: 'mortgage',
+  inputs: null,
+  results: null
+};
 
-function calculatorReducer<T extends CalculatorType>(
-  state: CalculatorState<T>,
-  action: CalculatorAction<T>
-): CalculatorState<T> {
+// Create reducer with proper type handling
+const calculatorReducer = (state: CalculatorState, action: CalculatorAction): CalculatorState => {
   switch (action.type) {
     case 'SET_INPUTS':
       return {
         ...state,
-        inputs: { ...state.inputs, ...action.payload }
+        inputs: action.inputs
       };
     case 'SET_RESULTS':
       return {
         ...state,
-        results: action.payload
+        results: action.results
+      };
+    case 'RESET':
+      return {
+        ...initialState,
+        calculatorType: state.calculatorType // Preserve the calculator type
+      };
+    case 'SET_TYPE':
+      return {
+        ...initialState, // Reset all data when changing calculator type
+        calculatorType: action.calculatorType
       };
     default:
       return state;
   }
-}
+};
 
-interface CalculatorContextType<T extends CalculatorType> {
-  state: CalculatorState<T>;
-  dispatch: React.Dispatch<CalculatorAction<T>>;
-}
+type CalculatorContextType = {
+  state: CalculatorState;
+  dispatch: React.Dispatch<CalculatorAction>;
+};
 
-const CalculatorContext = createContext<CalculatorContextType<any> | undefined>(undefined);
+const CalculatorContext = createContext<CalculatorContextType | undefined>(undefined);
 
-export function CalculatorProvider<T extends CalculatorType>({
-  children,
-  initialState
-}: {
-  children: ReactNode;
-  initialState: CalculatorState<T>;
-}) {
+export const useCalculator = () => {
+  const context = useContext(CalculatorContext);
+  if (!context) {
+    throw new Error('useCalculator must be used within a CalculatorProvider');
+  }
+  return context;
+};
+
+export const CalculatorProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(calculatorReducer, initialState);
 
   return (
@@ -54,14 +74,7 @@ export function CalculatorProvider<T extends CalculatorType>({
       {children}
     </CalculatorContext.Provider>
   );
-}
+};
 
-export function useCalculator<T extends CalculatorType>() {
-  const context = useContext(CalculatorContext);
-  if (context === undefined) {
-    throw new Error('useCalculator must be used within a CalculatorProvider');
-  }
-  return context as CalculatorContextType<T>;
-}
-
+// Add displayName for debugging
 CalculatorProvider.displayName = "CalculatorProvider"; 

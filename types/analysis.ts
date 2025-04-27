@@ -3,65 +3,49 @@ import { ObjectId } from 'mongodb';
 /**
  * Type representing all possible calculator types in the application
  */
-export type CalculatorType = 'rental' | 'airbnb' | 'wholesale' | 'mortgage' | 'renters';
+export type CalculatorType = 'mortgage' | 'airbnb' | 'wholesale' | 'renters' | 'rental';
 
 /**
  * Type mapping for calculator inputs
  */
 export interface CalculatorInputsMap {
-  rental: {
-    propertyAddress: string;
-    purchasePrice: number;
+  mortgage: {
     downPaymentPercent: number;
-    loanTerm: number;
+    loanTermYears: number;
     interestRate: number;
-    propertyTaxAnnual: number;
-    insuranceAnnual: number;
-    hoaFees: number;
-    monthlyRent: number;
-    vacancyRate: number;
-    maintenanceRate: number;
-    managementRate: number;
-    capitalExpendituresRate: number;
+    pmi?: number;
+    otherMonthlyExpenses?: number;
   };
   airbnb: {
-    propertyAddress: string;
-    purchasePrice: number;
+    averageNightlyRate: number;
+    occupancyRatePercent: number;
     downPaymentPercent: number;
-    loanTerm: number;
+    loanTermYears: number;
     interestRate: number;
-    propertyTaxAnnual: number;
-    insuranceAnnual: number;
-    hoaFees: number;
-    nightlyRate: number;
-    occupancyRate: number;
-    cleaningFee: number;
-    platformFeesPercent: number;
+    cleaningFeePerStay: number;
+    averageStayDurationNights: number;
+    annualAppreciationPercent?: number;
+    holdingPeriodYears?: number;
   };
   wholesale: {
-    propertyAddress: string;
-    purchasePrice: number;
-    afterRepairValue: number;
-    repairCosts: number;
+    estimatedRepairCost: number;
+    arv: number;
     assignmentFee: number;
-    closingCosts: number;
-    miscHoldingCosts: number;
-  };
-  mortgage: {
-    propertyAddress: string;
-    purchasePrice: number;
-    downPaymentPercent: number;
-    loanTerm: number;
-    interestRate: number;
-    propertyTaxAnnual: number;
-    insuranceAnnual: number;
-    hoaFees: number;
+    maxOfferPercent: number;
   };
   renters: {
-    monthlyRent: number;
-    securityDeposit: number;
-    leaseTerm: number;
-    utilitiesIncluded: boolean;
+    monthlyRent?: number;
+    vacancyRatePercent?: number;
+    capExReservePercent?: number;
+    downPaymentPercent: number;
+    loanTermYears: number;
+    interestRate: number;
+    annualAppreciationPercent?: number;
+    annualRentIncreasePercent?: number;
+    holdingPeriodYears?: number;
+  };
+  rental: {
+    // Any additional rental-specific inputs
   };
 }
 
@@ -69,47 +53,54 @@ export interface CalculatorInputsMap {
  * Type mapping for analysis results
  */
 export interface AnalysisResultsMap {
-  rental: {
-    type: 'rental';
-    monthlyPayment: number;
-    principalAndInterest: number;
+  mortgage: {
+    loanAmount: number;
+    downPayment: number;
+    monthlyMortgagePayment: number;
+    monthlyExpenses: number;
     totalMonthlyPayment: number;
-    monthlyCashFlow: number;
-    annualCashFlow: number;
-    cashOnCashReturn: number;
-    capRate: number;
   };
   airbnb: {
-    type: 'airbnb';
-    monthlyPayment: number;
-    principalAndInterest: number;
-    totalMonthlyPayment: number;
+    loanAmount: number;
+    downPayment: number;
+    monthlyMortgagePayment: number;
+    monthlyRevenue: number;
+    monthlyExpenses: number;
     monthlyCashFlow: number;
-    annualCashFlow: number;
-    cashOnCashReturn: number;
     capRate: number;
+    cashOnCashReturn: number;
+    roi: number;
+    breakEvenOccupancy: number;
   };
   wholesale: {
-    type: 'wholesale';
-    totalInvestment: number;
-    profit: number;
-    roi: number;
-    holdingCosts: number;
-    netProfit: number;
-    returnOnInvestment: number;
+    maxOfferAmount: number;
+    potentialProfit: number;
+    repairCostEstimate: number;
+    afterRepairValue: number;
     assignmentFee: number;
   };
-  mortgage: {
-    type: 'mortgage';
-    monthlyPayment: number;
-    principalAndInterest: number;
-    totalMonthlyPayment: number;
-  };
   renters: {
-    type: 'renters';
+    loanAmount: number;
+    downPayment: number;
+    monthlyMortgagePayment: number;
+    monthlyRevenue: number;
+    monthlyExpenses: number;
     monthlyCashFlow: number;
     annualCashFlow: number;
-    monthlyRevenue: number;
+    capRate: number;
+    cashOnCashReturn: number;
+    roi: number;
+  };
+  rental: {
+    fiveYearProjection?: Array<{
+      year: number;
+      propertyValue: number;
+      yearlyRent: number;
+      operatingExpenses: number;
+      annualCashFlow: number;
+      totalAppreciation: number;
+      roi: number;
+    }>;
   };
 }
 
@@ -117,17 +108,15 @@ export interface AnalysisResultsMap {
  * Base interface for all calculator inputs
  */
 export interface BaseCalculatorInputs {
-  propertyAddress: string;
+  propertyAddress?: string;
   purchasePrice: number;
-  downPaymentPercent: number;
-  interestRate: number;
-  loanTerm: number;
-  closingCosts: number;
-  propertyTaxAnnual: number;
-  insuranceAnnual: number;
-  utilitiesMonthly: number;
-  maintenancePercent: number;
+  closingCostsPercent: number;
   propertyManagementPercent: number;
+  maintenancePercent: number;
+  insuranceCostMonthly: number;
+  propertyTaxesYearly: number;
+  utilitiesMonthlyCost: number;
+  hoa?: number;
 }
 
 /**
@@ -143,27 +132,42 @@ export interface RentalInputs extends BaseCalculatorInputs {
 }
 
 export interface AirbnbInputs extends BaseCalculatorInputs {
-  nightlyRate: number;
-  occupancyRate: number;
-  cleaningFee: number;
-  platformFeesPercent: number;
+  averageNightlyRate: number;
+  occupancyRatePercent: number;
+  downPaymentPercent: number;
+  loanTermYears: number;
+  interestRate: number;
+  cleaningFeePerStay: number;
+  averageStayDurationNights: number;
+  annualAppreciationPercent?: number;
+  holdingPeriodYears?: number;
 }
 
 export interface WholesaleInputs extends BaseCalculatorInputs {
-  afterRepairValue: number;
-  repairCosts: number;
+  estimatedRepairCost: number;
+  arv: number;
   assignmentFee: number;
-  miscHoldingCosts: number;
+  maxOfferPercent: number;
 }
 
 export interface MortgageInputs extends BaseCalculatorInputs {
-  hoaFees: number;
+  downPaymentPercent: number;
+  loanTermYears: number;
+  interestRate: number;
+  pmi?: number;
+  otherMonthlyExpenses?: number;
 }
 
 export interface RentersInputs extends BaseCalculatorInputs {
-  securityDeposit: number;
-  leaseTerm: number;
-  utilitiesIncluded: boolean;
+  monthlyRent?: number;
+  vacancyRatePercent?: number;
+  capExReservePercent?: number;
+  downPaymentPercent: number;
+  loanTermYears: number;
+  interestRate: number;
+  annualAppreciationPercent?: number;
+  annualRentIncreasePercent?: number;
+  holdingPeriodYears?: number;
 }
 
 /**
@@ -303,10 +307,10 @@ export type AnalysisAction<T extends CalculatorType> =
 /**
  * Generic analysis interface
  */
-export type Analysis<T extends AnalysisResults> = {
+export type Analysis<T extends keyof AnalysisResultsMap> = {
   _id?: string;
-  type: T['type'];
-  data: T;
+  type: T;
+  data: AnalysisResultsMap[T];
   title: string;
   notes?: string;
   createdAt: Date;

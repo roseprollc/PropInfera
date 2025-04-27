@@ -1,5 +1,5 @@
 [build]
-  command = "npm run deploy"
+  command = "npm run build"
   publish = ".next"
 
 [build.environment]
@@ -8,7 +8,7 @@
   STRIPE_SECRET_KEY = "sk_test_placeholder"
   STRIPE_WEBHOOK_SECRET = "whsec_placeholder"
   NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY = "pk_test_placeholder"
-  OPENAI_API_KEY = "your-openai-api-key-here"
+  OPENAI_API_KEY = "dummy-key"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"

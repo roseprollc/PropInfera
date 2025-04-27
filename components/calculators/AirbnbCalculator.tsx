@@ -2,191 +2,342 @@
 
 import { useState } from "react";
 import { useCalculator } from '@/context/CalculatorContext';
-import ActionButtons from '@/components/ui/ActionButtons';
+import { CalculatorInputs } from '@/types/analysis';
 import { calculateAirbnbMetrics } from '@/lib/calculators/airbnb';
-import { saveAnalysis } from '@/lib/services/saveAnalysis';
-import { AirbnbInputs } from '@/types/analysis';
+import ActionButtons from "@/components/ui/ActionButtons";
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
-export function AirbnbCalculator() {
-  const { state, dispatch } = useCalculator<'airbnb'>();
-  const [isSaving, setIsSaving] = useState(false);
+export default function AirbnbCalculator() {
+  const { state, dispatch } = useCalculator();
+  const [showAllFields, setShowAllFields] = useState(false);
 
-  const handleInputChange = (field: keyof AirbnbInputs, value: number | string) => {
-    dispatch({ type: 'SET_INPUTS', payload: { [field]: value } });
-  };
+  // Default state is now correctly typed to match the calculator context expectations
+  const [inputs, setInputs] = useState<CalculatorInputs>({
+    propertyAddress: '',
+    purchasePrice: 0,
+    downPaymentPercent: 20,
+    loanTermYears: 30,
+    interestRate: 5.5,
+    closingCostsPercent: 3,
+    averageNightlyRate: 0,
+    occupancyRatePercent: 0,
+    propertyManagementPercent: 0,
+    maintenancePercent: 0,
+    cleaningFeePerStay: 0,
+    averageStayDurationNights: 0,
+    insuranceCostMonthly: 0,
+    propertyTaxesYearly: 0,
+    utilitiesMonthlyCost: 0,
+    hoa: 0,
+    annualAppreciationPercent: 2,
+    holdingPeriodYears: 5
+  });
 
   const calculateResults = () => {
-    const metrics = calculateAirbnbMetrics(state.inputs as unknown as AirbnbInputs);
+    const results = calculateAirbnbMetrics(inputs);
+    // Properly structure the results to match our AnalysisResults type
     dispatch({ 
       type: 'SET_RESULTS', 
-      payload: {
-        type: 'airbnb',
-        ...metrics
-      }
+      results: { 
+        type: 'airbnb', 
+        data: results 
+      } 
     });
   };
 
-  const handleSave = async () => {
-    if (!state.results) return;
-
-    setIsSaving(true);
-    try {
-      await saveAnalysis({
-        userId: 'mock-user-123',
-        type: 'airbnb',
-        inputs: state.inputs as unknown as AirbnbInputs,
-        results: state.results,
-        title: state.inputs.propertyAddress || 'Untitled Analysis',
-        notes: '',
-      });
-    } catch (error) {
-      console.error('Error saving analysis:', error);
-    } finally {
-      setIsSaving(false);
-    }
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    const numericValue = name !== 'propertyAddress' ? parseFloat(value) : value;
+    
+    setInputs(prev => ({
+      ...prev,
+      [name]: numericValue
+    }));
   };
 
-  const handleReset = () => {
-    dispatch({ type: 'SET_INPUTS', payload: {} });
-    dispatch({ type: 'SET_RESULTS', payload: null });
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Save the inputs to the calculator context
+    dispatch({ type: 'SET_INPUTS', inputs });
+    calculateResults();
   };
 
   return (
-    <div className="bg-[#111] rounded-lg shadow-lg overflow-hidden">
-      <div className="p-6 border-b border-gray-700">
-        <h2 className="text-2xl font-semibold text-white mb-4">Airbnb Calculator</h2>
-      </div>
-
-      <div className="p-6 border-b border-gray-700">
-        <h3 className="text-lg font-semibold text-white mb-4">Property Details</h3>
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
-              Property Address
-            </label>
-            <input
-              type="text"
-              value={state.inputs.propertyAddress}
-              onChange={(e) => handleInputChange('propertyAddress', e.target.value)}
-              className="w-full px-3 py-2 bg-[#111] text-white placeholder-gray-400 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
-              Purchase Price
-            </label>
-            <input
-              type="number"
-              value={state.inputs.purchasePrice}
-              onChange={(e) => handleInputChange('purchasePrice', Number(e.target.value))}
-              className="w-full px-3 py-2 bg-[#111] text-white placeholder-gray-400 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
-              Down Payment (%)
-            </label>
-            <input
-              type="number"
-              value={state.inputs.downPaymentPercent}
-              onChange={(e) => handleInputChange('downPaymentPercent', Number(e.target.value))}
-              className="w-full px-3 py-2 bg-[#111] text-white placeholder-gray-400 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
-              Interest Rate (%)
-            </label>
-            <input
-              type="number"
-              value={state.inputs.interestRate}
-              onChange={(e) => handleInputChange('interestRate', Number(e.target.value))}
-              className="w-full px-3 py-2 bg-[#111] text-white placeholder-gray-400 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
-              Loan Term (years)
-            </label>
-            <input
-              type="number"
-              value={state.inputs.loanTerm}
-              onChange={(e) => handleInputChange('loanTerm', Number(e.target.value))}
-              className="w-full px-3 py-2 bg-[#111] text-white placeholder-gray-400 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-        </div>
-      </div>
-
-      <div className="p-6 border-b border-gray-700">
-        <h3 className="text-lg font-semibold text-white mb-4">Income & Expenses</h3>
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
-              Nightly Rate
-            </label>
-            <input
-              type="number"
-              value={state.inputs.nightlyRate}
-              onChange={(e) => handleInputChange('nightlyRate', Number(e.target.value))}
-              className="w-full px-3 py-2 bg-[#111] text-white placeholder-gray-400 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
-              Occupancy Rate (%)
-            </label>
-            <input
-              type="number"
-              value={state.inputs.occupancyRate}
-              onChange={(e) => handleInputChange('occupancyRate', Number(e.target.value))}
-              className="w-full px-3 py-2 bg-[#111] text-white placeholder-gray-400 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
-              Cleaning Fee
-            </label>
-            <input
-              type="number"
-              value={state.inputs.cleaningFee}
-              onChange={(e) => handleInputChange('cleaningFee', Number(e.target.value))}
-              className="w-full px-3 py-2 bg-[#111] text-white placeholder-gray-400 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
-              Platform Fees (%)
-            </label>
-            <input
-              type="number"
-              value={state.inputs.platformFeesPercent}
-              onChange={(e) => handleInputChange('platformFeesPercent', Number(e.target.value))}
-              className="w-full px-3 py-2 bg-[#111] text-white placeholder-gray-400 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-        </div>
-      </div>
-
-      <div className="p-6 border-t border-gray-700">
-        <div className="flex justify-center">
-          <Button
-            onClick={calculateResults}
-            className="px-6 py-3 bg-[#2ecc71] text-white rounded-md hover:bg-[#27ae60] focus:outline-none focus:ring-2 focus:ring-[#2ecc71] focus:ring-offset-2 focus:ring-offset-gray-900 transition-all duration-200 shadow-lg hover:shadow-[#2ecc71]/50"
-          >
-            Calculate
-          </Button>
-        </div>
-      </div>
-
-      <ActionButtons
-        onReset={handleReset}
-        onSave={handleSave}
-        saveDisabled={!state.results || isSaving}
-      />
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Airbnb Investment Calculator</CardTitle>
+          <CardDescription>
+            Calculate the potential returns of an Airbnb rental property investment
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="propertyAddress">Property Address</Label>
+                <Input
+                  id="propertyAddress"
+                  name="propertyAddress"
+                  value={inputs.propertyAddress || ''}
+                  onChange={handleInputChange}
+                  placeholder="Property Address"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="purchasePrice">Purchase Price ($)</Label>
+                <Input
+                  id="purchasePrice"
+                  name="purchasePrice"
+                  type="number"
+                  value={inputs.purchasePrice || ''}
+                  onChange={handleInputChange}
+                  placeholder="Purchase Price"
+                  min="0"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="downPaymentPercent">Down Payment (%)</Label>
+                <Input
+                  id="downPaymentPercent"
+                  name="downPaymentPercent"
+                  type="number"
+                  value={inputs.downPaymentPercent || ''}
+                  onChange={handleInputChange}
+                  placeholder="Down Payment Percentage"
+                  min="0"
+                  max="100"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="interestRate">Interest Rate (%)</Label>
+                <Input
+                  id="interestRate"
+                  name="interestRate"
+                  type="number"
+                  value={inputs.interestRate || ''}
+                  onChange={handleInputChange}
+                  placeholder="Interest Rate"
+                  min="0"
+                  step="0.01"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="loanTermYears">Loan Term (Years)</Label>
+                <Input
+                  id="loanTermYears"
+                  name="loanTermYears"
+                  type="number"
+                  value={inputs.loanTermYears || ''}
+                  onChange={handleInputChange}
+                  placeholder="Loan Term"
+                  min="0"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="closingCostsPercent">Closing Costs (%)</Label>
+                <Input
+                  id="closingCostsPercent"
+                  name="closingCostsPercent"
+                  type="number"
+                  value={inputs.closingCostsPercent || ''}
+                  onChange={handleInputChange}
+                  placeholder="Closing Costs Percentage"
+                  min="0"
+                  max="100"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="averageNightlyRate">Average Nightly Rate ($)</Label>
+                <Input
+                  id="averageNightlyRate"
+                  name="averageNightlyRate"
+                  type="number"
+                  value={inputs.averageNightlyRate || ''}
+                  onChange={handleInputChange}
+                  placeholder="Average Nightly Rate"
+                  min="0"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="occupancyRatePercent">Occupancy Rate (%)</Label>
+                <Input
+                  id="occupancyRatePercent"
+                  name="occupancyRatePercent"
+                  type="number"
+                  value={inputs.occupancyRatePercent || ''}
+                  onChange={handleInputChange}
+                  placeholder="Occupancy Rate"
+                  min="0"
+                  max="100"
+                />
+              </div>
+              
+              {showAllFields && (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="propertyManagementPercent">Property Management (%)</Label>
+                    <Input
+                      id="propertyManagementPercent"
+                      name="propertyManagementPercent"
+                      type="number"
+                      value={inputs.propertyManagementPercent || ''}
+                      onChange={handleInputChange}
+                      placeholder="Property Management Percentage"
+                      min="0"
+                      max="100"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="maintenancePercent">Maintenance (%)</Label>
+                    <Input
+                      id="maintenancePercent"
+                      name="maintenancePercent"
+                      type="number"
+                      value={inputs.maintenancePercent || ''}
+                      onChange={handleInputChange}
+                      placeholder="Maintenance Percentage"
+                      min="0"
+                      max="100"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="cleaningFeePerStay">Cleaning Fee per Stay ($)</Label>
+                    <Input
+                      id="cleaningFeePerStay"
+                      name="cleaningFeePerStay"
+                      type="number"
+                      value={inputs.cleaningFeePerStay || ''}
+                      onChange={handleInputChange}
+                      placeholder="Cleaning Fee"
+                      min="0"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="averageStayDurationNights">Average Stay Duration (Nights)</Label>
+                    <Input
+                      id="averageStayDurationNights"
+                      name="averageStayDurationNights"
+                      type="number"
+                      value={inputs.averageStayDurationNights || ''}
+                      onChange={handleInputChange}
+                      placeholder="Average Stay Duration"
+                      min="0"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="insuranceCostMonthly">Monthly Insurance ($)</Label>
+                    <Input
+                      id="insuranceCostMonthly"
+                      name="insuranceCostMonthly"
+                      type="number"
+                      value={inputs.insuranceCostMonthly || ''}
+                      onChange={handleInputChange}
+                      placeholder="Monthly Insurance"
+                      min="0"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="propertyTaxesYearly">Yearly Property Taxes ($)</Label>
+                    <Input
+                      id="propertyTaxesYearly"
+                      name="propertyTaxesYearly"
+                      type="number"
+                      value={inputs.propertyTaxesYearly || ''}
+                      onChange={handleInputChange}
+                      placeholder="Property Taxes"
+                      min="0"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="utilitiesMonthlyCost">Monthly Utilities ($)</Label>
+                    <Input
+                      id="utilitiesMonthlyCost"
+                      name="utilitiesMonthlyCost"
+                      type="number"
+                      value={inputs.utilitiesMonthlyCost || ''}
+                      onChange={handleInputChange}
+                      placeholder="Monthly Utilities"
+                      min="0"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="hoa">Monthly HOA ($)</Label>
+                    <Input
+                      id="hoa"
+                      name="hoa"
+                      type="number"
+                      value={inputs.hoa || ''}
+                      onChange={handleInputChange}
+                      placeholder="Monthly HOA"
+                      min="0"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="annualAppreciationPercent">Annual Appreciation (%)</Label>
+                    <Input
+                      id="annualAppreciationPercent"
+                      name="annualAppreciationPercent"
+                      type="number"
+                      value={inputs.annualAppreciationPercent || ''}
+                      onChange={handleInputChange}
+                      placeholder="Annual Appreciation"
+                      min="0"
+                      max="100"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="holdingPeriodYears">Holding Period (Years)</Label>
+                    <Input
+                      id="holdingPeriodYears"
+                      name="holdingPeriodYears"
+                      type="number"
+                      value={inputs.holdingPeriodYears || ''}
+                      onChange={handleInputChange}
+                      placeholder="Holding Period"
+                      min="0"
+                    />
+                  </div>
+                </>
+              )}
+            </div>
+            
+            <div className="flex justify-between items-center">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => setShowAllFields(!showAllFields)}
+              >
+                {showAllFields ? 'Show Less Fields' : 'Show All Fields'}
+              </Button>
+              
+              <ActionButtons />
+            </div>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   );
 }
 
+// Add displayName property
 AirbnbCalculator.displayName = "AirbnbCalculator"; 
