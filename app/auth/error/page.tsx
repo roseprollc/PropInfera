@@ -1,32 +1,47 @@
 'use client';
 
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import Link from 'next/link';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
-export default function AuthErrorPage() {
+// Create a client component that uses the search params
+function ErrorContent() {
   const searchParams = useSearchParams();
-  const error = searchParams.get('error');
-
+  const [error, setError] = useState<string | null>(null);
+  
+  useEffect(() => {
+    const errorParam = searchParams.get('error');
+    setError(errorParam);
+  }, [searchParams]);
+  
   return (
-    <div className="min-h-screen bg-[#111] text-white flex items-center justify-center">
-      <div className="max-w-md w-full mx-4">
-        <div className="bg-[#1a1a1a] rounded-lg p-8">
-          <h1 className="text-2xl font-bold mb-4 text-center text-red-500">Authentication Error</h1>
-          <p className="text-gray-400 mb-6 text-center">
-            {error === 'Configuration'
-              ? 'There was a problem with the server configuration.'
-              : 'An error occurred during authentication.'}
-          </p>
-          <div className="flex justify-center">
-            <Link
-              href="/signin"
-              className="bg-[#2ecc71] text-white py-2 px-4 rounded-lg hover:bg-[#27ae60] transition-colors"
-            >
-              Try Again
-            </Link>
-          </div>
-        </div>
-      </div>
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="text-2xl font-bold mb-6">Authentication Error</h1>
+      
+      <Alert variant="destructive">
+        <AlertTitle>Error</AlertTitle>
+        <AlertDescription>
+          {error === 'CredentialsSignin' && 'Invalid credentials. Please check your email and password.'}
+          {error === 'OAuthSignin' && 'Error during OAuth sign in. Please try again.'}
+          {error === 'OAuthCallback' && 'Error during OAuth callback. Please try again.'}
+          {error === 'OAuthCreateAccount' && 'Error creating OAuth account. Please try again.'}
+          {error === 'EmailCreateAccount' && 'Error creating email account. Please try again.'}
+          {error === 'Callback' && 'Error during callback. Please try again.'}
+          {error === 'OAuthAccountNotLinked' && 'Email already in use with different provider.'}
+          {error === 'EmailSignin' && 'Error sending email. Please try again.'}
+          {error === 'SessionRequired' && 'Authentication required. Please sign in.'}
+          {!error && 'An unknown error occurred. Please try again.'}
+        </AlertDescription>
+      </Alert>
     </div>
+  );
+}
+
+// Wrap the client component with Suspense
+export default function AuthErrorPage() {
+  return (
+    <Suspense fallback={<div className="container mx-auto px-4 py-8">Loading...</div>}>
+      <ErrorContent />
+    </Suspense>
   );
 } 
