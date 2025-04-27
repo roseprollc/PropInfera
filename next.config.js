@@ -6,6 +6,10 @@ const nextConfig = {
   output: 'standalone',
   images: {
     domains: ['lh3.googleusercontent.com'],
+  },
+  experimental: {
+    appDir: true,
+    serverComponentsExternalPackages: ['@netlify/functions']
   }
 }
 
