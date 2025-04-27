@@ -1,15 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'standalone',
-  eslint: {
-    ignoreDuringBuilds: true
-  },
-  typescript: {
-    ignoreBuildErrors: true,
-  },
+  cacheMaxMemorySize: 50,
+  serverExternalPackages: ['@netlify/functions'],
   experimental: {
-    serverComponentsExternalPackages: ['@netlify/functions'],
-    isrMemoryCacheSize: 50
+    serverActions: true,
+    incrementalCacheHandlerPath: require.resolve('./cache-handler.js')
   },
   images: {
     domains: ['avatars.githubusercontent.com', 'lh3.googleusercontent.com']

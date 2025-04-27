@@ -1,10 +1,12 @@
 [build]
-  command = "npm run build"
+  command = "npm install && npm run build"
   publish = ".next"
+  functions = ".next/serverless"
 
 [build.environment]
-  NODE_VERSION = "18"
-  NPM_VERSION = "9.8.1"
+  NODE_VERSION = "18.20.8"
+  NPM_VERSION = "10.8.2"
+  NEXT_PUBLIC_BASE_URL = "https://your-site.netlify.app"
   STRIPE_SECRET_KEY = "sk_test_placeholder"
   STRIPE_WEBHOOK_SECRET = "whsec_placeholder"
   NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY = "pk_test_placeholder"
