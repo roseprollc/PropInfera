@@ -8,24 +8,110 @@ export type CalculatorType = 'rental' | 'airbnb' | 'wholesale' | 'mortgage' | 'r
 /**
  * Type mapping for calculator inputs
  */
-export type CalculatorInputsMap = {
-  rental: RentalInputs;
-  airbnb: AirbnbInputs;
-  wholesale: WholesaleInputs;
-  mortgage: MortgageInputs;
-  renters: RentersInputs;
-};
+export interface CalculatorInputsMap {
+  rental: {
+    propertyAddress: string;
+    purchasePrice: number;
+    downPaymentPercent: number;
+    loanTerm: number;
+    interestRate: number;
+    propertyTaxAnnual: number;
+    insuranceAnnual: number;
+    hoaFees: number;
+    monthlyRent: number;
+    vacancyRate: number;
+    maintenanceRate: number;
+    managementRate: number;
+    capitalExpendituresRate: number;
+  };
+  airbnb: {
+    propertyAddress: string;
+    purchasePrice: number;
+    downPaymentPercent: number;
+    loanTerm: number;
+    interestRate: number;
+    propertyTaxAnnual: number;
+    insuranceAnnual: number;
+    hoaFees: number;
+    nightlyRate: number;
+    occupancyRate: number;
+    cleaningFee: number;
+    platformFeesPercent: number;
+  };
+  wholesale: {
+    propertyAddress: string;
+    purchasePrice: number;
+    afterRepairValue: number;
+    repairCosts: number;
+    assignmentFee: number;
+    closingCosts: number;
+    miscHoldingCosts: number;
+  };
+  mortgage: {
+    propertyAddress: string;
+    purchasePrice: number;
+    downPaymentPercent: number;
+    loanTerm: number;
+    interestRate: number;
+    propertyTaxAnnual: number;
+    insuranceAnnual: number;
+    hoaFees: number;
+  };
+  renters: {
+    monthlyRent: number;
+    securityDeposit: number;
+    leaseTerm: number;
+    utilitiesIncluded: boolean;
+  };
+}
 
 /**
  * Type mapping for analysis results
  */
-export type AnalysisResultsMap = {
-  rental: RentalAnalysisResults;
-  airbnb: AirbnbAnalysisResults;
-  wholesale: WholesaleAnalysisResults;
-  mortgage: MortgageAnalysisResults;
-  renters: RentersAnalysisResults;
-};
+export interface AnalysisResultsMap {
+  rental: {
+    type: 'rental';
+    monthlyPayment: number;
+    principalAndInterest: number;
+    totalMonthlyPayment: number;
+    monthlyCashFlow: number;
+    annualCashFlow: number;
+    cashOnCashReturn: number;
+    capRate: number;
+  };
+  airbnb: {
+    type: 'airbnb';
+    monthlyPayment: number;
+    principalAndInterest: number;
+    totalMonthlyPayment: number;
+    monthlyCashFlow: number;
+    annualCashFlow: number;
+    cashOnCashReturn: number;
+    capRate: number;
+  };
+  wholesale: {
+    type: 'wholesale';
+    totalInvestment: number;
+    profit: number;
+    roi: number;
+    holdingCosts: number;
+    netProfit: number;
+    returnOnInvestment: number;
+    assignmentFee: number;
+  };
+  mortgage: {
+    type: 'mortgage';
+    monthlyPayment: number;
+    principalAndInterest: number;
+    totalMonthlyPayment: number;
+  };
+  renters: {
+    type: 'renters';
+    monthlyCashFlow: number;
+    annualCashFlow: number;
+    monthlyRevenue: number;
+  };
+}
 
 /**
  * Base interface for all calculator inputs
@@ -168,12 +254,7 @@ export interface ProjectionYear {
 /**
  * Union type of all analysis results
  */
-export type AnalysisResults = 
-  | RentalAnalysisResults
-  | AirbnbAnalysisResults
-  | WholesaleAnalysisResults
-  | MortgageAnalysisResults
-  | RentersAnalysisResults;
+export type AnalysisResults = AnalysisResultsMap[keyof AnalysisResultsMap];
 
 /**
  * Type guard functions for each calculator type
@@ -226,13 +307,11 @@ export type Analysis<T extends AnalysisResults> = {
   _id?: string;
   type: T['type'];
   data: T;
+  title: string;
+  notes?: string;
   createdAt: Date;
   updatedAt: Date;
   userId: string;
-  name: string;
-  description?: string;
-  isPublic: boolean;
-  tags?: string[];
 };
 
 // Type guards for each calculator type

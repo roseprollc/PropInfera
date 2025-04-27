@@ -16,13 +16,13 @@
     "postinstall": "next telemetry disable"
   },
   "dependencies": {
-    "@auth/mongodb-adapter": "^3.9.0",
+    "@auth/mongodb-adapter": "^2.0.0",
     "@types/mongodb": "^4.0.6",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "jspdf": "^2.5.1",
     "jspdf-autotable": "^3.8.1",
-    "mongodb": "^6.16.0",
+    "mongodb": "^6.0.0",
     "next": "^15.3.1",
     "next-auth": "^4.24.5",
     "openai": "^4.96.0",

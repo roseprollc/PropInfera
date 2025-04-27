@@ -10,7 +10,8 @@ const nextConfig = {
   experimental: {
     appDir: true,
     serverComponentsExternalPackages: ['@netlify/functions']
-  }
+  },
+  serverExternalPackages: ['@netlify/functions']
 }
 
 module.exports = nextConfig 
