@@ -3,10 +3,12 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
+import { useTheme } from 'next-themes';
 
 const Navbar = () => {
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { theme } = useTheme();
 
   const isActive = (path: string) => pathname === path;
 
@@ -15,11 +17,11 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="bg-[#111] border-b border-gray-800">
+    <nav className="border-b border-border bg-background">
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex h-16 items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="text-xl font-bold text-[#2ecc71]">
+          <Link href="/" className="text-xl font-bold text-primary">
             PropInfera
           </Link>
 
@@ -29,8 +31,8 @@ const Navbar = () => {
               href="/"
               className={`text-sm font-medium transition-colors ${
                 isActive('/')
-                  ? 'text-[#2ecc71]'
-                  : 'text-gray-400 hover:text-[#2ecc71]'
+                  ? 'text-primary'
+                  : 'text-muted-foreground hover:text-primary'
               }`}
             >
               Home
@@ -39,8 +41,8 @@ const Navbar = () => {
               href="/pricing"
               className={`text-sm font-medium transition-colors ${
                 isActive('/pricing')
-                  ? 'text-[#2ecc71]'
-                  : 'text-gray-400 hover:text-[#2ecc71]'
+                  ? 'text-primary'
+                  : 'text-muted-foreground hover:text-primary'
               }`}
             >
               Pricing
@@ -49,8 +51,8 @@ const Navbar = () => {
               href="/dashboard"
               className={`text-sm font-medium transition-colors ${
                 isActive('/dashboard')
-                  ? 'text-[#2ecc71]'
-                  : 'text-gray-400 hover:text-[#2ecc71]'
+                  ? 'text-primary'
+                  : 'text-muted-foreground hover:text-primary'
               }`}
             >
               Dashboard
@@ -59,13 +61,13 @@ const Navbar = () => {
 
           {/* Mobile Menu Button */}
           <button
-            className="md:hidden text-gray-400 hover:text-[#2ecc71]"
+            className="md:hidden text-muted-foreground hover:text-primary"
             onClick={toggleMobileMenu}
             aria-label="Toggle menu"
             aria-expanded={isMobileMenuOpen}
           >
             <svg
-              className="w-6 h-6"
+              className="h-6 w-6"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -88,8 +90,8 @@ const Navbar = () => {
                 href="/"
                 className={`text-sm font-medium transition-colors ${
                   isActive('/')
-                    ? 'text-[#2ecc71]'
-                    : 'text-gray-400 hover:text-[#2ecc71]'
+                    ? 'text-primary'
+                    : 'text-muted-foreground hover:text-primary'
                 }`}
               >
                 Home
@@ -98,8 +100,8 @@ const Navbar = () => {
                 href="/pricing"
                 className={`text-sm font-medium transition-colors ${
                   isActive('/pricing')
-                    ? 'text-[#2ecc71]'
-                    : 'text-gray-400 hover:text-[#2ecc71]'
+                    ? 'text-primary'
+                    : 'text-muted-foreground hover:text-primary'
                 }`}
               >
                 Pricing
@@ -108,8 +110,8 @@ const Navbar = () => {
                 href="/dashboard"
                 className={`text-sm font-medium transition-colors ${
                   isActive('/dashboard')
-                    ? 'text-[#2ecc71]'
-                    : 'text-gray-400 hover:text-[#2ecc71]'
+                    ? 'text-primary'
+                    : 'text-muted-foreground hover:text-primary'
                 }`}
               >
                 Dashboard
