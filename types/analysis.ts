@@ -3,50 +3,16 @@ import { ObjectId } from 'mongodb';
 /**
  * Type representing all possible calculator types in the application
  */
-export type CalculatorType = 'mortgage' | 'airbnb' | 'wholesale' | 'renters' | 'rental';
+export type CalculatorType = 'mortgage' | 'rental' | 'airbnb' | 'wholesale';
 
 /**
  * Type mapping for calculator inputs
  */
-export interface CalculatorInputsMap {
-  mortgage: {
-    downPaymentPercent: number;
-    loanTermYears: number;
-    interestRate: number;
-    pmi?: number;
-    otherMonthlyExpenses?: number;
-  };
-  airbnb: {
-    averageNightlyRate: number;
-    occupancyRatePercent: number;
-    downPaymentPercent: number;
-    loanTermYears: number;
-    interestRate: number;
-    cleaningFeePerStay: number;
-    averageStayDurationNights: number;
-    annualAppreciationPercent?: number;
-    holdingPeriodYears?: number;
-  };
-  wholesale: {
-    estimatedRepairCost: number;
-    arv: number;
-    assignmentFee: number;
-    maxOfferPercent: number;
-  };
-  renters: {
-    monthlyRent?: number;
-    vacancyRatePercent?: number;
-    capExReservePercent?: number;
-    downPaymentPercent: number;
-    loanTermYears: number;
-    interestRate: number;
-    annualAppreciationPercent?: number;
-    annualRentIncreasePercent?: number;
-    holdingPeriodYears?: number;
-  };
-  rental: {
-    // Any additional rental-specific inputs
-  };
+export interface CalculatorInputs {
+  mortgage?: MortgageInputs;
+  rental?: RentalInputs;
+  airbnb?: AirbnbInputs;
+  wholesale?: WholesaleInputs;
 }
 
 /**
@@ -307,7 +273,7 @@ export type AnalysisAction<T extends CalculatorType> =
 /**
  * Generic analysis interface
  */
-export type Analysis<T extends keyof AnalysisResultsMap> = {
+export interface Analysis<T extends keyof AnalysisResultsMap> {
   _id?: string;
   type: T;
   data: AnalysisResultsMap[T];
@@ -316,7 +282,7 @@ export type Analysis<T extends keyof AnalysisResultsMap> = {
   createdAt: Date;
   updatedAt: Date;
   userId: string;
-};
+}
 
 // Type guards for each calculator type
 export function isRentalAnalysis(analysis: Analysis<AnalysisResults>): analysis is Analysis<RentalAnalysisResults> {

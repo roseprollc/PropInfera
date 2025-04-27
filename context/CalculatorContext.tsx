@@ -1,72 +1,47 @@
 'use client';
 
-import React, { createContext, useContext, useReducer } from 'react';
-import { CalculatorInputs, AnalysisResults, CalculatorType } from '@/types/analysis';
+import { createContext, useContext, useReducer, ReactNode } from 'react';
+import { CalculatorInputs, AnalysisResults } from '@/types/analysis';
 
-// Define action types as a discriminated union
-type CalculatorAction = 
-  | { type: 'SET_INPUTS'; inputs: CalculatorInputs }
-  | { type: 'SET_RESULTS'; results: AnalysisResults }
-  | { type: 'RESET' }
-  | { type: 'SET_TYPE'; calculatorType: CalculatorType };
-
-// Define state interface that properly matches reducer
 interface CalculatorState {
-  calculatorType: CalculatorType;
-  inputs: CalculatorInputs | null;
+  type: 'mortgage' | 'rental' | 'airbnb' | 'wholesale';
+  inputs: CalculatorInputs;
   results: AnalysisResults | null;
 }
 
+type CalculatorAction =
+  | { type: 'SET_TYPE'; payload: CalculatorState['type'] }
+  | { type: 'SET_INPUTS'; payload: CalculatorInputs }
+  | { type: 'SET_RESULTS'; payload: AnalysisResults }
+  | { type: 'RESET_CALCULATOR' };
+
 const initialState: CalculatorState = {
-  calculatorType: 'mortgage',
-  inputs: null,
+  type: 'mortgage',
+  inputs: {},
   results: null
 };
 
-// Create reducer with proper type handling
-const calculatorReducer = (state: CalculatorState, action: CalculatorAction): CalculatorState => {
+function calculatorReducer(state: CalculatorState, action: CalculatorAction): CalculatorState {
   switch (action.type) {
-    case 'SET_INPUTS':
-      return {
-        ...state,
-        inputs: action.inputs
-      };
-    case 'SET_RESULTS':
-      return {
-        ...state,
-        results: action.results
-      };
-    case 'RESET':
-      return {
-        ...initialState,
-        calculatorType: state.calculatorType // Preserve the calculator type
-      };
     case 'SET_TYPE':
-      return {
-        ...initialState, // Reset all data when changing calculator type
-        calculatorType: action.calculatorType
-      };
+      return { ...state, type: action.payload };
+    case 'SET_INPUTS':
+      return { ...state, inputs: action.payload };
+    case 'SET_RESULTS':
+      return { ...state, results: action.payload };
+    case 'RESET_CALCULATOR':
+      return initialState;
     default:
       return state;
   }
-};
+}
 
-type CalculatorContextType = {
+const CalculatorContext = createContext<{
   state: CalculatorState;
   dispatch: React.Dispatch<CalculatorAction>;
-};
+} | null>(null);
 
-const CalculatorContext = createContext<CalculatorContextType | undefined>(undefined);
-
-export const useCalculator = () => {
-  const context = useContext(CalculatorContext);
-  if (!context) {
-    throw new Error('useCalculator must be used within a CalculatorProvider');
-  }
-  return context;
-};
-
-export const CalculatorProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export function CalculatorProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(calculatorReducer, initialState);
 
   return (
@@ -74,7 +49,15 @@ export const CalculatorProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       {children}
     </CalculatorContext.Provider>
   );
-};
+}
+
+export function useCalculator() {
+  const context = useContext(CalculatorContext);
+  if (!context) {
+    throw new Error('useCalculator must be used within a CalculatorProvider');
+  }
+  return context;
+}
 
 // Add displayName for debugging
 CalculatorProvider.displayName = "CalculatorProvider"; 

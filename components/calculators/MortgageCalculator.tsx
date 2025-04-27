@@ -1,89 +1,95 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from 'react';
 import { useCalculator } from '@/context/CalculatorContext';
-import { CalculatorInputs, MortgageAnalysisResults } from '@/types/analysis';
-import ActionButtons from "@/components/ui/ActionButtons";
+import { MortgageInputs, MortgageResults } from '@/types/analysis';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { toast } from 'react-hot-toast';
 import { saveAnalysis } from '@/lib/services/saveAnalysis';
-
-interface MortgageInputs extends CalculatorInputs {
-  hoaFees: number;
-}
+import ActionButtons from "@/components/ui/ActionButtons";
 
 const defaultInputs: MortgageInputs = {
-  propertyAddress: '',
   purchasePrice: 300000,
-  downPaymentPercent: 20,
+  downPayment: 20,
   interestRate: 6.5,
   loanTerm: 30,
-  closingCosts: 9000,
-  propertyTaxAnnual: 3000,
-  insuranceAnnual: 1200,
-  utilitiesMonthly: 200,
-  maintenancePercent: 5,
-  propertyManagementPercent: 8,
-  monthlyRent: 0,
-  vacancyRatePercent: 0,
-  capExReservePercent: 0,
-  annualAppreciationPercent: 3,
-  annualRentIncreasePercent: 2,
-  holdingPeriodYears: 5,
-  nightlyRate: 0,
-  occupancyRate: 0,
-  cleaningFee: 0,
-  platformFeesPercent: 0,
-  afterRepairValue: 0,
-  repairCosts: 0,
-  assignmentFee: 0,
-  miscHoldingCosts: 0,
-  hoaFees: 0
+  propertyTax: 3000,
+  insurance: 1200,
+  hoaFees: 0,
+  maintenance: 100,
+  vacancyRate: 5,
+  managementFees: 0,
+  closingCosts: 8000,
+  monthlyRent: 2000,
+  appreciationRate: 3
 };
 
-export function MortgageCalculator() {
-  const { state, dispatch } = useCalculator();
-  const [results, setResults] = useState<MortgageAnalysisResults | null>(null);
+export default function MortgageCalculator() {
+  const { dispatch, state } = useCalculator();
+  const [inputs, setInputs] = useState<MortgageInputs>(defaultInputs);
+  const [results, setResults] = useState<MortgageResults | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
-  const handleInputChange = (field: keyof CalculatorInputs, value: number | string) => {
-    dispatch({ type: 'SET_INPUT', field, value });
+  useEffect(() => {
+    if (state.type === 'mortgage' && state.inputs.mortgage) {
+      setInputs(state.inputs.mortgage);
+    }
+  }, [state]);
+
+  const handleInputChange = (field: keyof MortgageInputs, value: string) => {
+    const numValue = parseFloat(value) || 0;
+    setInputs(prev => ({ ...prev, [field]: numValue }));
   };
 
   const calculateResults = () => {
-    const {
-      purchasePrice,
-      downPaymentPercent,
-      loanTerm,
-      interestRate,
-      propertyTaxAnnual,
-      insuranceAnnual,
-      hoaFees,
-    } = state.calculatorInputs as MortgageInputs;
-
-    const downPayment = (purchasePrice * downPaymentPercent) / 100;
-    const loanAmount = purchasePrice - downPayment;
-    const monthlyInterestRate = interestRate / 100 / 12;
-    const numberOfPayments = loanTerm * 12;
-
-    // Calculate monthly principal and interest
-    const principalAndInterest =
-      (loanAmount *
-        (monthlyInterestRate * Math.pow(1 + monthlyInterestRate, numberOfPayments))) /
-      (Math.pow(1 + monthlyInterestRate, numberOfPayments) - 1);
-
-    // Calculate total monthly payment
-    const monthlyPropertyTax = propertyTaxAnnual / 12;
-    const monthlyInsurance = insuranceAnnual / 12;
-    const totalMonthlyPayment =
-      principalAndInterest + monthlyPropertyTax + monthlyInsurance + hoaFees;
-
-    const mortgageResults: MortgageAnalysisResults = {
-      monthlyPayment: totalMonthlyPayment,
-      principalAndInterest,
-      totalMonthlyPayment,
+    const loanAmount = inputs.purchasePrice * (1 - inputs.downPayment / 100);
+    const monthlyInterestRate = inputs.interestRate / 100 / 12;
+    const numberOfPayments = inputs.loanTerm * 12;
+    const monthlyPayment = loanAmount * monthlyInterestRate * Math.pow(1 + monthlyInterestRate, numberOfPayments) / (Math.pow(1 + monthlyInterestRate, numberOfPayments) - 1);
+    
+    const totalMonthlyExpenses = monthlyPayment + (inputs.propertyTax / 12) + (inputs.insurance / 12) + inputs.hoaFees + inputs.maintenance;
+    const vacancyLoss = (inputs.monthlyRent * inputs.vacancyRate / 100);
+    const managementFees = inputs.monthlyRent * inputs.managementFees / 100;
+    const monthlyOperatingExpenses = totalMonthlyExpenses + vacancyLoss + managementFees;
+    
+    const annualCashFlow = (inputs.monthlyRent - monthlyOperatingExpenses) * 12;
+    const totalInvestment = (inputs.purchasePrice * inputs.downPayment / 100) + inputs.closingCosts;
+    const cashOnCashReturn = (annualCashFlow / totalInvestment) * 100;
+    
+    const results: MortgageResults = {
+      type: 'mortgage',
+      monthlyPayment,
+      totalInvestment,
+      annualCashFlow,
+      cashOnCashReturn,
+      capRate: (annualCashFlow / inputs.purchasePrice) * 100,
+      netOperatingIncome: inputs.monthlyRent * 12 - (monthlyOperatingExpenses * 12),
+      grossRentMultiplier: inputs.purchasePrice / (inputs.monthlyRent * 12),
+      internalRateOfReturn: 0, // This would require more complex calculation
+      totalReturn: 0, // This would require more complex calculation
+      breakEvenPoint: monthlyOperatingExpenses / inputs.monthlyRent,
+      loanAmount,
+      totalInterest: (monthlyPayment * numberOfPayments) - loanAmount,
+      totalCost: inputs.purchasePrice + inputs.closingCosts + ((monthlyPayment * numberOfPayments) - loanAmount),
+      equityBuildUp: 0, // This would require amortization schedule
+      amortizationSchedule: [] // This would require full amortization calculation
     };
 
-    setResults(mortgageResults);
-    dispatch({ type: 'SET_RESULTS', results: { type: 'mortgage', data: mortgageResults } });
+    setResults(results);
+    dispatch({
+      type: 'SET_RESULTS',
+      payload: results
+    });
+
+    dispatch({
+      type: 'SET_INPUTS',
+      payload: { mortgage: inputs }
+    });
+
+    toast.success('Mortgage analysis completed!');
   };
 
   const handleSave = async () => {
@@ -114,160 +120,208 @@ export function MortgageCalculator() {
   };
 
   return (
-    <div className="bg-gray-900 rounded-lg shadow-lg p-6">
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          calculateResults();
-        }}
-        className="space-y-6"
-      >
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-white">Loan Details</h3>
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">
-                Property Address
-              </label>
-              <input
-                type="text"
-                value={state.calculatorInputs.propertyAddress}
-                onChange={(e) => handleInputChange('propertyAddress', e.target.value)}
-                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md text-white focus:ring-2 focus:ring-green-500 focus:border-transparent"
+    <Card>
+      <CardHeader>
+        <CardTitle>Mortgage Calculator</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="grid gap-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="purchasePrice">Purchase Price</Label>
+              <Input
+                id="purchasePrice"
+                type="number"
+                value={inputs.purchasePrice}
+                onChange={(e) => handleInputChange('purchasePrice', e.target.value)}
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">
-                Purchase Price
-              </label>
-              <input
+            <div className="space-y-2">
+              <Label htmlFor="downPayment">Down Payment (%)</Label>
+              <Input
+                id="downPayment"
                 type="number"
-                value={state.calculatorInputs.purchasePrice}
-                onChange={(e) => handleInputChange('purchasePrice', Number(e.target.value))}
-                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md text-white focus:ring-2 focus:ring-green-500 focus:border-transparent"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">
-                Down Payment (%)
-              </label>
-              <input
-                type="number"
-                value={state.calculatorInputs.downPaymentPercent}
-                onChange={(e) => handleInputChange('downPaymentPercent', Number(e.target.value))}
-                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md text-white focus:ring-2 focus:ring-green-500 focus:border-transparent"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">
-                Loan Term (years)
-              </label>
-              <input
-                type="number"
-                value={state.calculatorInputs.loanTerm}
-                onChange={(e) => handleInputChange('loanTerm', Number(e.target.value))}
-                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md text-white focus:ring-2 focus:ring-green-500 focus:border-transparent"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">
-                Interest Rate (%)
-              </label>
-              <input
-                type="number"
-                value={state.calculatorInputs.interestRate}
-                onChange={(e) => handleInputChange('interestRate', Number(e.target.value))}
-                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md text-white focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                value={inputs.downPayment}
+                onChange={(e) => handleInputChange('downPayment', e.target.value)}
               />
             </div>
           </div>
-
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-white">Additional Costs</h3>
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">
-                Property Tax (annual)
-              </label>
-              <input
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="interestRate">Interest Rate (%)</Label>
+              <Input
+                id="interestRate"
                 type="number"
-                value={state.calculatorInputs.propertyTaxAnnual}
-                onChange={(e) => handleInputChange('propertyTaxAnnual', Number(e.target.value))}
-                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md text-white focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                value={inputs.interestRate}
+                onChange={(e) => handleInputChange('interestRate', e.target.value)}
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">
-                Home Insurance (annual)
-              </label>
-              <input
+            <div className="space-y-2">
+              <Label htmlFor="loanTerm">Loan Term (years)</Label>
+              <Input
+                id="loanTerm"
                 type="number"
-                value={state.calculatorInputs.insuranceAnnual}
-                onChange={(e) => handleInputChange('insuranceAnnual', Number(e.target.value))}
-                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md text-white focus:ring-2 focus:ring-green-500 focus:border-transparent"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">
-                HOA Fees (monthly)
-              </label>
-              <input
-                type="number"
-                value={(state.calculatorInputs as MortgageInputs).hoaFees}
-                onChange={(e) => handleInputChange('hoaFees', Number(e.target.value))}
-                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md text-white focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                value={inputs.loanTerm}
+                onChange={(e) => handleInputChange('loanTerm', e.target.value)}
               />
             </div>
           </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="propertyTax">Annual Property Tax</Label>
+              <Input
+                id="propertyTax"
+                type="number"
+                value={inputs.propertyTax}
+                onChange={(e) => handleInputChange('propertyTax', e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="insurance">Annual Insurance</Label>
+              <Input
+                id="insurance"
+                type="number"
+                value={inputs.insurance}
+                onChange={(e) => handleInputChange('insurance', e.target.value)}
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="hoaFees">Monthly HOA Fees</Label>
+              <Input
+                id="hoaFees"
+                type="number"
+                value={inputs.hoaFees}
+                onChange={(e) => handleInputChange('hoaFees', e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="maintenance">Monthly Maintenance</Label>
+              <Input
+                id="maintenance"
+                type="number"
+                value={inputs.maintenance}
+                onChange={(e) => handleInputChange('maintenance', e.target.value)}
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="vacancyRate">Vacancy Rate (%)</Label>
+              <Input
+                id="vacancyRate"
+                type="number"
+                value={inputs.vacancyRate}
+                onChange={(e) => handleInputChange('vacancyRate', e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="managementFees">Management Fees (%)</Label>
+              <Input
+                id="managementFees"
+                type="number"
+                value={inputs.managementFees}
+                onChange={(e) => handleInputChange('managementFees', e.target.value)}
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="closingCosts">Closing Costs</Label>
+              <Input
+                id="closingCosts"
+                type="number"
+                value={inputs.closingCosts}
+                onChange={(e) => handleInputChange('closingCosts', e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="monthlyRent">Monthly Rent</Label>
+              <Input
+                id="monthlyRent"
+                type="number"
+                value={inputs.monthlyRent}
+                onChange={(e) => handleInputChange('monthlyRent', e.target.value)}
+              />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="appreciationRate">Annual Appreciation Rate (%)</Label>
+            <Input
+              id="appreciationRate"
+              type="number"
+              value={inputs.appreciationRate}
+              onChange={(e) => handleInputChange('appreciationRate', e.target.value)}
+            />
+          </div>
+          <Button onClick={calculateResults}>Calculate</Button>
         </div>
-
-        <div className="flex justify-center">
-          <button
-            type="submit"
-            className="px-6 py-3 bg-[#2ecc71] text-white rounded-md hover:bg-[#27ae60] focus:outline-none focus:ring-2 focus:ring-[#2ecc71] focus:ring-offset-2 focus:ring-offset-gray-900 transition-all duration-200 shadow-lg hover:shadow-[#2ecc71]/50"
-          >
-            Calculate Payment
-          </button>
-        </div>
-
+      </CardContent>
+      <CardHeader>
+        <CardTitle>Results</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {results && (
+          <div className="space-y-4">
+            <div className="flex justify-between">
+              <span className="text-gray-300">Monthly Payment</span>
+              <span className="text-white font-medium">{formatCurrency(results.monthlyPayment)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-300">Total Investment</span>
+              <span className="text-white font-medium">{formatCurrency(results.totalInvestment)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-300">Annual Cash Flow</span>
+              <span className="text-white font-medium">{formatCurrency(results.annualCashFlow)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-300">Cash on Cash Return</span>
+              <span className="text-white font-medium">{formatCurrency(results.cashOnCashReturn)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-300">Cap Rate</span>
+              <span className="text-white font-medium">{formatCurrency(results.capRate)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-300">Net Operating Income</span>
+              <span className="text-white font-medium">{formatCurrency(results.netOperatingIncome)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-300">Gross Rent Multiplier</span>
+              <span className="text-white font-medium">{formatCurrency(results.grossRentMultiplier)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-300">Break Even Point</span>
+              <span className="text-white font-medium">{formatCurrency(results.breakEvenPoint)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-300">Total Interest</span>
+              <span className="text-white font-medium">{formatCurrency(results.totalInterest)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-300">Total Cost</span>
+              <span className="text-white font-medium">{formatCurrency(results.totalCost)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-300">Equity Build Up</span>
+              <span className="text-white font-medium">{formatCurrency(results.equityBuildUp)}</span>
+            </div>
+          </div>
+        )}
+      </CardContent>
+      <CardHeader>
+        <CardTitle>Actions</CardTitle>
+      </CardHeader>
+      <CardContent>
         <ActionButtons
           onReset={() => dispatch({ type: 'RESET_CALCULATOR' })}
           onSave={handleSave}
           saveDisabled={!results || isSaving}
         />
-      </form>
-
-      {results && (
-        <div className="mt-8 p-6 bg-gray-800 rounded-lg">
-          <h3 className="text-lg font-semibold text-white mb-4">Monthly Payment Breakdown</h3>
-          <div className="space-y-4">
-            <div className="flex justify-between">
-              <span className="text-gray-300">Principal & Interest</span>
-              <span className="text-white font-medium">{formatCurrency(results.principalAndInterest)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-300">Property Tax</span>
-              <span className="text-white font-medium">{formatCurrency(state.calculatorInputs.propertyTaxAnnual / 12)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-300">Home Insurance</span>
-              <span className="text-white font-medium">{formatCurrency(state.calculatorInputs.insuranceAnnual / 12)}</span>
-            </div>
-            {(state.calculatorInputs as MortgageInputs).hoaFees > 0 && (
-              <div className="flex justify-between">
-                <span className="text-gray-300">HOA Fees</span>
-                <span className="text-white font-medium">{formatCurrency((state.calculatorInputs as MortgageInputs).hoaFees)}</span>
-              </div>
-            )}
-            <div className="border-t border-gray-700 pt-4 mt-4">
-              <div className="flex justify-between">
-                <span className="text-white font-semibold">Total Monthly Payment</span>
-                <span className="text-[#2ecc71] font-bold text-xl">{formatCurrency(results.totalMonthlyPayment)}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+      </CardContent>
+    </Card>
   );
 }
 
