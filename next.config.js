@@ -1,14 +1,67 @@
+const withBundleAnalyzer = require('@next/bundle-analyzer')({
+  enabled: process.env.ANALYZE === 'true',
+});
+
+const securityHeaders = [
+  {
+    key: 'X-DNS-Prefetch-Control',
+    value: 'on'
+  },
+  {
+    key: 'Strict-Transport-Security',
+    value: 'max-age=63072000; includeSubDomains; preload'
+  },
+  {
+    key: 'X-XSS-Protection',
+    value: '1; mode=block'
+  },
+  {
+    key: 'X-Frame-Options',
+    value: 'SAMEORIGIN'
+  },
+  {
+    key: 'X-Content-Type-Options',
+    value: 'nosniff'
+  },
+  {
+    key: 'Referrer-Policy',
+    value: 'origin-when-cross-origin'
+  },
+  {
+    key: 'Content-Security-Policy',
+    value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:;"
+  }
+];
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'standalone',
-  cacheMaxMemorySize: 50,
-  serverExternalPackages: ['@netlify/functions'],
-  experimental: {
-    // serverActions is enabled by default in Next 14
-  },
+  reactStrictMode: true,
+  swcMinify: true,
   images: {
-    domains: ['avatars.githubusercontent.com', 'lh3.googleusercontent.com']
-  }
+    domains: ['images.unsplash.com', 'lh3.googleusercontent.com'],
+  },
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: securityHeaders,
+      },
+    ];
+  },
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+        dns: false,
+        child_process: false,
+        module: false,
+      };
+    }
+    return config;
+  },
 };
 
-module.exports = nextConfig;
+module.exports = withBundleAnalyzer(nextConfig);
