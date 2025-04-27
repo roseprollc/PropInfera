@@ -25,7 +25,7 @@ export async function rateLimit(ip: string): Promise<RateLimitResult> {
   const windowStart = now - WINDOW_MS;
   
   const requests = rateLimitCache.get(ip) || [];
-  const recentRequests = requests.filter(timestamp => timestamp > windowStart);
+  const recentRequests = requests.filter((timestamp: number) => timestamp > windowStart);
   
   if (recentRequests.length >= RATE_LIMIT) {
     return {
