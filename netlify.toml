@@ -4,7 +4,7 @@
 
 [build.environment]
   NODE_VERSION = "18"
-  NPM_VERSION = "10.0.0"
+  NPM_VERSION = "9.8.1"
   STRIPE_SECRET_KEY = "sk_test_placeholder"
   STRIPE_WEBHOOK_SECRET = "whsec_placeholder"
   NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY = "pk_test_placeholder"

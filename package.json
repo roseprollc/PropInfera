@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "engines": {
-    "node": "18.x",
-    "npm": "10.0.0"
+    "node": ">=18.17.0",
+    "npm": ">=9.8.1"
   },
   "scripts": {
     "dev": "next dev",
@@ -15,8 +15,7 @@
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "format": "prettier --write .",
     "test": "jest",
-    "clean": "rimraf .next node_modules",
-    "prepare": "npm run build"
+    "clean": "rimraf .next node_modules"
   },
   "dependencies": {
     "@auth/mongodb-adapter": "^1.0.0",
@@ -32,7 +31,7 @@
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
     "date-fns": "^2.30.0",
-    "jspdf": "^2.5.1",
+    "jspdf": "^2.5.2",
     "jspdf-autotable": "^3.8.1",
     "lucide-react": "^0.330.0",
     "mongodb": "^6.3.0",
@@ -43,8 +42,8 @@
     "postcss": "^8.4.35",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-hot-toast": "^2.4.1",
-    "react-markdown": "^9.0.1",
+    "react-hot-toast": "^2.5.2",
+    "react-markdown": "^9.1.0",
     "stripe": "^14.17.0",
     "tailwind-merge": "^2.2.1",
     "tailwindcss": "^3.4.1",
@@ -52,11 +51,11 @@
     "typescript": "^5.3.3"
   },
   "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^6.19.0",
+    "@typescript-eslint/parser": "^6.19.0",
     "eslint": "^8.56.0",
     "eslint-config-next": "^14.0.0",
     "eslint-plugin-react": "^7.33.2",
-    "eslint-plugin-react-hooks": "^4.6.0",
-    "@typescript-eslint/eslint-plugin": "^6.19.0",
-    "@typescript-eslint/parser": "^6.19.0"
+    "eslint-plugin-react-hooks": "^4.6.0"
   }
 }
