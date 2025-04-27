@@ -1,10 +1,10 @@
 'use server';
 
-import { Analysis, CalculatorType } from '@/types/analysis';
+import { Analysis, AnalysisResultsMap } from '@/types/analysis';
 
-export async function updateAnalysis<T extends CalculatorType>(
+export async function updateAnalysis<T extends keyof AnalysisResultsMap>(
   id: string, 
-  updatedData: Partial<Analysis<T>>
+  updatedData: Partial<Analysis<AnalysisResultsMap[T]>>
 ) {
   try {
     const response = await fetch(`/api/analyses/${id}`, {

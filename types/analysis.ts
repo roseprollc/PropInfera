@@ -333,4 +333,6 @@ export function isMortgageAnalysis(analysis: Analysis<AnalysisResults>): analysi
 
 export function isRentersAnalysis(analysis: Analysis<AnalysisResults>): analysis is Analysis<RentersAnalysisResults> {
   return analysis.type === 'renters';
-} 
+}
+
+export type AnyAnalysis = Analysis<any>; 

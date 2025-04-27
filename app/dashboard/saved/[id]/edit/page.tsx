@@ -1,9 +1,9 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getAnalysisById } from '@/lib/data';
-import { EditAnalysisForm } from '@/components/dashboard/EditAnalysisForm';
-import { Analysis, CalculatorType } from '@/types/analysis';
 import { updateAnalysis } from '@/app/actions/analysis';
+import { EditAnalysisForm } from '@/components/dashboard/EditAnalysisForm';
+import { Analysis, AnalysisResults } from '@/types/analysis';
 
 export const metadata: Metadata = {
   title: 'Edit Analysis | PropInfera',
@@ -14,21 +14,21 @@ export default async function EditAnalysisPage({ params }: { params: { id: strin
   const analysis = await getAnalysisById(params.id);
 
   if (!analysis) {
-    notFound();
+    return (
+      <div className="text-center py-8">
+        <h2 className="text-2xl font-bold">Analysis not found</h2>
+      </div>
+    );
   }
 
-  const handleSave = async (updatedData: Partial<Analysis<CalculatorType>>) => {
+  const handleSave = async (updatedData: Partial<Analysis<AnalysisResults>>) => {
     await updateAnalysis(params.id, updatedData);
   };
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="max-w-4xl mx-auto">
-        <EditAnalysisForm<CalculatorType>
-          initialData={analysis}
-          onSave={handleSave}
-        />
-      </div>
+      <h1 className="text-3xl font-bold mb-8">Edit Analysis</h1>
+      <EditAnalysisForm analysis={analysis} onSave={handleSave} />
     </div>
   );
 } 

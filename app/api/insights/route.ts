@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ObjectId } from 'mongodb';
 import { getAnalysisById, updateInsightsById } from '@/lib/data';
 import { generateInsights } from '@/lib/ai/generateInsights';
+import { getCompletion } from '@/lib/openai';
 
 // Simple in-memory rate limiting
 const rateLimit = new Map<string, number>();
@@ -107,4 +108,29 @@ export async function DELETE() {
     { error: 'Method not allowed' },
     { status: 405 }
   );
+}
+
+export async function POST_OpenAI(request: Request) {
+  try {
+    const { prompt } = await request.json();
+    
+    try {
+      const completion = await getCompletion(prompt);
+      return Response.json({ result: completion.choices[0].message.content });
+    } catch (error: any) {
+      if (error.message.includes("OpenAI client is not configured")) {
+        return Response.json(
+          { error: "AI insights are currently disabled." },
+          { status: 501 }
+        );
+      }
+      throw error;
+    }
+  } catch (error) {
+    console.error("Error in insights API:", error);
+    return Response.json(
+      { error: "Failed to generate insights" },
+      { status: 500 }
+    );
+  }
 } 

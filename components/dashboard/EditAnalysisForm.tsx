@@ -6,28 +6,27 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Analysis, CalculatorType } from "@/types/analysis";
+import { Analysis, AnalysisResults } from "@/types/analysis";
 
-interface EditAnalysisFormProps<T extends CalculatorType> {
-  initialData: Analysis<T>;
-  onSave: (updatedData: Partial<Analysis<T>>) => Promise<void>;
+interface EditAnalysisFormProps {
+  analysis: Analysis<AnalysisResults>;
+  onSave: (updatedData: Partial<Analysis<AnalysisResults>>) => Promise<void>;
 }
 
-export function EditAnalysisForm<T extends CalculatorType>({
-  initialData,
-  onSave,
-}: EditAnalysisFormProps<T>) {
+export function EditAnalysisForm({ analysis, onSave }: EditAnalysisFormProps) {
   const router = useRouter();
-  const [title, setTitle] = useState(initialData.title);
-  const [notes, setNotes] = useState(initialData.notes || "");
+  const [title, setTitle] = useState(analysis.title);
+  const [notes, setNotes] = useState(analysis.notes || "");
   const [isSaving, setIsSaving] = useState(false);
 
-  const handleSave = async () => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setIsSaving(true);
     try {
       await onSave({
         title,
         notes,
+        type: analysis.type
       });
       router.push("/dashboard");
     } catch (error) {
@@ -38,7 +37,7 @@ export function EditAnalysisForm<T extends CalculatorType>({
   };
 
   return (
-    <div className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-4">
         <div>
           <Label htmlFor="title">Title</Label>
@@ -47,6 +46,7 @@ export function EditAnalysisForm<T extends CalculatorType>({
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             className="mt-1"
+            required
           />
         </div>
         <div>
@@ -68,11 +68,15 @@ export function EditAnalysisForm<T extends CalculatorType>({
         >
           Cancel
         </Button>
-        <Button onClick={handleSave} disabled={isSaving}>
+        <Button
+          type="submit"
+          disabled={isSaving}
+          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900 disabled:opacity-50"
+        >
           {isSaving ? "Saving..." : "Save Changes"}
         </Button>
       </div>
-    </div>
+    </form>
   );
 }
 

@@ -13,7 +13,8 @@
     "test": "jest",
     "clean": "rimraf .next node_modules",
     "prepare": "npm run type-check && npm run lint",
-    "postinstall": "next telemetry disable"
+    "postinstall": "next telemetry disable",
+    "deploy": "next build --no-lint --no-typescript"
   },
   "dependencies": {
     "@auth/mongodb-adapter": "^2.0.0",

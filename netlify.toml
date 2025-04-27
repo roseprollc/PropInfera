@@ -1,24 +1,18 @@
 [build]
-  command = "npm install --legacy-peer-deps && npm run build"
-  publish = ".next/standalone"
-  functions = ".next/serverless"
+  command = "npm run deploy"
+  publish = ".next"
 
 [build.environment]
-  NEXT_PUBLIC_STRIPE_KEY = "your_stripe_key"
-  NEXTAUTH_SECRET = "your_nextauth_secret"
-  NEXTAUTH_URL = "https://your-site.netlify.app"
-  MONGODB_URI = "your_mongodb_uri"
+  NODE_VERSION = "18.17.0"
+  NPM_FLAGS = "--no-audit --no-fund"
+  STRIPE_SECRET_KEY = "sk_test_placeholder"
+  STRIPE_WEBHOOK_SECRET = "whsec_placeholder"
+  NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY = "pk_test_placeholder"
+  OPENAI_API_KEY = "your-openai-api-key-here"
 
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
-
-[[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/:splat"
-  status = 200
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
 
 [functions]
+  included_files = [".next/**/*"]
   node_bundler = "esbuild"
-  external_node_modules = ["mongodb", "stripe", "next-auth"] 

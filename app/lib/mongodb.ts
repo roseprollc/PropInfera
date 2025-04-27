@@ -1,36 +1,33 @@
 import { MongoClient } from 'mongodb';
 
-// Check if MONGODB_URI is defined
-if (!process.env.MONGODB_URI) {
-  throw new Error('Invalid/Missing environment variable: "MONGODB_URI"');
-}
+const MONGODB_URI = process.env.MONGODB_URI || '';
+const options = {};
 
-const uri = process.env.MONGODB_URI;
-const options = {
-  // Add any MongoDB client options here if needed
-};
+let client: MongoClient;
+let clientPromise: Promise<MongoClient>;
 
-// Define global interface for TypeScript
 declare global {
   var _mongoClientPromise: Promise<MongoClient> | undefined;
 }
 
-// Initialize client outside to ensure proper typing
-const client = new MongoClient(uri, options);
-let clientPromise: Promise<MongoClient>;
+if (!MONGODB_URI) {
+  throw new Error('Please add your Mongo URI to .env.local');
+}
 
 if (process.env.NODE_ENV === 'development') {
-  // In development mode, use a global variable to preserve the value
-  // across module reloads caused by HMR (Hot Module Replacement).
+  // In development mode, use a global variable so that the value
+  // is preserved across module reloads caused by HMR (Hot Module Replacement).
   if (!global._mongoClientPromise) {
-    clientPromise = client.connect();
-    global._mongoClientPromise = clientPromise;
+    client = new MongoClient(MONGODB_URI, options);
+    global._mongoClientPromise = client.connect();
   }
   clientPromise = global._mongoClientPromise;
 } else {
   // In production mode, it's best to not use a global variable.
+  client = new MongoClient(MONGODB_URI, options);
   clientPromise = client.connect();
 }
 
-// Export a module-scoped MongoClient promise
+// Export a module-scoped MongoClient promise. By doing this in a
+// separate module, the client can be shared across functions.
 export default clientPromise; 
