@@ -1,10 +1,10 @@
 [build]
-  command = "npm run build"
+  command = "npm install --legacy-peer-deps && npm run build"
   publish = ".next"
 
 [build.environment]
-  NODE_VERSION = "18.17.0"
-  NPM_FLAGS = "--no-audit --no-fund"
+  NODE_VERSION = "20"
+  NPM_VERSION = "10"
   STRIPE_SECRET_KEY = "sk_test_placeholder"
   STRIPE_WEBHOOK_SECRET = "whsec_placeholder"
   NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY = "pk_test_placeholder"
