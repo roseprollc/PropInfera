@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useCalculator } from '@/context/CalculatorContext';
-import { CalculatorInputs } from '@/types/analysis';
+import { AirbnbInputs, AnalysisResults } from '@/types/analysis';
 import { calculateAirbnbMetrics } from '@/lib/calculators/airbnb';
 import ActionButtons from "@/components/ui/ActionButtons";
 import { Button } from '@/components/ui/button';
@@ -14,8 +14,7 @@ export default function AirbnbCalculator() {
   const { state, dispatch } = useCalculator();
   const [showAllFields, setShowAllFields] = useState(false);
 
-  // Default state is now correctly typed to match the calculator context expectations
-  const [inputs, setInputs] = useState<CalculatorInputs>({
+  const [inputs, setInputs] = useState<AirbnbInputs>({
     propertyAddress: '',
     purchasePrice: 0,
     downPaymentPercent: 20,
@@ -37,14 +36,18 @@ export default function AirbnbCalculator() {
   });
 
   const calculateResults = () => {
-    const results = calculateAirbnbMetrics(inputs);
-    // Properly structure the results to match our AnalysisResults type
+    const metrics = calculateAirbnbMetrics(inputs);
+    const results: AnalysisResults = {
+      loanAmount: inputs.purchasePrice * (1 - inputs.downPaymentPercent / 100),
+      downPayment: inputs.purchasePrice * (inputs.downPaymentPercent / 100),
+      monthlyMortgagePayment: metrics.monthlyMortgagePayment,
+      monthlyExpenses: metrics.monthlyExpenses,
+      totalMonthlyPayment: metrics.monthlyMortgagePayment + metrics.monthlyExpenses
+    };
+
     dispatch({ 
       type: 'SET_RESULTS', 
-      results: { 
-        type: 'airbnb', 
-        data: results 
-      } 
+      payload: results
     });
   };
 
@@ -60,8 +63,7 @@ export default function AirbnbCalculator() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Save the inputs to the calculator context
-    dispatch({ type: 'SET_INPUTS', inputs });
+    dispatch({ type: 'SET_INPUTS', payload: { airbnb: inputs } });
     calculateResults();
   };
 
@@ -340,4 +342,6 @@ export default function AirbnbCalculator() {
 }
 
 // Add displayName property
-AirbnbCalculator.displayName = "AirbnbCalculator"; 
+AirbnbCalculator.displayName = "AirbnbCalculator";
+
+export { AirbnbCalculator }; 

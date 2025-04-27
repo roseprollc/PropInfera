@@ -1,7 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'standalone',
-  serverExternalPackages: ['@netlify/functions'],
   eslint: {
     ignoreDuringBuilds: true
   },
@@ -9,7 +8,7 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   experimental: {
-    serverComponentsExternalPackages: ['mongodb']
+    serverComponentsExternalPackages: ['mongodb', '@netlify/functions']
   }
 };
 

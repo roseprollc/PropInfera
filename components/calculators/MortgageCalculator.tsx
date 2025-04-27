@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useCalculator } from '@/context/CalculatorContext';
-import { MortgageInputs, MortgageResults } from '@/types/analysis';
+import { MortgageInputs, MortgageAnalysisResults } from '@/types/analysis';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,25 +12,24 @@ import { saveAnalysis } from '@/lib/services/saveAnalysis';
 import ActionButtons from "@/components/ui/ActionButtons";
 
 const defaultInputs: MortgageInputs = {
+  propertyAddress: '',
   purchasePrice: 300000,
-  downPayment: 20,
+  downPaymentPercent: 20,
+  loanTermYears: 30,
   interestRate: 6.5,
-  loanTerm: 30,
-  propertyTax: 3000,
-  insurance: 1200,
-  hoaFees: 0,
-  maintenance: 100,
-  vacancyRate: 5,
-  managementFees: 0,
-  closingCosts: 8000,
-  monthlyRent: 2000,
-  appreciationRate: 3
+  propertyTaxesYearly: 3000,
+  insuranceCostMonthly: 100,
+  hoa: 0,
+  maintenancePercent: 1,
+  propertyManagementPercent: 0,
+  closingCostsPercent: 3,
+  utilitiesMonthlyCost: 0
 };
 
-export default function MortgageCalculator() {
+function MortgageCalculator() {
   const { dispatch, state } = useCalculator();
   const [inputs, setInputs] = useState<MortgageInputs>(defaultInputs);
-  const [results, setResults] = useState<MortgageResults | null>(null);
+  const [results, setResults] = useState<MortgageAnalysisResults | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
@@ -45,37 +44,16 @@ export default function MortgageCalculator() {
   };
 
   const calculateResults = () => {
-    const loanAmount = inputs.purchasePrice * (1 - inputs.downPayment / 100);
+    const loanAmount = inputs.purchasePrice * (1 - inputs.downPaymentPercent / 100);
     const monthlyInterestRate = inputs.interestRate / 100 / 12;
-    const numberOfPayments = inputs.loanTerm * 12;
+    const numberOfPayments = inputs.loanTermYears * 12;
     const monthlyPayment = loanAmount * monthlyInterestRate * Math.pow(1 + monthlyInterestRate, numberOfPayments) / (Math.pow(1 + monthlyInterestRate, numberOfPayments) - 1);
     
-    const totalMonthlyExpenses = monthlyPayment + (inputs.propertyTax / 12) + (inputs.insurance / 12) + inputs.hoaFees + inputs.maintenance;
-    const vacancyLoss = (inputs.monthlyRent * inputs.vacancyRate / 100);
-    const managementFees = inputs.monthlyRent * inputs.managementFees / 100;
-    const monthlyOperatingExpenses = totalMonthlyExpenses + vacancyLoss + managementFees;
-    
-    const annualCashFlow = (inputs.monthlyRent - monthlyOperatingExpenses) * 12;
-    const totalInvestment = (inputs.purchasePrice * inputs.downPayment / 100) + inputs.closingCosts;
-    const cashOnCashReturn = (annualCashFlow / totalInvestment) * 100;
-    
-    const results: MortgageResults = {
+    const results: MortgageAnalysisResults = {
       type: 'mortgage',
       monthlyPayment,
-      totalInvestment,
-      annualCashFlow,
-      cashOnCashReturn,
-      capRate: (annualCashFlow / inputs.purchasePrice) * 100,
-      netOperatingIncome: inputs.monthlyRent * 12 - (monthlyOperatingExpenses * 12),
-      grossRentMultiplier: inputs.purchasePrice / (inputs.monthlyRent * 12),
-      internalRateOfReturn: 0, // This would require more complex calculation
-      totalReturn: 0, // This would require more complex calculation
-      breakEvenPoint: monthlyOperatingExpenses / inputs.monthlyRent,
-      loanAmount,
-      totalInterest: (monthlyPayment * numberOfPayments) - loanAmount,
-      totalCost: inputs.purchasePrice + inputs.closingCosts + ((monthlyPayment * numberOfPayments) - loanAmount),
-      equityBuildUp: 0, // This would require amortization schedule
-      amortizationSchedule: [] // This would require full amortization calculation
+      principalAndInterest: monthlyPayment,
+      totalMonthlyPayment: monthlyPayment + (inputs.propertyTaxesYearly / 12) + inputs.insuranceCostMonthly + (inputs.hoa || 0)
     };
 
     setResults(results);
@@ -86,7 +64,7 @@ export default function MortgageCalculator() {
 
     dispatch({
       type: 'SET_INPUTS',
-      payload: { mortgage: inputs }
+      payload: { type: 'mortgage', inputs }
     });
 
     toast.success('Mortgage analysis completed!');
@@ -100,9 +78,9 @@ export default function MortgageCalculator() {
       await saveAnalysis({
         userId: 'mock-user-123',
         type: 'mortgage',
-        inputs: state.calculatorInputs,
-        results: { type: 'mortgage', data: results },
-        title: state.calculatorInputs.propertyAddress || 'Untitled Analysis',
+        inputs: inputs,
+        results: results,
+        title: inputs.propertyAddress || 'Untitled Analysis',
         notes: '',
       });
     } catch (error) {
@@ -137,12 +115,12 @@ export default function MortgageCalculator() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="downPayment">Down Payment (%)</Label>
+              <Label htmlFor="downPaymentPercent">Down Payment (%)</Label>
               <Input
-                id="downPayment"
+                id="downPaymentPercent"
                 type="number"
-                value={inputs.downPayment}
-                onChange={(e) => handleInputChange('downPayment', e.target.value)}
+                value={inputs.downPaymentPercent}
+                onChange={(e) => handleInputChange('downPaymentPercent', e.target.value)}
               />
             </div>
           </div>
@@ -157,103 +135,85 @@ export default function MortgageCalculator() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="loanTerm">Loan Term (years)</Label>
+              <Label htmlFor="loanTermYears">Loan Term (years)</Label>
               <Input
-                id="loanTerm"
+                id="loanTermYears"
                 type="number"
-                value={inputs.loanTerm}
-                onChange={(e) => handleInputChange('loanTerm', e.target.value)}
+                value={inputs.loanTermYears}
+                onChange={(e) => handleInputChange('loanTermYears', e.target.value)}
               />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="propertyTax">Annual Property Tax</Label>
+              <Label htmlFor="propertyTaxesYearly">Annual Property Tax</Label>
               <Input
-                id="propertyTax"
+                id="propertyTaxesYearly"
                 type="number"
-                value={inputs.propertyTax}
-                onChange={(e) => handleInputChange('propertyTax', e.target.value)}
+                value={inputs.propertyTaxesYearly}
+                onChange={(e) => handleInputChange('propertyTaxesYearly', e.target.value)}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="insurance">Annual Insurance</Label>
+              <Label htmlFor="insuranceCostMonthly">Monthly Insurance</Label>
               <Input
-                id="insurance"
+                id="insuranceCostMonthly"
                 type="number"
-                value={inputs.insurance}
-                onChange={(e) => handleInputChange('insurance', e.target.value)}
+                value={inputs.insuranceCostMonthly}
+                onChange={(e) => handleInputChange('insuranceCostMonthly', e.target.value)}
               />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="hoaFees">Monthly HOA Fees</Label>
+              <Label htmlFor="hoa">Monthly HOA Fees</Label>
               <Input
-                id="hoaFees"
+                id="hoa"
                 type="number"
-                value={inputs.hoaFees}
-                onChange={(e) => handleInputChange('hoaFees', e.target.value)}
+                value={inputs.hoa}
+                onChange={(e) => handleInputChange('hoa', e.target.value)}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="maintenance">Monthly Maintenance</Label>
+              <Label htmlFor="maintenancePercent">Monthly Maintenance</Label>
               <Input
-                id="maintenance"
+                id="maintenancePercent"
                 type="number"
-                value={inputs.maintenance}
-                onChange={(e) => handleInputChange('maintenance', e.target.value)}
+                value={inputs.maintenancePercent}
+                onChange={(e) => handleInputChange('maintenancePercent', e.target.value)}
               />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="vacancyRate">Vacancy Rate (%)</Label>
+              <Label htmlFor="propertyManagementPercent">Management Fees (%)</Label>
               <Input
-                id="vacancyRate"
+                id="propertyManagementPercent"
                 type="number"
-                value={inputs.vacancyRate}
-                onChange={(e) => handleInputChange('vacancyRate', e.target.value)}
+                value={inputs.propertyManagementPercent}
+                onChange={(e) => handleInputChange('propertyManagementPercent', e.target.value)}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="managementFees">Management Fees (%)</Label>
+              <Label htmlFor="closingCostsPercent">Closing Costs (%)</Label>
               <Input
-                id="managementFees"
+                id="closingCostsPercent"
                 type="number"
-                value={inputs.managementFees}
-                onChange={(e) => handleInputChange('managementFees', e.target.value)}
+                value={inputs.closingCostsPercent}
+                onChange={(e) => handleInputChange('closingCostsPercent', e.target.value)}
               />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="closingCosts">Closing Costs</Label>
+              <Label htmlFor="utilitiesMonthlyCost">Monthly Utilities</Label>
               <Input
-                id="closingCosts"
+                id="utilitiesMonthlyCost"
                 type="number"
-                value={inputs.closingCosts}
-                onChange={(e) => handleInputChange('closingCosts', e.target.value)}
+                value={inputs.utilitiesMonthlyCost}
+                onChange={(e) => handleInputChange('utilitiesMonthlyCost', e.target.value)}
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="monthlyRent">Monthly Rent</Label>
-              <Input
-                id="monthlyRent"
-                type="number"
-                value={inputs.monthlyRent}
-                onChange={(e) => handleInputChange('monthlyRent', e.target.value)}
-              />
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="appreciationRate">Annual Appreciation Rate (%)</Label>
-            <Input
-              id="appreciationRate"
-              type="number"
-              value={inputs.appreciationRate}
-              onChange={(e) => handleInputChange('appreciationRate', e.target.value)}
-            />
           </div>
           <Button onClick={calculateResults}>Calculate</Button>
         </div>
@@ -269,44 +229,12 @@ export default function MortgageCalculator() {
               <span className="text-white font-medium">{formatCurrency(results.monthlyPayment)}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-300">Total Investment</span>
-              <span className="text-white font-medium">{formatCurrency(results.totalInvestment)}</span>
+              <span className="text-gray-300">Principal and Interest</span>
+              <span className="text-white font-medium">{formatCurrency(results.principalAndInterest)}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-300">Annual Cash Flow</span>
-              <span className="text-white font-medium">{formatCurrency(results.annualCashFlow)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-300">Cash on Cash Return</span>
-              <span className="text-white font-medium">{formatCurrency(results.cashOnCashReturn)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-300">Cap Rate</span>
-              <span className="text-white font-medium">{formatCurrency(results.capRate)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-300">Net Operating Income</span>
-              <span className="text-white font-medium">{formatCurrency(results.netOperatingIncome)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-300">Gross Rent Multiplier</span>
-              <span className="text-white font-medium">{formatCurrency(results.grossRentMultiplier)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-300">Break Even Point</span>
-              <span className="text-white font-medium">{formatCurrency(results.breakEvenPoint)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-300">Total Interest</span>
-              <span className="text-white font-medium">{formatCurrency(results.totalInterest)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-300">Total Cost</span>
-              <span className="text-white font-medium">{formatCurrency(results.totalCost)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-300">Equity Build Up</span>
-              <span className="text-white font-medium">{formatCurrency(results.equityBuildUp)}</span>
+              <span className="text-gray-300">Total Monthly Payment</span>
+              <span className="text-white font-medium">{formatCurrency(results.totalMonthlyPayment)}</span>
             </div>
           </div>
         )}
@@ -325,4 +253,6 @@ export default function MortgageCalculator() {
   );
 }
 
-MortgageCalculator.displayName = "MortgageCalculator"; 
+MortgageCalculator.displayName = "MortgageCalculator";
+
+export { MortgageCalculator }; 
