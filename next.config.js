@@ -4,8 +4,7 @@ const nextConfig = {
   cacheMaxMemorySize: 50,
   serverExternalPackages: ['@netlify/functions'],
   experimental: {
-    serverActions: true,
-    incrementalCacheHandlerPath: require.resolve('./cache-handler.js')
+    // serverActions is enabled by default in Next 14
   },
   images: {
     domains: ['avatars.githubusercontent.com', 'lh3.googleusercontent.com']
