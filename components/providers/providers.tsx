@@ -1,11 +1,22 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { TierProvider } from '@/context/TierContext';
 import { AnalysisProvider } from '@/context/AnalysisContext';
 import { ThemeProvider } from '@/components/providers/theme-provider';
 import { Toaster } from 'react-hot-toast';
 
 export function Providers({ children }: { children: React.ReactNode }) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return null;
+  }
+
   return (
     <ThemeProvider
       attribute="class"
