@@ -15,7 +15,9 @@
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "format": "prettier --write .",
     "test": "jest",
-    "clean": "rimraf .next node_modules"
+    "clean": "rimraf .next node_modules",
+    "build:lambda": "cd lambda/ml-handler && npm install && npm run build",
+    "deploy:lambda": "aws lambda update-function-code --function-name ml-handler --zip-file fileb://lambda/ml-handler/dist/index.js"
   },
   "dependencies": {
     "@auth/mongodb-adapter": "^3.9.0",
@@ -35,18 +37,19 @@
     "jspdf-autotable": "^3.8.1",
     "lucide-react": "^0.330.0",
     "mongodb": "^6.3.0",
-    "next": "13.4.19",
+    "next": "^15.3.1",
     "next-auth": "^4.24.5",
     "next-themes": "^0.2.1",
     "openai": "^4.28.0",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
     "tailwindcss-animate": "^1.0.7",
     "typescript": "^5.3.3"
   },
   "devDependencies": {
-    "@next/bundle-analyzer": "^13.4.19",
+    "@next/bundle-analyzer": "^14.2.28",
     "@stripe/stripe-js": "^7.2.0",
+    "@types/aws-lambda": "^8.10.149",
     "@types/lru-cache": "^7.10.9",
     "@typescript-eslint/eslint-plugin": "^6.19.0",
     "@typescript-eslint/parser": "^6.19.0",
@@ -54,7 +57,7 @@
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "eslint": "^8.56.0",
-    "eslint-config-next": "13.4.19",
+    "eslint-config-next": "14.2.28",
     "eslint-plugin-react": "^7.33.2",
     "eslint-plugin-react-hooks": "^4.6.0",
     "jspdf": "^3.0.1",

@@ -39,7 +39,10 @@
     "strictPropertyInitialization": true,
     "noImplicitAny": true,
     "noImplicitThis": true,
-    "alwaysStrict": true
+    "alwaysStrict": true,
+    "useDefineForClassFields": true,
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true
   },
   "include": [
     "next-env.d.ts",
