@@ -1,4 +1,4 @@
-import { Metadata } from 'next';
+import type { Metadata } from 'next';
 import { MortgageCalculator } from '@/components/calculators/MortgageCalculator';
 import CalculatorLayout from '@/components/layout/CalculatorLayout';
 
@@ -17,4 +17,4 @@ export default function MortgagePage() {
       <MortgageCalculator />
     </CalculatorLayout>
   );
-} 
+}

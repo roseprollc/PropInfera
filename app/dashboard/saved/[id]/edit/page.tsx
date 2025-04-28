@@ -12,7 +12,6 @@ export const metadata: Metadata = {
 
 export default async function EditAnalysisPage({ params }: { params: { id: string } }) {
   const analysis = await getAnalysisById(params.id);
-
   if (!analysis) {
     return (
       <div className="text-center py-8">
@@ -20,15 +19,15 @@ export default async function EditAnalysisPage({ params }: { params: { id: strin
       </div>
     );
   }
-
+  
   const handleSave = async (updatedData: Partial<Analysis<AnalysisResults>>) => {
     await updateAnalysis(params.id, updatedData);
   };
-
+  
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-8">Edit Analysis</h1>
       <EditAnalysisForm analysis={analysis} onSave={handleSave} />
     </div>
   );
-} 
+}

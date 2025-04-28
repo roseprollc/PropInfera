@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useReducer, ReactNode } from 'react';
-import { CalculatorInputs, AnalysisResults } from '@/types/analysis';
+import type { CalculatorInputs, AnalysisResults } from '@/types/analysis';
 
 interface CalculatorState {
   type: 'mortgage' | 'rental' | 'airbnb' | 'wholesale';
@@ -60,4 +60,4 @@ export function useCalculator() {
 }
 
 // Add displayName for debugging
-CalculatorProvider.displayName = "CalculatorProvider"; 
+CalculatorProvider.displayName = "CalculatorProvider";

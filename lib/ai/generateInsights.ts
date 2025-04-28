@@ -1,5 +1,5 @@
 import OpenAI from 'openai';
-import { Analysis } from '@/lib/data';
+import type { Analysis } from '@/lib/data';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -49,4 +49,4 @@ Format the response in clear, concise bullet points.`;
     console.error('Error generating insights:', error);
     return "An error occurred while generating insights. Please try again later.";
   }
-} 
+}

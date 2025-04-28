@@ -1,4 +1,4 @@
-import { ObjectId } from 'mongodb';
+import type { ObjectId } from 'mongodb';
 
 /**
  * Type representing all possible calculator types in the application
@@ -305,4 +305,4 @@ export function isRentersAnalysis(analysis: Analysis<AnalysisResults>): analysis
   return analysis.type === 'renters';
 }
 
-export type AnyAnalysis = Analysis<any>; 
+export type AnyAnalysis = Analysis<any>;

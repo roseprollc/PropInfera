@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useCalculator } from '@/context/CalculatorContext';
-import { MortgageInputs, MortgageAnalysisResults } from '@/types/analysis';
+import type { MortgageInputs, MortgageAnalysisResults } from '@/types/analysis';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -255,4 +255,4 @@ function MortgageCalculator() {
 
 MortgageCalculator.displayName = "MortgageCalculator";
 
-export { MortgageCalculator }; 
+export { MortgageCalculator };

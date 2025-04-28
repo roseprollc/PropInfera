@@ -16,7 +16,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Info } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import Image from 'next/image';
-import { AirbnbInputs, AnalysisResults } from '@/types/analysis';
+import type { AirbnbInputs, AnalysisResults } from '@/types/analysis';
 import { calculateAirbnbMetrics } from '@/lib/calculators/airbnb';
 import ActionButtons from "@/components/ui/ActionButtons";
 
@@ -393,4 +393,4 @@ export default AirbnbCalculator;
 // Add displayName property
 AirbnbCalculator.displayName = "AirbnbCalculator";
 
-export { AirbnbCalculator }; 
+export { AirbnbCalculator };

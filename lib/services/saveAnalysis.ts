@@ -1,4 +1,4 @@
-import { Analysis, CalculatorInputs, AnalysisResults, CalculatorType } from '@/types/analysis';
+import type { Analysis, CalculatorInputs, AnalysisResults, CalculatorType } from '@/types/analysis';
 
 export interface SaveAnalysisParams {
   userId: string;
@@ -32,7 +32,7 @@ export async function saveAnalysis(params: SaveAnalysisParams): Promise<SaveAnal
     });
 
     const data = await response.json();
-
+    
     if (!response.ok) {
       return { 
         success: false, 
@@ -54,4 +54,4 @@ export async function saveAnalysis(params: SaveAnalysisParams): Promise<SaveAnal
       error: error instanceof Error ? error.message : 'Unknown error'
     };
   }
-} 
+}

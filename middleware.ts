@@ -54,4 +54,4 @@ export const config = {
     '/api/:path*',
     '/auth/:path*',
   ],
-}; 
+};

@@ -1,4 +1,4 @@
-import { CalculatorInputs, RentalAnalysisResults, ProjectionYear } from '@/types/analysis';
+import type { CalculatorInputs, RentalAnalysisResults, ProjectionYear } from '@/types/analysis';
 
 // Initial calculator inputs with sensible defaults
 export const initialCalculatorInputs: CalculatorInputs = {
@@ -303,4 +303,5 @@ export function calculateRentalMetrics(inputs: CalculatorInputs): RentalAnalysis
     grossRentMultiplier: grm,
     debtServiceCoverageRatio: dscr
   };
-} 
+}
+ 
