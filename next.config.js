@@ -2,8 +2,12 @@
 const nextConfig = {
   reactStrictMode: true,
   experimental: {
+  serverActions: {
+    bodySizeLimit: "2mb"
+  }
+},
     serverActions: {
-      allowedOrigins: ['localhost:3000']
+      bodySizeLimit: '2mb'
     }
   },
   async rewrites() {
