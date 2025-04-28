@@ -1,9 +1,9 @@
-import { Metadata } from 'next';
+import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getAnalysisById } from '@/lib/data';
 import { updateAnalysis } from '@/app/actions/analysis';
 import { EditAnalysisForm } from '@/components/dashboard/EditAnalysisForm';
-import { Analysis, AnalysisResults } from '@/types/analysis';
+import type { Analysis, AnalysisResults } from '@/types/analysis';
 
 export const metadata: Metadata = {
   title: 'Edit Analysis | PropInfera',
