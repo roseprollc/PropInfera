@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
-import { Analysis, AnalysisResults } from '@/types/analysis';
+import type { Analysis, AnalysisResultsMap, CalculatorType } from '@/types/analysis';
 
 export async function PATCH(
   request: NextRequest,
@@ -19,7 +19,7 @@ export async function PATCH(
     }
 
     // Get the request body
-    const updates: Partial<Analysis<AnalysisResults>> = await request.json();
+    const updates = await request.json();
 
     // Validate required fields
     if (!updates.title?.trim()) {
