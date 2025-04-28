@@ -3,7 +3,7 @@ import { getWebhookSecret } from '@/lib/aws-ssm';
 import Stripe from 'stripe';
 
 const stripe = new Stripe(process.env.STRIPE_KEY || '', {
-  apiVersion: '2023-10-16',
+  apiVersion: '2025-03-31.basil',
 });
 
 export const handler = async (
