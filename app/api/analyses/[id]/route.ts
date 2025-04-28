@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
-import type { Analysis } from '@/types/analysis';
-import type { AnalysisResultsMap } from '@/types/analysis';
-import type { CalculatorType } from '@/types/analysis';
 
 export async function PATCH(
   request: NextRequest,
@@ -52,4 +49,4 @@ export async function PATCH(
       { status: 500 }
     );
   }
-} 
+}
