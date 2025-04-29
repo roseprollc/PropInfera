@@ -1,9 +1,8 @@
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
 import { getAnalysisById } from '@/lib/data';
 import { updateAnalysis } from '@/app/actions/analysis';
 import { EditAnalysisForm } from '@/components/dashboard/EditAnalysisForm';
-import type { Analysis, AnalysisResults } from '@/types/analysis';
+import type { Analysis, CalculatorType } from '@/types/analysis';
 
 export const metadata: Metadata = {
   title: 'Edit Analysis | PropInfera',
@@ -20,7 +19,8 @@ export default async function EditAnalysisPage({ params }: { params: { id: strin
     );
   }
   
-  const handleSave = async (updatedData: Partial<Analysis<AnalysisResults>>) => {
+  // Use proper typing that matches constraints
+  const handleSave = async (updatedData: Partial<Analysis>) => {
     await updateAnalysis(params.id, updatedData);
   };
   

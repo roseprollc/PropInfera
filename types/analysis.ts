@@ -3,7 +3,7 @@ import type { ObjectId } from 'mongodb';
 /**
  * Type representing all possible calculator types in the application
  */
-export type CalculatorType = 'mortgage' | 'rental' | 'airbnb' | 'wholesale';
+export type CalculatorType = 'mortgage' | 'rental' | 'airbnb' | 'wholesale' | 'renters';
 
 /**
  * Type mapping for calculator inputs
@@ -13,6 +13,7 @@ export interface CalculatorInputs {
   rental?: RentalInputs;
   airbnb?: AirbnbInputs;
   wholesale?: WholesaleInputs;
+  renters?: RentersInputs;
 }
 
 /**
@@ -250,31 +251,10 @@ export function isRentersResults(results: AnalysisResults): results is RentersAn
 }
 
 /**
- * Generic analysis state interface
- */
-export interface AnalysisState<T extends CalculatorType> {
-  currentAnalysis: Analysis<T> | null;
-  calculatorInputs: CalculatorInputsMap[T];
-  results: AnalysisResultsMap[T] | null;
-  isLoading: boolean;
-  error: string | null;
-}
-
-/**
- * Action types for the calculator reducer
- */
-export type AnalysisAction<T extends CalculatorType> =
-  | { type: 'SET_INPUTS'; payload: { type: T; inputs: CalculatorInputsMap[T] } }
-  | { type: 'SET_RESULTS'; payload: AnalysisResultsMap[T] }
-  | { type: 'SET_LOADING'; payload: boolean }
-  | { type: 'SET_ERROR'; payload: string | null }
-  | { type: 'RESET_CALCULATOR' };
-
-/**
  * Generic analysis interface
  */
-export interface Analysis<T extends keyof AnalysisResultsMap> {
-  _id?: string;
+export interface Analysis<T extends CalculatorType = CalculatorType> {
+  _id?: string | ObjectId;
   type: T;
   data: AnalysisResultsMap[T];
   title: string;
@@ -284,25 +264,14 @@ export interface Analysis<T extends keyof AnalysisResultsMap> {
   userId: string;
 }
 
-// Type guards for each calculator type
-export function isRentalAnalysis(analysis: Analysis<AnalysisResults>): analysis is Analysis<RentalAnalysisResults> {
-  return analysis.type === 'rental';
-}
+/**
+ * Type-safe analysis creation payload
+ */
+export type CreateAnalysisPayload<T extends CalculatorType> = Omit<Analysis<T>, '_id' | 'createdAt' | 'updatedAt'>;
 
-export function isAirbnbAnalysis(analysis: Analysis<AnalysisResults>): analysis is Analysis<AirbnbAnalysisResults> {
-  return analysis.type === 'airbnb';
-}
-
-export function isWholesaleAnalysis(analysis: Analysis<AnalysisResults>): analysis is Analysis<WholesaleAnalysisResults> {
-  return analysis.type === 'wholesale';
-}
-
-export function isMortgageAnalysis(analysis: Analysis<AnalysisResults>): analysis is Analysis<MortgageAnalysisResults> {
-  return analysis.type === 'mortgage';
-}
-
-export function isRentersAnalysis(analysis: Analysis<AnalysisResults>): analysis is Analysis<RentersAnalysisResults> {
-  return analysis.type === 'renters';
-}
-
-export type AnyAnalysis = Analysis<any>;
+/**
+ * Type-safe analysis update payload
+ */
+export type UpdateAnalysisPayload<T extends CalculatorType> = Partial<Omit<Analysis<T>, '_id' | 'userId' | 'createdAt' | 'type'>> & {
+  _id: string | ObjectId;
+};

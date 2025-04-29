@@ -10,6 +10,6 @@ export default function Home() {
       <CalculatorTiles />
       <HowItWorks />
       <Footer />
-    </main>
+      </main>
   );
 } 

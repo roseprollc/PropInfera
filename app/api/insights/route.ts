@@ -1,51 +1,58 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
+import clientPromise from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
-import { getAnalysisById, updateInsightsById } from '@/lib/data';
 import { generateInsights } from '@/lib/ai/generateInsights';
-import { getCompletion } from '@/lib/openai';
+import type { Analysis } from '@/types/analysis';
 
-// Simple in-memory rate limiting
-const rateLimit = new Map<string, number>();
-const RATE_LIMIT_WINDOW = 10 * 1000; // 10 seconds in milliseconds
+export const dynamic = 'force-dynamic';
 
-export async function POST(request: NextRequest) {
+// Define a type that extends Analysis to include insights
+interface AnalysisWithInsights extends Analysis {
+  insights?: {
+    content: string;
+    generatedAt: Date;
+    modelVersion: string;
+  };
+}
+
+// Function to get analysis by ID from MongoDB directly
+async function getAnalysisById(id: string): Promise<AnalysisWithInsights | null> {
   try {
-    // Rate limiting check
-    const ip = request.headers.get('x-forwarded-for') || 'unknown';
-    const now = Date.now();
-    const lastRequest = rateLimit.get(ip);
+    const client = await clientPromise;
+    const db = client.db();
     
-    if (lastRequest && now - lastRequest < RATE_LIMIT_WINDOW) {
-      return NextResponse.json(
-        { error: 'Rate limit exceeded. Please wait 10 seconds before trying again.' },
-        { status: 429 }
-      );
+    if (!ObjectId.isValid(id)) {
+      return null;
     }
     
-    // Update rate limit
-    rateLimit.set(ip, now);
+    const analysis = await db.collection('analyses').findOne({ 
+      _id: new ObjectId(id) 
+    });
+    
+    return analysis as AnalysisWithInsights;
+  } catch (error) {
+    console.error('Error fetching analysis:', error);
+    return null;
+  }
+}
 
-    // Validate request body
-    const body = await request.json();
-    const { id } = body;
-    const shouldRefresh = new URL(request.url).searchParams.get('refresh') === 'true';
-
+export async function GET(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const shouldRefresh = searchParams.get('refresh') === 'true';
+    const id = params.id;
+    
     if (!id) {
       return NextResponse.json(
         { error: 'Analysis ID is required' },
         { status: 400 }
       );
     }
-
-    // Validate ObjectId format
-    if (!ObjectId.isValid(id)) {
-      return NextResponse.json(
-        { error: 'Invalid analysis ID format' },
-        { status: 400 }
-      );
-    }
-
-    // Fetch analysis data
+    
+    // Get analysis using the local function
     const analysis = await getAnalysisById(id);
     
     if (!analysis) {
@@ -54,83 +61,51 @@ export async function POST(request: NextRequest) {
         { status: 404 }
       );
     }
-
+    
     // Return cached insights if they exist and refresh is not requested
     if (analysis.insights && !shouldRefresh) {
       return NextResponse.json({ 
         insights: analysis.insights,
         cached: true,
-        updatedAt: analysis.insightsUpdatedAt
       });
     }
-
-    // Generate new insights
-    const insights = await generateInsights(analysis);
-
+    
+    // Generate new insights if none exist or refresh is requested
+    const insightsContent = await generateInsights(analysis);
+    
     // Update the analysis with new insights
-    const success = await updateInsightsById(id, insights);
-
-    if (!success) {
-      console.error('Failed to update insights in database');
+    const updatedAnalysis = {
+      ...analysis,
+      insights: {
+        content: insightsContent,
+        generatedAt: new Date(),
+        modelVersion: 'gpt-4-turbo'
+      }
+    };
+    
+    // Save the updated insights
+    try {
+      const client = await clientPromise;
+      const db = client.db();
+      
+      await db.collection('analyses').updateOne(
+        { _id: new ObjectId(id) },
+        { $set: { insights: updatedAnalysis.insights } }
+      );
+    } catch (updateError) {
+      console.error('Error updating insights:', updateError);
+      // Continue anyway to return the generated insights
     }
-
-    return NextResponse.json({ 
-      insights,
-      cached: false,
-      updatedAt: new Date().toISOString()
+    
+    return NextResponse.json({
+      insights: updatedAnalysis.insights,
+      cached: false
     });
   } catch (error) {
-    console.error('Error generating insights:', error);
+    console.error('[INSIGHTS_ERROR]', error);
     return NextResponse.json(
-      { error: 'Failed to generate insights. Please try again later.' },
+      { error: 'Failed to generate insights' },
       { status: 500 }
     );
   }
 }
-
-// Only allow POST method
-export async function GET() {
-  return NextResponse.json(
-    { error: 'Method not allowed' },
-    { status: 405 }
-  );
-}
-
-export async function PUT() {
-  return NextResponse.json(
-    { error: 'Method not allowed' },
-    { status: 405 }
-  );
-}
-
-export async function DELETE() {
-  return NextResponse.json(
-    { error: 'Method not allowed' },
-    { status: 405 }
-  );
-}
-
-export async function POST_OpenAI(request: Request) {
-  try {
-    const { prompt } = await request.json();
-    
-    try {
-      const completion = await getCompletion(prompt);
-      return Response.json({ result: completion.choices[0].message.content });
-    } catch (error: any) {
-      if (error.message.includes("OpenAI client is not configured")) {
-        return Response.json(
-          { error: "AI insights are currently disabled." },
-          { status: 501 }
-        );
-      }
-      throw error;
-    }
-  } catch (error) {
-    console.error("Error in insights API:", error);
-    return Response.json(
-      { error: "Failed to generate insights" },
-      { status: 500 }
-    );
-  }
-} 
