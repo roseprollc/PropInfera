@@ -20,15 +20,27 @@ import {
   isRentersResults
 } from "@/types/analysis";
 
-// Incoming request structure with correct type safety
-interface IncomingSaveAnalysisRequest<T extends CalculatorType = CalculatorType> {
+// Base request structure with unknown data field
+interface IncomingSaveAnalysisBase {
   userId: string;
-  type: T;
+  type: CalculatorType;
   title?: string;
   notes?: string;
-  data: AnalysisResultsMap[T];
-  createdAt?: Date;
-  updatedAt?: Date;
+  data: unknown;
+}
+
+// Constants for validation
+const MAX_TITLE_LENGTH = 100;
+const MAX_NOTES_LENGTH = 1000;
+
+// Helper function to validate MongoDB ObjectId
+function isValidObjectId(id: string): boolean {
+  return ObjectId.isValid(id) && new ObjectId(id).toString() === id;
+}
+
+// Helper function to sanitize text
+function sanitizeText(text: string): string {
+  return text.trim().replace(/[<>]/g, '');
 }
 
 // GET handler
@@ -36,6 +48,13 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get("userId");
+
+    if (userId && !isValidObjectId(userId)) {
+      return NextResponse.json(
+        { error: "Invalid userId format" },
+        { status: 400 }
+      );
+    }
 
     const client = await clientPromise;
     const db = client.db("propinfera");
@@ -63,10 +82,18 @@ export async function GET(request: NextRequest) {
 // POST handler
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json() as IncomingSaveAnalysisRequest;
+    const body = await request.json() as IncomingSaveAnalysisBase;
     const { userId, type, data, title, notes } = body;
 
-    const missingFields = ["userId", "type", "data"].filter((field) => !(field === "userId" ? userId : field === "type" ? type : data));
+    // Validate userId format
+    if (!isValidObjectId(userId)) {
+      return NextResponse.json(
+        { error: "Invalid userId format" },
+        { status: 400 }
+      );
+    }
+
+    const missingFields = ["userId", "type", "data"].filter((field) => !body[field as keyof typeof body]);
     if (missingFields.length > 0) {
       return NextResponse.json(
         {
@@ -77,8 +104,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    let validatedData: AnalysisResultsMap[typeof type];
+    // Validate and sanitize title and notes
+    const sanitizedTitle = title ? sanitizeText(title) : "Untitled Analysis";
+    const sanitizedNotes = notes ? sanitizeText(notes) : "";
 
+    if (sanitizedTitle.length > MAX_TITLE_LENGTH) {
+      return NextResponse.json(
+        { error: `Title must be less than ${MAX_TITLE_LENGTH} characters` },
+        { status: 400 }
+      );
+    }
+
+    if (sanitizedNotes.length > MAX_NOTES_LENGTH) {
+      return NextResponse.json(
+        { error: `Notes must be less than ${MAX_NOTES_LENGTH} characters` },
+        { status: 400 }
+      );
+    }
+
+    // Validate type and cast safely
+    let validatedData: AnalysisResults;
     switch (type) {
       case "mortgage":
         if (!isMortgageResults(data as AnalysisResults)) return invalidTypeResponse();
@@ -106,13 +151,13 @@ export async function POST(request: NextRequest) {
 
     const client = await clientPromise;
     const db = client.db("propinfera");
-    const collection = db.collection<Analysis<typeof type>>("analyses");
+    const collection = db.collection<Analysis>("analyses");
 
-    const newAnalysis: Analysis<typeof type> = {
+    const newAnalysis: Analysis = {
       userId,
       type,
-      title: title || "Untitled Analysis",
-      notes: notes || "",
+      title: sanitizedTitle,
+      notes: sanitizedNotes,
       data: validatedData,
       createdAt: new Date(),
       updatedAt: new Date()
@@ -139,6 +184,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
+// Helper response for type mismatches
 function invalidTypeResponse() {
   return NextResponse.json(
     {
