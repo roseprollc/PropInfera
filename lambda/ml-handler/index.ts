@@ -33,7 +33,7 @@ export const handler = async (
     const startTime = Date.now();
 
     // TODO: Implement your ML processing logic here
-    const result = await processMLRequest(body);
+    const result = await processMLRequest();
 
     // Calculate processing time
     const processingTime = Date.now() - startTime;
@@ -59,7 +59,7 @@ export const handler = async (
   }
 };
 
-async function processMLRequest(request: MLRequest): Promise<any> {
+async function processMLRequest(): Promise<any> {
   // Implement your ML processing logic here
   // This is a placeholder that returns a mock result
   return {

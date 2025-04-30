@@ -1,10 +1,5 @@
 import { LRUCache } from 'lru-cache';
 
-interface RateLimitOptions {
-  max: number;
-  ttl: number;
-}
-
 interface RateLimitResult {
   success: boolean;
   limit: number;

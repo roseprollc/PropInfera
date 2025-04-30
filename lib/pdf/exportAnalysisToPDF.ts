@@ -1,15 +1,10 @@
-import type { Analysis } from '@/types/analysis';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
-import { format } from 'date-fns';
 
-export async function exportAnalysisToPDF(analysis: Analysis): Promise<void> {
+export function exportAnalysisToPDF(analysis: any) {
   const doc = new jsPDF();
   const margin = 20;
-  const pageHeight = doc.internal.pageSize.height;
-  const pageWidth = doc.internal.pageSize.width;
-  const contentWidth = pageWidth - (margin * 2);
-
+  
   // Add title
   doc.setFontSize(20);
   doc.text(analysis.title || 'Property Analysis', margin, margin + 20);

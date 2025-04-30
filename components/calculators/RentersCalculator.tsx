@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useCalculator } from "@/context/CalculatorContext";
-import type { RentalInputs, RentalAnalysisResults, CalculatorInputs } from "@/types/analysis";
+import type { RentalInputs, RentalAnalysisResults, RentersInputs } from "@/types/analysis";
 import { saveAnalysis } from "@/lib/services/saveAnalysis";
 import { useSession } from "next-auth/react";
 import { Input } from "@/components/ui/input";
@@ -11,13 +11,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Toast from "@/components/ui/Toast";
 
-interface RentersInputs {
-  monthlyRent: number;
-  securityDeposit: number;
-  leaseTerm: number;
-  utilitiesIncluded: boolean;
-}
-
 export default function RentersCalculator() {
   const { state, dispatch } = useCalculator();
   const { data: session } = useSession();
@@ -25,10 +18,24 @@ export default function RentersCalculator() {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const inputs: RentersInputs = {
+    propertyAddress: state.rental?.propertyAddress ?? "",
+    purchasePrice: state.rental?.purchasePrice ?? 0,
+    downPaymentPercent: state.rental?.downPaymentPercent ?? 20,
+    loanTermYears: state.rental?.loanTermYears ?? 30,
+    interestRate: state.rental?.interestRate ?? 5.5,
+    closingCostsPercent: state.rental?.closingCostsPercent ?? 3,
+    propertyTaxesYearly: state.rental?.propertyTaxesYearly ?? 0,
+    insuranceCostMonthly: state.rental?.insuranceCostMonthly ?? 0,
+    utilitiesMonthlyCost: state.rental?.utilitiesMonthlyCost ?? 0,
+    maintenancePercent: state.rental?.maintenancePercent ?? 0,
+    propertyManagementPercent: state.rental?.propertyManagementPercent ?? 0,
     monthlyRent: state.rental?.monthlyRent ?? 0,
-    securityDeposit: (state.rental as any)?.securityDeposit ?? 0,
-    leaseTerm: (state.rental as any)?.leaseTerm ?? 12,
-    utilitiesIncluded: (state.rental as any)?.utilitiesIncluded ?? false,
+    vacancyRatePercent: state.rental?.vacancyRatePercent ?? 5,
+    capExReservePercent: state.rental?.capExReservePercent ?? 5,
+    annualAppreciationPercent: state.rental?.annualAppreciationPercent ?? 3,
+    annualRentIncreasePercent: state.rental?.annualRentIncreasePercent ?? 2,
+    holdingPeriodYears: state.rental?.holdingPeriodYears ?? 5,
+    hoa: state.rental?.hoa
   };
 
   useEffect(() => {
@@ -74,10 +81,6 @@ export default function RentersCalculator() {
   ) => {
     const rentalInputs: RentalInputs = {
       ...state.rental,
-      monthlyRent: inputs.monthlyRent,
-      securityDeposit: inputs.securityDeposit,
-      leaseTerm: inputs.leaseTerm,
-      utilitiesIncluded: inputs.utilitiesIncluded,
       [field]: value,
     } as RentalInputs;
 
@@ -92,14 +95,14 @@ export default function RentersCalculator() {
   const calculateResults = () => {
     const results: RentalAnalysisResults = {
       type: "rental",
-      monthlyCashFlow: inputs.monthlyRent,
-      annualCashFlow: inputs.monthlyRent * 12,
+      monthlyCashFlow: inputs.monthlyRent ?? 0,
+      annualCashFlow: (inputs.monthlyRent ?? 0) * 12,
       capRate: 0,
       cashOnCash: 0,
       roi: 0,
       totalCashInvestment: 0,
-      netOperatingIncome: inputs.monthlyRent * 12,
-      monthlyRevenue: inputs.monthlyRent,
+      netOperatingIncome: (inputs.monthlyRent ?? 0) * 12,
+      monthlyRevenue: inputs.monthlyRent ?? 0,
       totalOperatingExpenses: 0,
       monthlyMortgagePayment: 0,
       breakEvenOccupancy: 0,
@@ -125,7 +128,7 @@ export default function RentersCalculator() {
       await saveAnalysis({
         userId: session.user.id,
         type: "rental",
-        inputs: state.rental as unknown as CalculatorInputs,
+        inputs,
         results: state.rentalResults as RentalAnalysisResults,
         title: "Renters Analysis",
         notes: "",
@@ -154,45 +157,33 @@ export default function RentersCalculator() {
                 <Input
                   id="monthlyRent"
                   type="number"
-                  value={inputs.monthlyRent}
+                  value={inputs.monthlyRent ?? 0}
                   onChange={(e) =>
                     handleInputChange("monthlyRent", Number(e.target.value))
                   }
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="securityDeposit">Security Deposit</Label>
+                <Label htmlFor="utilitiesMonthlyCost">Monthly Utilities Cost</Label>
                 <Input
-                  id="securityDeposit"
+                  id="utilitiesMonthlyCost"
                   type="number"
-                  value={inputs.securityDeposit}
+                  value={inputs.utilitiesMonthlyCost ?? 0}
                   onChange={(e) =>
-                    handleInputChange("securityDeposit", Number(e.target.value))
+                    handleInputChange("utilitiesMonthlyCost", Number(e.target.value))
                   }
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="leaseTerm">Lease Term (months)</Label>
+                <Label htmlFor="propertyManagementPercent">Property Management %</Label>
                 <Input
-                  id="leaseTerm"
+                  id="propertyManagementPercent"
                   type="number"
-                  value={inputs.leaseTerm}
+                  value={inputs.propertyManagementPercent ?? 0}
                   onChange={(e) =>
-                    handleInputChange("leaseTerm", Number(e.target.value))
+                    handleInputChange("propertyManagementPercent", Number(e.target.value))
                   }
                 />
-              </div>
-              <div className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  id="utilitiesIncluded"
-                  checked={inputs.utilitiesIncluded}
-                  onChange={(e) =>
-                    handleInputChange("utilitiesIncluded", e.target.checked)
-                  }
-                  className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                />
-                <Label htmlFor="utilitiesIncluded">Utilities Included</Label>
               </div>
             </div>
 
@@ -242,3 +233,4 @@ export default function RentersCalculator() {
 }
 
 RentersCalculator.displayName = "RentersCalculator";
+

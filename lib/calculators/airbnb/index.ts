@@ -1,12 +1,6 @@
-import type { AirbnbInputs, AirbnbAnalysisResults, MonthlyBreakdown, RentalInputs } from "@/types/analysis";
-import { calculateLoanAmount, calculateMonthlyMortgage, calculateAnnualPrincipalPayment } from "../mortgage/amortization";
-import {
-  calculateNOI,
-  calculateCapRate,
-  calculateCashOnCash,
-  calculateROI,
-  calculateBreakEvenOccupancy,
-} from "./metrics";
+import { calculateLoanAmount, calculateMonthlyMortgage, calculateAnnualPrincipalPayment } from '../mortgage/amortization';
+import { calculateNOI, calculateROI, calculateBreakEvenOccupancy } from './metrics';
+import type { AirbnbInputs, AirbnbAnalysisResults, MonthlyBreakdown, RentalInputs } from '@/types/analysis';
 import { generateAirbnbProjection } from "./projection";
 
 export function calculateAirbnbMetrics(inputs: AirbnbInputs): AirbnbAnalysisResults {
@@ -15,7 +9,7 @@ export function calculateAirbnbMetrics(inputs: AirbnbInputs): AirbnbAnalysisResu
     monthlyRent: 0,
     vacancyRatePercent: 0,
     capExReservePercent: 0,
-    annualAppreciationPercent: inputs.annualAppreciationPercent || 0,
+    annualAppreciationPercent: 0,
     annualRentIncreasePercent: 0,
     holdingPeriodYears: inputs.holdingPeriodYears || 0
   };
@@ -36,9 +30,7 @@ export function calculateAirbnbMetrics(inputs: AirbnbInputs): AirbnbAnalysisResu
   const closingCosts = inputs.purchasePrice * (inputs.closingCostsPercent / 100);
   const totalCashInvestment = downPayment + closingCosts;
 
-  const capRate = calculateCapRate(noi, inputs.purchasePrice);
-  const cashOnCash = calculateCashOnCash(annualCashFlow, totalCashInvestment);
-
+  // Calculate ROI components
   const annualAppreciation = inputs.purchasePrice * ((inputs.annualAppreciationPercent || 0) / 100);
   const annualPrincipalPaydown = calculateAnnualPrincipalPayment(loanAmount, monthlyInterestRate, 1, monthlyMortgage);
 

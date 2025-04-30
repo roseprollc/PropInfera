@@ -5,7 +5,6 @@ import type {
   Analysis,
   CalculatorType,
   AnalysisResults,
-  AnalysisResultsMap,
   MortgageAnalysisResults,
   RentalAnalysisResults,
   AirbnbAnalysisResults,
@@ -20,13 +19,13 @@ import {
   isRentersResults
 } from "@/types/analysis";
 
-// Base request structure with unknown data field
+// Base request structure with typed data field
 interface IncomingSaveAnalysisBase {
   userId: string;
   type: CalculatorType;
   title?: string;
   notes?: string;
-  data: unknown;
+  data: AnalysisResults;
 }
 
 // Constants for validation
@@ -126,23 +125,23 @@ export async function POST(request: NextRequest) {
     let validatedData: AnalysisResults;
     switch (type) {
       case "mortgage":
-        if (!isMortgageResults(data as AnalysisResults)) return invalidTypeResponse();
+        if (!isMortgageResults(data)) return invalidTypeResponse();
         validatedData = data as MortgageAnalysisResults;
         break;
       case "rental":
-        if (!isRentalResults(data as AnalysisResults)) return invalidTypeResponse();
+        if (!isRentalResults(data)) return invalidTypeResponse();
         validatedData = data as RentalAnalysisResults;
         break;
       case "airbnb":
-        if (!isAirbnbResults(data as AnalysisResults)) return invalidTypeResponse();
+        if (!isAirbnbResults(data)) return invalidTypeResponse();
         validatedData = data as AirbnbAnalysisResults;
         break;
       case "wholesale":
-        if (!isWholesaleResults(data as AnalysisResults)) return invalidTypeResponse();
+        if (!isWholesaleResults(data)) return invalidTypeResponse();
         validatedData = data as WholesaleAnalysisResults;
         break;
       case "renters":
-        if (!isRentersResults(data as AnalysisResults)) return invalidTypeResponse();
+        if (!isRentersResults(data)) return invalidTypeResponse();
         validatedData = data as RentersAnalysisResults;
         break;
       default:

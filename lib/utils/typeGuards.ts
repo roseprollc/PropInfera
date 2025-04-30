@@ -1,4 +1,4 @@
-import { Analysis, CalculatorType } from '@/types/analysis';
+import type { Analysis, CalculatorType } from '@/types/analysis';
 
 export function isWholesaleAnalysis(
   analysis: Analysis<CalculatorType>

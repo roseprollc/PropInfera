@@ -1,16 +1,16 @@
-import { CalculatorInputs, Analysis } from '@/types/analysis';
+import type { CalculatorInputs, Analysis, CalculatorType } from '@/types/analysis';
 
-export interface SavedAnalysis {
+export interface SavedAnalysis<T extends CalculatorType> {
   id: string;
-  inputs: CalculatorInputs;
+  inputs: CalculatorInputs[T];
   results: any; // Using any since we don't have the exact type
   createdAt: string;
 }
 
 const STORAGE_KEY = 'propinfera_saved_analyses';
 
-export function saveAnalysis(inputs: CalculatorInputs, results: any): SavedAnalysis {
-  const savedAnalysis: SavedAnalysis = {
+export function saveAnalysis<T extends CalculatorType>(inputs: CalculatorInputs[T], results: any): SavedAnalysis<T> {
+  const savedAnalysis: SavedAnalysis<T> = {
     id: Date.now().toString(),
     inputs,
     results,
@@ -24,7 +24,7 @@ export function saveAnalysis(inputs: CalculatorInputs, results: any): SavedAnaly
   return savedAnalysis;
 }
 
-export function getSavedAnalyses(): SavedAnalysis[] {
+export function getSavedAnalyses<T extends CalculatorType>(): SavedAnalysis<T>[] {
   const stored = localStorage.getItem(STORAGE_KEY);
   return stored ? JSON.parse(stored) : [];
 }
@@ -35,7 +35,7 @@ export function deleteSavedAnalysis(id: string): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedAnalyses));
 }
 
-export function formatAnalysisForDisplay(analysis: Analysis): Record<string, unknown> {
+export function formatAnalysisForDisplay<T extends CalculatorType>(analysis: Analysis<T>): Record<string, unknown> {
   return {
     ...analysis,
     createdAt: new Date(analysis.createdAt).toLocaleDateString(),
@@ -43,16 +43,15 @@ export function formatAnalysisForDisplay(analysis: Analysis): Record<string, unk
   };
 }
 
-export function validateAnalysisData(data: unknown): data is Analysis {
+export function validateAnalysisData<T extends CalculatorType>(data: unknown): data is Analysis<T> {
   if (!data || typeof data !== 'object') return false;
   
-  const analysis = data as Partial<Analysis>;
+  const analysis = data as Partial<Analysis<T>>;
   return (
-    typeof analysis._id === 'string' &&
-    typeof analysis.type === 'string' &&
-    typeof analysis.createdAt === 'string' &&
-    typeof analysis.updatedAt === 'string' &&
-    typeof analysis.inputs === 'object' &&
-    typeof analysis.results === 'object'
+    typeof analysis?._id === 'string' &&
+    typeof analysis?.type === 'string' &&
+    typeof analysis?.createdAt === 'string' &&
+    typeof analysis?.updatedAt === 'string' &&
+    typeof analysis?.data === 'object'
   );
 } 

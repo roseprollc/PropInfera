@@ -2,8 +2,7 @@
 
 import { useState } from 'react';
 import { format } from 'date-fns';
-import { formatCurrency, formatPercentage, capitalizeWords } from '@/lib/utils/formatting';
-import type { Analysis, CalculatorType, AnalysisResultsMap } from '@/types/analysis';
+import type { Analysis, CalculatorType } from '@/types/analysis';
 
 interface SavedAnalysesListProps<T extends CalculatorType> {
   analyses: Analysis<T>[];
@@ -25,14 +24,6 @@ export default function SavedAnalysesList<T extends CalculatorType>({
       </div>
     );
   }
-
-  // Format result values based on their keys
-  const formatResultValue = (key: string, value: number): string => {
-    if (key.toLowerCase().includes('rate') || key.toLowerCase().includes('roi')) {
-      return formatPercentage(value);
-    }
-    return formatCurrency(value);
-  };
 
   if (analyses.length === 0) {
     return (

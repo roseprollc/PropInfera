@@ -15,14 +15,15 @@ export async function middleware(request: NextRequest) {
     const { success, limit, remaining, reset } = await rateLimit(ip);
     if (!success) {
       const response = new NextResponse('Too Many Requests', { status: 429 });
-      response.headers.set('X-RateLimit-Limit', limit.toString());
-      response.headers.set('X-RateLimit-Remaining', remaining.toString());
-      response.headers.set('X-RateLimit-Reset', reset.toString());
+      response.headers.set('X-RateLimit-Limit', (limit || 100).toString());
+      response.headers.set('X-RateLimit-Remaining', (remaining || 0).toString());
+      response.headers.set('X-RateLimit-Reset', (reset || Math.ceil(Date.now() / 1000)).toString());
       return response;
     }
   } catch (err) {
     console.error('Rate limiting failed:', err);
-    return new NextResponse('Internal Server Error', { status: 500 });
+    // Continue with the request if rate limiting fails
+    return NextResponse.next();
   }
 
   // Auth handling

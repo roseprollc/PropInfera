@@ -1,7 +1,8 @@
 "use client";
 
 import { formatCurrency, formatPercentage } from '@/lib/utils/formatting';
-import { AnalysisResults, isRentalResults, isAirbnbResults, isWholesaleResults, isMortgageResults, isRentersResults } from '@/types/analysis';
+import type { AnalysisResults } from '@/types/analysis';
+import { isRentalResults, isAirbnbResults, isWholesaleResults, isMortgageResults, isRentersResults } from '@/types/analysis';
 
 interface ResultsSummaryProps {
   results: AnalysisResults;

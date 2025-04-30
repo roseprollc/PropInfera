@@ -1,5 +1,5 @@
 import { MongoClient, ObjectId } from 'mongodb';
-import { Analysis } from '@/types/analysis';
+import type { Analysis } from '@/types/analysis';
 
 export type { Analysis };
 

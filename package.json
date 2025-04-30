@@ -17,7 +17,8 @@
     "test": "jest",
     "clean": "rimraf .next node_modules",
     "build:lambda": "cd lambda/ml-handler && npm install && npm run build",
-    "deploy:lambda": "aws lambda update-function-code --function-name ml-handler --zip-file fileb://lambda/ml-handler/dist/index.js"
+    "deploy:lambda": "aws lambda update-function-code --function-name ml-handler --zip-file fileb://lambda/ml-handler/dist/index.js",
+    "prepare": "husky install"
   },
   "dependencies": {
     "@auth/mongodb-adapter": "^3.9.0",
@@ -60,12 +61,20 @@
     "eslint-config-next": "^14.2.28",
     "eslint-plugin-react": "^7.33.2",
     "eslint-plugin-react-hooks": "^4.6.0",
+    "husky": "^9.1.7",
     "jspdf": "^3.0.1",
+    "lint-staged": "^15.5.1",
     "postcss": "^8.4.31",
     "react-hot-toast": "^2.5.2",
     "react-markdown": "^10.1.0",
     "stripe": "^18.0.0",
     "tailwind-merge": "^3.2.0",
     "tailwindcss": "^3.4.0"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "eslint --fix",
+      "tsc --noEmit"
+    ]
   }
 }

@@ -20,7 +20,7 @@ export function generateAirbnbProjection(inputs: AirbnbInputs, monthlyMortgage: 
   const projection: ProjectionYear[] = [];
 
   let currentValue = purchasePrice;
-  let currentNightlyRate = averageNightlyRate;
+  const currentNightlyRate = averageNightlyRate;
 
   for (let year = 1; year <= holdingPeriodYears; year++) {
     const annualIncome = currentNightlyRate * (occupancyRatePercent / 100) * 365;

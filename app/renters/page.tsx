@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { RentersCalculator } from '@/components/calculators/RentersCalculator';
+import RentersCalculator from '@/components/calculators/RentersCalculator';
 import CalculatorLayout from '@/components/layout/CalculatorLayout';
 
 export const metadata: Metadata = {

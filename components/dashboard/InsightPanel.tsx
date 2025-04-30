@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { toast } from 'react-hot-toast';
-import { Analysis, CalculatorType } from '@/types/analysis';
+import type { Analysis, CalculatorType } from '@/types/analysis';
 
 interface InsightPanelProps<T extends CalculatorType> {
   analysis: Analysis<T>;

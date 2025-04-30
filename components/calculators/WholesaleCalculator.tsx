@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useCalculator } from '@/context/CalculatorContext';
-import type { WholesaleInputs, WholesaleAnalysisResults, CalculatorInputs, AnalysisResults } from '@/types/analysis';
+import type { WholesaleInputs, WholesaleAnalysisResults } from '@/types/analysis';
 import ActionButtons from "@/components/ui/ActionButtons";
 import { formatCurrency, formatPercentage } from '@/lib/utils/formatting';
 import { saveAnalysis } from '@/lib/services/saveAnalysis';
@@ -97,11 +97,11 @@ export default function WholesaleCalculator() {
     try {
       await saveAnalysis({
         userId: session.user.id,
-        type: 'wholesale',
-        inputs: inputs as unknown as CalculatorInputs,
-        results: state.wholesaleResults as unknown as AnalysisResults,
-        title: inputs.propertyAddress || 'Untitled Analysis',
-        notes: '',
+        type: "wholesale",
+        inputs: inputs as WholesaleInputs,
+        results: state.wholesaleResults as WholesaleAnalysisResults,
+        title: "Wholesale Analysis",
+        notes: "",
       });
       setToastMessage("Analysis saved successfully");
     } catch (error) {

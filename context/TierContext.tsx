@@ -1,7 +1,8 @@
 "use client";
 
 import React, { createContext, useContext, useState, useMemo } from 'react';
-import { TierLevel, TierContextType } from '@/types/tier';
+import { TierLevel } from '@/types/tier';
+import type { TierContextType } from '@/types/tier';
 
 const TierContext = createContext<TierContextType | undefined>(undefined);
 

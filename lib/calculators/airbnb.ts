@@ -1,18 +1,18 @@
-import { AirbnbInputs, AnalysisResultsMap } from '@/types/analysis';
+import type { AirbnbInputs, AirbnbAnalysisResults } from '@/types/analysis';
 
-export function calculateAirbnbMetrics(inputs: AirbnbInputs): Omit<AnalysisResultsMap['airbnb'], 'type'> {
+export function calculateAirbnbMetrics(inputs: AirbnbInputs): Omit<AirbnbAnalysisResults, 'type'> {
   const {
     purchasePrice,
     downPaymentPercent,
     interestRate,
-    loanTerm,
-    nightlyRate = 0,
-    occupancyRate = 0,
-    cleaningFee = 0,
-    platformFeesPercent = 0,
-    propertyTaxAnnual,
-    insuranceAnnual,
-    utilitiesMonthly,
+    loanTermYears,
+    averageNightlyRate,
+    occupancyRatePercent,
+    cleaningFeePerStay,
+    averageStayDurationNights,
+    propertyTaxesYearly,
+    insuranceCostMonthly,
+    utilitiesMonthlyCost,
     maintenancePercent,
     propertyManagementPercent
   } = inputs;
@@ -20,7 +20,7 @@ export function calculateAirbnbMetrics(inputs: AirbnbInputs): Omit<AnalysisResul
   const downPayment = purchasePrice * (downPaymentPercent / 100);
   const loanAmount = purchasePrice - downPayment;
   const monthlyInterestRate = interestRate / 100 / 12;
-  const numberOfPayments = loanTerm * 12;
+  const numberOfPayments = loanTermYears * 12;
   
   const monthlyPayment = loanAmount * 
     (monthlyInterestRate * Math.pow(1 + monthlyInterestRate, numberOfPayments)) / 
@@ -28,38 +28,43 @@ export function calculateAirbnbMetrics(inputs: AirbnbInputs): Omit<AnalysisResul
 
   // Calculate monthly revenue
   const daysPerMonth = 30.44; // Average days per month
-  const occupancyDecimal = occupancyRate / 100;
+  const occupancyDecimal = occupancyRatePercent / 100;
   const averageBookedNightsPerMonth = daysPerMonth * occupancyDecimal;
-  const monthlyCleaningFeeRevenue = cleaningFee * (averageBookedNightsPerMonth / 3); // Assume average 3-night stays
-  const monthlyRoomRevenue = nightlyRate * averageBookedNightsPerMonth;
-  const platformFees = (monthlyRoomRevenue + monthlyCleaningFeeRevenue) * (platformFeesPercent / 100);
-  const monthlyRevenue = monthlyRoomRevenue + monthlyCleaningFeeRevenue - platformFees;
+  const monthlyCleaningFeeRevenue = cleaningFeePerStay * (averageBookedNightsPerMonth / averageStayDurationNights);
+  const monthlyRoomRevenue = averageNightlyRate * averageBookedNightsPerMonth;
+  const monthlyRevenue = monthlyRoomRevenue + monthlyCleaningFeeRevenue;
 
   // Calculate monthly operating expenses
-  const monthlyPropertyTax = propertyTaxAnnual / 12;
-  const monthlyInsurance = insuranceAnnual / 12;
+  const monthlyPropertyTax = propertyTaxesYearly / 12;
+  const monthlyInsurance = insuranceCostMonthly;
   const monthlyMaintenance = purchasePrice * (maintenancePercent / 100) / 12;
   const monthlyManagement = monthlyRevenue * (propertyManagementPercent / 100);
   const monthlyOperatingExpenses = 
     monthlyPropertyTax +
     monthlyInsurance +
-    utilitiesMonthly +
+    utilitiesMonthlyCost +
     monthlyMaintenance +
     monthlyManagement;
 
   // Calculate cash flow metrics
   const monthlyCashFlow = monthlyRevenue - monthlyOperatingExpenses - monthlyPayment;
   const annualCashFlow = monthlyCashFlow * 12;
-  const cashOnCashReturn = (annualCashFlow / downPayment) * 100;
-  const capRate = ((monthlyRevenue - monthlyOperatingExpenses) * 12 / purchasePrice) * 100;
+  const totalCashInvestment = downPayment + (purchasePrice * (inputs.closingCostsPercent / 100));
+  const roi = (annualCashFlow / totalCashInvestment) * 100;
+  const netOperatingIncome = monthlyRevenue - monthlyOperatingExpenses;
+  const breakEvenOccupancy = ((monthlyOperatingExpenses + monthlyPayment) / (averageNightlyRate + cleaningFeePerStay / averageStayDurationNights)) / daysPerMonth * 100;
 
   return {
-    monthlyPayment,
-    principalAndInterest: monthlyPayment,
-    totalMonthlyPayment: monthlyPayment + monthlyOperatingExpenses,
-    monthlyCashFlow,
+    monthlyAirbnbIncome: monthlyRevenue,
     annualCashFlow,
-    cashOnCashReturn,
-    capRate
+    roi,
+    netOperatingIncome,
+    totalOperatingExpenses: monthlyOperatingExpenses,
+    monthlyMortgagePayment: monthlyPayment,
+    totalCashInvestment,
+    breakEvenOccupancy,
+    averageDailyRate: averageNightlyRate,
+    projectedAnnualIncome: monthlyRevenue * 12,
+    monthlyBreakdown: []
   };
 } 

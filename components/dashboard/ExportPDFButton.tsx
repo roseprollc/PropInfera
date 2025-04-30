@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { exportAnalysisToPDF } from '@/lib/pdf/exportAnalysisToPDF';
-import { Analysis } from '@/types/analysis';
+import type { Analysis } from '@/types/analysis';
 
 interface ExportPDFButtonProps {
   analysis: Analysis;
