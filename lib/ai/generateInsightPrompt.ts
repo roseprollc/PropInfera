@@ -1,6 +1,6 @@
-import type { Analysis } from '@/lib/data';
+import type { Analysis, CalculatorType } from '@/types/analysis';
 
-const PROMPT_TEMPLATES = {
+const PROMPT_TEMPLATES: Record<CalculatorType, string> = {
   rental: `As a real estate investment expert, analyze this rental property data and provide insights:
 Inputs:
 {inputs}
@@ -51,13 +51,34 @@ Please provide:
 3. Refinancing opportunities
 4. Risk assessment
 5. Alternative financing options
+Format the response in clear, concise bullet points.`,
+
+  renters: `As a buy-and-hold investment expert, analyze this renters property data and provide insights:
+Inputs:
+{inputs}
+Results:
+{results}
+Please provide:
+1. Monthly income potential
+2. Long-term equity growth
+3. Risk and tenant turnover analysis
+4. Tax/finance implications
+5. Suggestions to improve yield
 Format the response in clear, concise bullet points.`
 };
 
-export function generateInsightPrompt(analysis: Analysis): string {
-  const template = PROMPT_TEMPLATES[analysis.type] || PROMPT_TEMPLATES.rental;
-  
+export function generateInsightPrompt<T extends CalculatorType>(analysis: Analysis<T>): string {
+  const template = PROMPT_TEMPLATES[analysis.type];
+
+  if (!template) {
+    throw new Error(`No prompt template defined for calculator type: ${analysis.type}`);
+  }
+
+  // Use optional chaining to avoid undefined crashes
+  const inputs = JSON.stringify((analysis.data as any)?.inputs || {}, null, 2);
+  const results = JSON.stringify(analysis.data || {}, null, 2);
+
   return template
-    .replace('{inputs}', JSON.stringify(analysis.inputs, null, 2))
-    .replace('{results}', JSON.stringify(analysis.results, null, 2));
+    .replace('{inputs}', inputs)
+    .replace('{results}', results);
 }

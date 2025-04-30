@@ -4,62 +4,53 @@ const DEFAULT_CURRENCY = 'USD';
 const DEFAULT_CURRENCY_SYMBOL = '$';
 
 /**
- * Formats a number as currency
- * @param value - The number to format
- * @param currency - The currency code (defaults to USD)
- * @param currencySymbol - The currency symbol to use (defaults to $)
- * @returns Formatted currency string or "—" for invalid inputs
+ * Formats a number as a currency string
  */
 export function formatCurrency(
   value: number | string | null | undefined,
   currency: string = DEFAULT_CURRENCY,
   currencySymbol: string = DEFAULT_CURRENCY_SYMBOL
 ): string {
-  if (value === null || value === undefined || isNaN(Number(value))) {
-    return '—';
-  }
+  const num = typeof value === 'string' ? parseFloat(value) : value;
 
-  const numValue = typeof value === 'string' ? parseFloat(value) : value;
-  
-  return new Intl.NumberFormat('en-US', {
+  if (num === null || num === undefined || isNaN(num)) return '—';
+
+  const formatted = new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency,
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  }).format(numValue).replace(DEFAULT_CURRENCY_SYMBOL, currencySymbol);
+  }).format(num);
+
+  // Replace default symbol only if it differs
+  return currencySymbol !== DEFAULT_CURRENCY_SYMBOL
+    ? formatted.replace(DEFAULT_CURRENCY_SYMBOL, currencySymbol)
+    : formatted;
 }
 
 /**
- * Formats a number as a percentage
- * @param value - The number to format
- * @param decimals - Number of decimal places (defaults to 1)
- * @returns Formatted percentage string or "—" for invalid inputs
+ * Formats a number as a percent string (e.g. 12.3%)
  */
 export function formatPercentage(
   value: number | string | null | undefined,
   decimals: number = 1
 ): string {
-  if (value === null || value === undefined || isNaN(Number(value))) {
-    return '—';
-  }
+  const num = typeof value === 'string' ? parseFloat(value) : value;
 
-  const numValue = typeof value === 'string' ? parseFloat(value) : value;
-  
+  if (num === null || num === undefined || isNaN(num)) return '—';
+
   return new Intl.NumberFormat('en-US', {
     style: 'percent',
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
-  }).format(numValue / 100);
+  }).format(num / 100);
 }
 
 /**
- * Capitalizes each word in a string
- * @param text - The text to capitalize
- * @returns Capitalized text
+ * Capitalizes the first letter of each word in a string
  */
 export function capitalizeWords(text: string): string {
   if (!text) return '';
-  
   return text
     .split(' ')
     .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
@@ -67,7 +58,7 @@ export function capitalizeWords(text: string): string {
 }
 
 /**
- * React hook for memoized currency formatting
+ * React hook to memoize currency formatting
  */
 export function useFormatCurrency(
   value: number | string | null | undefined,
@@ -81,14 +72,11 @@ export function useFormatCurrency(
 }
 
 /**
- * React hook for memoized percentage formatting
+ * React hook to memoize percentage formatting
  */
 export function useFormatPercentage(
   value: number | string | null | undefined,
   decimals: number = 1
 ): string {
-  return useMemo(
-    () => formatPercentage(value, decimals),
-    [value, decimals]
-  );
-} 
+  return useMemo(() => formatPercentage(value, decimals), [value, decimals]);
+}

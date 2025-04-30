@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { format } from 'date-fns';
 import { formatCurrency, formatPercentage, capitalizeWords } from '@/lib/utils/formatting';
-import { Analysis, CalculatorType, AnalysisResultsMap } from '@/types/analysis';
+import type { Analysis, CalculatorType, AnalysisResultsMap } from '@/types/analysis';
 
 interface SavedAnalysesListProps<T extends CalculatorType> {
   analyses: Analysis<T>[];
@@ -45,30 +45,33 @@ export default function SavedAnalysesList<T extends CalculatorType>({
 
   return (
     <div className="space-y-2">
-      {analyses.map((analysis) => (
-        <div
-          key={analysis.id}
-          className={`p-4 rounded-lg cursor-pointer ${
-            selectedId === analysis.id
-              ? 'bg-indigo-600 text-white'
-              : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-          }`}
-          onClick={() => {
-            setSelectedId(analysis.id);
-            onSelect(analysis);
-          }}
-        >
-          <div className="flex justify-between items-start">
-            <h3 className="font-medium">{analysis.propertyName || 'Untitled Analysis'}</h3>
-            <span className="text-sm">
-              {format(new Date(analysis.createdAt), 'MMM d, yyyy')}
-            </span>
+      {analyses.map((analysis) => {
+        const id = analysis._id?.toString() || '';
+        return (
+          <div
+            key={id}
+            className={`p-4 rounded-lg cursor-pointer ${
+              selectedId === id
+                ? 'bg-indigo-600 text-white'
+                : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+            }`}
+            onClick={() => {
+              setSelectedId(id);
+              onSelect(analysis);
+            }}
+          >
+            <div className="flex justify-between items-start">
+              <h3 className="font-medium">{analysis.title || 'Untitled Analysis'}</h3>
+              <span className="text-sm">
+                {format(new Date(analysis.createdAt), 'MMM d, yyyy')}
+              </span>
+            </div>
+            {analysis.notes && (
+              <p className="mt-1 text-sm text-gray-400 line-clamp-2">{analysis.notes}</p>
+            )}
           </div>
-          {analysis.notes && (
-            <p className="mt-1 text-sm text-gray-400 line-clamp-2">{analysis.notes}</p>
-          )}
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 } 

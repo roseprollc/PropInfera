@@ -1,7 +1,7 @@
 'use client';
 
 import { format } from 'date-fns';
-import { Analysis, CalculatorType, AnalysisResultsMap } from '@/types/analysis';
+import type { Analysis, CalculatorType, AnalysisResultsMap } from '@/types/analysis';
 import { ExportPDFButton } from '@/components/dashboard/ExportPDFButton';
 import ResultsSummary from '@/components/results/ResultsSummary';
 
@@ -13,7 +13,7 @@ export function SavedAnalysisView<T extends CalculatorType>({ analysis }: SavedA
   return (
     <div className="p-4">
       <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold">{analysis.propertyName || 'Untitled Analysis'}</h1>
+        <h1 className="text-2xl font-bold">{analysis.title || 'Untitled Analysis'}</h1>
         <ExportPDFButton analysis={analysis} />
       </div>
       
@@ -23,7 +23,7 @@ export function SavedAnalysisView<T extends CalculatorType>({ analysis }: SavedA
       </div>
 
       <ResultsSummary 
-        results={analysis.results}
+        results={analysis.data}
         highlightKeys={['monthlyCashFlow', 'cashOnCash', 'roi']}
       />
     </div>

@@ -1,4 +1,4 @@
-import { Analysis } from '@/types/analysis';
+import type { Analysis } from '@/types/analysis';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 import { format } from 'date-fns';
@@ -12,7 +12,7 @@ export async function exportAnalysisToPDF(analysis: Analysis): Promise<void> {
 
   // Add title
   doc.setFontSize(20);
-  doc.text(analysis.propertyName || 'Property Analysis', margin, margin + 20);
+  doc.text(analysis.title || 'Property Analysis', margin, margin + 20);
 
   // Add property details
   doc.setFontSize(12);
@@ -36,5 +36,5 @@ export async function exportAnalysisToPDF(analysis: Analysis): Promise<void> {
   }
 
   // Save the PDF
-  doc.save(`${analysis.propertyName || 'analysis'}.pdf`);
+  doc.save(`${analysis.title || 'analysis'}.pdf`);
 } 

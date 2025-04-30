@@ -1,9 +1,14 @@
-import type { Analysis, CalculatorInputs, AnalysisResults, CalculatorType } from '@/types/analysis';
+import type {
+  Analysis,
+  CalculatorInputs,
+  AnalysisResults,
+  CalculatorType,
+} from "@/types/analysis";
 
 export interface SaveAnalysisParams {
   userId: string;
   type: Analysis<CalculatorType>['type'];
-  inputs: CalculatorInputs;
+  inputs: CalculatorInputs[keyof CalculatorInputs];
   results: AnalysisResults;
   title?: string;
   notes?: string;
@@ -21,37 +26,42 @@ export interface SaveAnalysisResponse {
  */
 export async function saveAnalysis(params: SaveAnalysisParams): Promise<SaveAnalysisResponse> {
   if (!params.userId) {
-    return { success: false, message: 'User ID is required' };
+    return {
+      success: false,
+      message: "User ID is required",
+    };
   }
-  
+
   try {
-    const response = await fetch('/api/analyses', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    const response = await fetch("/api/analyses", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify(params),
     });
 
     const data = await response.json();
-    
+
     if (!response.ok) {
-      return { 
-        success: false, 
-        message: data.error || 'Failed to save analysis', 
-        error: data.error 
+      return {
+        success: false,
+        message: data.error || "Failed to save analysis",
+        error: data.error,
       };
     }
 
     return {
       success: true,
-      message: 'Analysis saved successfully',
-      analysisId: data.analysisId
+      message: "Analysis saved successfully",
+      analysisId: data.analysisId,
     };
   } catch (error) {
-    console.error('Error saving analysis:', error);
+    console.error("Error saving analysis:", error);
     return {
       success: false,
-      message: 'Failed to save analysis',
-      error: error instanceof Error ? error.message : 'Unknown error'
+      message: "Failed to save analysis",
+      error: error instanceof Error ? error.message : "Unknown error",
     };
   }
 }

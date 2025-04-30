@@ -1,47 +1,63 @@
 import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 import { getToken } from 'next-auth/jwt';
 import { rateLimit } from '@/lib/rate-limit';
-import type { NextRequest } from 'next/server';
 
 export async function middleware(request: NextRequest) {
+  const url = request.nextUrl.clone();
+  const pathname = url.pathname;
+
+  // Safe IP extraction
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || '127.0.0.1';
+
   // Rate limiting
-  const ip = request.ip || request.headers.get('x-forwarded-for') || '127.0.0.1';
-  const { success, limit, remaining, reset } = await rateLimit(ip);
-  
-  if (!success) {
-    const response = new NextResponse('Too Many Requests', { status: 429 });
-    response.headers.set('X-RateLimit-Limit', limit.toString());
-    response.headers.set('X-RateLimit-Remaining', remaining.toString());
-    response.headers.set('X-RateLimit-Reset', reset.toString());
-    return response;
+  try {
+    const { success, limit, remaining, reset } = await rateLimit(ip);
+    if (!success) {
+      const response = new NextResponse('Too Many Requests', { status: 429 });
+      response.headers.set('X-RateLimit-Limit', limit.toString());
+      response.headers.set('X-RateLimit-Remaining', remaining.toString());
+      response.headers.set('X-RateLimit-Reset', reset.toString());
+      return response;
+    }
+  } catch (err) {
+    console.error('Rate limiting failed:', err);
+    return new NextResponse('Internal Server Error', { status: 500 });
   }
 
-  // Authentication check for protected routes
+  // Auth handling
   const token = await getToken({ req: request });
-  const isAuthPage = request.nextUrl.pathname.startsWith('/auth');
-  const isApiRoute = request.nextUrl.pathname.startsWith('/api');
-  const isProtectedRoute = request.nextUrl.pathname.startsWith('/dashboard');
-
-  if (isAuthPage && token) {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
-  }
+  const isProtectedRoute = pathname.startsWith('/dashboard');
+  const isAuthRoute = pathname.startsWith('/auth');
+  const isApiRoute = pathname.startsWith('/api');
 
   if (isProtectedRoute && !token) {
-    return NextResponse.redirect(new URL('/auth/signin', request.url));
+    const redirectUrl = request.nextUrl.clone();
+    redirectUrl.pathname = '/auth/signin';
+    return NextResponse.redirect(redirectUrl);
   }
 
-  // API route protection
+  if (isAuthRoute && token) {
+    const redirectUrl = request.nextUrl.clone();
+    redirectUrl.pathname = '/dashboard';
+    return NextResponse.redirect(redirectUrl);
+  }
+
+  // Add security headers for API requests
   if (isApiRoute) {
     const response = NextResponse.next();
-    
-    // Add security headers
     response.headers.set('X-Content-Type-Options', 'nosniff');
     response.headers.set('X-Frame-Options', 'DENY');
     response.headers.set('X-XSS-Protection', '1; mode=block');
     response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-    response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), interest-cohort=()');
-    response.headers.set('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://api.example.com; frame-ancestors 'none';");
-    
+    response.headers.set(
+      'Permissions-Policy',
+      'camera=(), microphone=(), geolocation=(), interest-cohort=()'
+    );
+    response.headers.set(
+      'Content-Security-Policy',
+      "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://api.propinfera.com; frame-ancestors 'none';"
+    );
     return response;
   }
 
@@ -49,9 +65,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    '/dashboard/:path*',
-    '/api/:path*',
-    '/auth/:path*',
-  ],
+  matcher: ['/dashboard/:path*', '/api/:path*', '/auth/:path*'],
 };

@@ -1,10 +1,10 @@
 "use client";
 
 import SavedAnalysesList from "@/components/dashboard/SavedAnalysesList";
-import { Analysis, CalculatorType } from "@/types/analysis";
+import type { Analysis, CalculatorType } from "@/types/analysis";
 
 export default function SavedAnalysesPage() {
-  // Replace useState with a constant since you're not updating the state
+  // TODO: Replace with real data fetching
   const analyses: Analysis<CalculatorType>[] = [];
 
   return (
@@ -16,4 +16,4 @@ export default function SavedAnalysesPage() {
       />
     </div>
   );
-} 
+}

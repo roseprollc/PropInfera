@@ -2,237 +2,244 @@
 
 import { useState } from "react";
 import { useCalculator } from '@/context/CalculatorContext';
-import { CalculatorInputs, WholesaleAnalysisResults } from '@/types/analysis';
+import type { WholesaleInputs, WholesaleAnalysisResults, CalculatorInputs, AnalysisResults } from '@/types/analysis';
 import ActionButtons from "@/components/ui/ActionButtons";
 import { formatCurrency, formatPercentage } from '@/lib/utils/formatting';
 import { saveAnalysis } from '@/lib/services/saveAnalysis';
+import { useSession } from 'next-auth/react';
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import Toast from "@/components/ui/Toast";
 
-interface WholesaleInputs extends CalculatorInputs {
-  afterRepairValue: number;
-  repairCosts: number;
-  assignmentFee: number;
-  miscHoldingCosts: number;
-}
-
-const defaultInputs: WholesaleInputs = {
-  propertyAddress: '',
-  purchasePrice: 200000,
-  downPaymentPercent: 0,
-  interestRate: 0,
-  loanTerm: 0,
-  closingCosts: 5000,
-  propertyTaxAnnual: 0,
-  insuranceAnnual: 0,
-  utilitiesMonthly: 0,
-  maintenancePercent: 0,
-  propertyManagementPercent: 0,
-  monthlyRent: 0,
-  vacancyRatePercent: 0,
-  capExReservePercent: 0,
-  annualAppreciationPercent: 0,
-  annualRentIncreasePercent: 0,
-  holdingPeriodYears: 0,
-  nightlyRate: 0,
-  occupancyRate: 0,
-  cleaningFee: 0,
-  platformFeesPercent: 0,
-  afterRepairValue: 300000,
-  repairCosts: 30000,
-  assignmentFee: 10000,
-  miscHoldingCosts: 0,
-  hoaFees: 0
-};
-
-export function WholesaleCalculator() {
+export default function WholesaleCalculator() {
   const { state, dispatch } = useCalculator();
-  const [results, setResults] = useState<WholesaleAnalysisResults | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
+  const { data: session } = useSession();
+  const [isLoading, setIsLoading] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  const handleInputChange = (field: keyof CalculatorInputs, value: number | string) => {
-    dispatch({ type: 'SET_INPUT', field, value });
+  const inputs = state.wholesale || {
+    propertyAddress: "",
+    purchasePrice: 0,
+    closingCostsPercent: 0,
+    propertyManagementPercent: 0,
+    maintenancePercent: 0,
+    insuranceCostMonthly: 0,
+    propertyTaxesYearly: 0,
+    utilitiesMonthlyCost: 0,
+    hoa: 0,
+    downPaymentPercent: 0,
+    loanTermYears: 0,
+    interestRate: 0,
+    estimatedRepairCost: 0,
+    arv: 0,
+    assignmentFee: 0,
+    maxOfferPercent: 0,
+  };
+
+  const updateInput = (field: keyof WholesaleInputs, value: number | string) => {
+    dispatch({
+      type: 'SET_INPUTS',
+      payload: {
+        wholesale: {
+          ...inputs,
+          [field]: value
+        }
+      }
+    });
   };
 
   const calculateResults = () => {
-    const {
-      purchasePrice,
-      closingCosts,
-      afterRepairValue,
-      repairCosts,
-      assignmentFee,
-      miscHoldingCosts,
-    } = state.calculatorInputs as WholesaleInputs;
+    try {
+      const {
+        purchasePrice,
+        closingCostsPercent,
+        estimatedRepairCost,
+        arv,
+        assignmentFee,
+      } = inputs;
 
-    const totalInvestment = purchasePrice + repairCosts + assignmentFee + closingCosts + miscHoldingCosts;
-    const profit = afterRepairValue - totalInvestment;
-    const roi = (profit / totalInvestment) * 100;
+      if (!purchasePrice || !arv) {
+        setToastMessage("Please fill in all required fields");
+        return;
+      }
 
-    const wholesaleResults: WholesaleAnalysisResults = {
-      totalInvestment,
-      profit,
-      roi,
-      holdingCosts: miscHoldingCosts,
-      netProfit: profit,
-      returnOnInvestment: roi,
-      assignmentFee
-    };
+      const closingCosts = (purchasePrice * closingCostsPercent) / 100;
+      const totalInvestment = purchasePrice + estimatedRepairCost + assignmentFee + closingCosts;
+      const profit = arv - totalInvestment;
+      const roi = (profit / totalInvestment) * 100;
 
-    setResults(wholesaleResults);
-    dispatch({ type: 'SET_RESULTS', results: { type: 'wholesale', data: wholesaleResults } });
+      const wholesaleResults: WholesaleAnalysisResults = {
+        type: 'wholesale',
+        totalInvestment,
+        profit,
+        roi,
+        holdingCosts: closingCosts,
+        netProfit: profit,
+        returnOnInvestment: roi,
+        assignmentFee
+      };
+
+      dispatch({ type: 'SET_RESULTS', payload: { wholesaleResults } });
+    } catch (error) {
+      setToastMessage("An error occurred while calculating results");
+    }
   };
 
   const handleSave = async () => {
-    if (!results) return;
+    if (!session?.user?.id) {
+      setToastMessage("Please sign in to save your analysis");
+      return;
+    }
 
-    setIsSaving(true);
+    setIsLoading(true);
     try {
       await saveAnalysis({
-        userId: 'mock-user-123',
+        userId: session.user.id,
         type: 'wholesale',
-        inputs: state.calculatorInputs,
-        results: { type: 'wholesale', data: results },
-        title: state.calculatorInputs.propertyAddress || 'Untitled Analysis',
+        inputs: inputs as unknown as CalculatorInputs,
+        results: state.wholesaleResults as unknown as AnalysisResults,
+        title: inputs.propertyAddress || 'Untitled Analysis',
         notes: '',
       });
+      setToastMessage("Analysis saved successfully");
     } catch (error) {
-      console.error('Error saving analysis:', error);
+      setToastMessage("Failed to save analysis. Please try again.");
     } finally {
-      setIsSaving(false);
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="bg-gray-900 rounded-lg shadow-lg p-6">
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          calculateResults();
-        }}
-        className="space-y-6"
-      >
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-white">Property Details</h3>
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">
-                Property Address
-              </label>
-              <input
-                type="text"
-                value={state.calculatorInputs.propertyAddress}
-                onChange={(e) => handleInputChange('propertyAddress', e.target.value)}
-                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md text-white focus:ring-2 focus:ring-green-500 focus:border-transparent"
-              />
+    <Card className="w-full">
+      <CardHeader>
+        <CardTitle>Wholesale Calculator</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            calculateResults();
+          }}
+          className="space-y-6"
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Property Details</h3>
+              <div className="space-y-2">
+                <Label htmlFor="propertyAddress">Property Address</Label>
+                <Input
+                  id="propertyAddress"
+                  type="text"
+                  value={inputs.propertyAddress}
+                  onChange={(e) => updateInput('propertyAddress', e.target.value)}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="arv">After Repair Value</Label>
+                <Input
+                  id="arv"
+                  type="number"
+                  value={inputs.arv}
+                  onChange={(e) => updateInput('arv', Number(e.target.value))}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="purchasePrice">Purchase Price</Label>
+                <Input
+                  id="purchasePrice"
+                  type="number"
+                  value={inputs.purchasePrice}
+                  onChange={(e) => updateInput('purchasePrice', Number(e.target.value))}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="estimatedRepairCost">Repair Costs</Label>
+                <Input
+                  id="estimatedRepairCost"
+                  type="number"
+                  value={inputs.estimatedRepairCost}
+                  onChange={(e) => updateInput('estimatedRepairCost', Number(e.target.value))}
+                />
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">
-                After Repair Value
-              </label>
-              <input
-                type="number"
-                value={(state.calculatorInputs as WholesaleInputs).afterRepairValue}
-                onChange={(e) => handleInputChange('afterRepairValue', Number(e.target.value))}
-                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md text-white focus:ring-2 focus:ring-green-500 focus:border-transparent"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">
-                Purchase Price
-              </label>
-              <input
-                type="number"
-                value={state.calculatorInputs.purchasePrice}
-                onChange={(e) => handleInputChange('purchasePrice', Number(e.target.value))}
-                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md text-white focus:ring-2 focus:ring-green-500 focus:border-transparent"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">
-                Repair Costs
-              </label>
-              <input
-                type="number"
-                value={(state.calculatorInputs as WholesaleInputs).repairCosts}
-                onChange={(e) => handleInputChange('repairCosts', Number(e.target.value))}
-                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md text-white focus:ring-2 focus:ring-green-500 focus:border-transparent"
-              />
+
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Deal Costs</h3>
+              <div className="space-y-2">
+                <Label htmlFor="assignmentFee">Assignment Fee</Label>
+                <Input
+                  id="assignmentFee"
+                  type="number"
+                  value={inputs.assignmentFee}
+                  onChange={(e) => updateInput('assignmentFee', Number(e.target.value))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="closingCostsPercent">Closing Costs (%)</Label>
+                <Input
+                  id="closingCostsPercent"
+                  type="number"
+                  value={inputs.closingCostsPercent}
+                  onChange={(e) => updateInput('closingCostsPercent', Number(e.target.value))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="maxOfferPercent">Max Offer (%)</Label>
+                <Input
+                  id="maxOfferPercent"
+                  type="number"
+                  value={inputs.maxOfferPercent}
+                  onChange={(e) => updateInput('maxOfferPercent', Number(e.target.value))}
+                />
+              </div>
             </div>
           </div>
 
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-white">Deal Costs</h3>
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">
-                Assignment Fee
-              </label>
-              <input
-                type="number"
-                value={(state.calculatorInputs as WholesaleInputs).assignmentFee}
-                onChange={(e) => handleInputChange('assignmentFee', Number(e.target.value))}
-                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md text-white focus:ring-2 focus:ring-green-500 focus:border-transparent"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">
-                Closing Costs
-              </label>
-              <input
-                type="number"
-                value={state.calculatorInputs.closingCosts}
-                onChange={(e) => handleInputChange('closingCosts', Number(e.target.value))}
-                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md text-white focus:ring-2 focus:ring-green-500 focus:border-transparent"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">
-                Misc Holding Costs
-              </label>
-              <input
-                type="number"
-                value={(state.calculatorInputs as WholesaleInputs).miscHoldingCosts}
-                onChange={(e) => handleInputChange('miscHoldingCosts', Number(e.target.value))}
-                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md text-white focus:ring-2 focus:ring-green-500 focus:border-transparent"
-              />
+          <div className="flex justify-center">
+            <Button type="submit" disabled={isLoading}>
+              Calculate
+            </Button>
+          </div>
+
+          <ActionButtons
+            onReset={() => dispatch({ type: 'RESET_CALCULATOR' })}
+            onSave={handleSave}
+            saveDisabled={!state.wholesaleResults || isLoading}
+          />
+        </form>
+
+        {state.wholesaleResults && (
+          <div className="mt-8 p-6 bg-muted rounded-lg">
+            <h3 className="text-lg font-semibold mb-4">Investment Analysis</h3>
+            <div className="space-y-4">
+              <Stat label="Total Investment" value={formatCurrency(state.wholesaleResults.totalInvestment)} />
+              <Stat label="Profit" value={formatCurrency(state.wholesaleResults.profit)} />
+              <Stat label="ROI" value={formatPercentage(state.wholesaleResults.roi)} isPositive />
             </div>
           </div>
-        </div>
+        )}
 
-        <div className="flex justify-center">
-          <button
-            type="submit"
-            className="px-6 py-3 bg-[#2ecc71] text-white rounded-md hover:bg-[#27ae60] focus:outline-none focus:ring-2 focus:ring-[#2ecc71] focus:ring-offset-2 focus:ring-offset-gray-900 transition-all duration-200 shadow-lg hover:shadow-[#2ecc71]/50"
-          >
-            Calculate
-          </button>
-        </div>
-
-        <ActionButtons
-          onReset={() => dispatch({ type: 'RESET_CALCULATOR' })}
-          onSave={handleSave}
-          saveDisabled={!results || isSaving}
-        />
-      </form>
-
-      {results && (
-        <div className="mt-8 p-6 bg-gray-800 rounded-lg">
-          <h3 className="text-lg font-semibold text-white mb-4">Investment Analysis</h3>
-          <div className="space-y-4">
-            <div className="flex justify-between">
-              <span className="text-gray-300">Total Investment</span>
-              <span className="text-white font-medium">{formatCurrency(results.totalInvestment)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-300">Profit</span>
-              <span className="text-white font-medium">{formatCurrency(results.profit)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-300">ROI</span>
-              <span className="text-[#2ecc71] font-bold">{formatPercentage(results.roi)}</span>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+        {toastMessage && (
+          <Toast
+            message={toastMessage}
+            onClose={() => setToastMessage(null)}
+          />
+        )}
+      </CardContent>
+    </Card>
   );
 }
 
-WholesaleCalculator.displayName = "WholesaleCalculator"; 
+export function Stat({ label, value, isPositive = false }: { label: string; value: string; isPositive?: boolean }) {
+  return (
+    <div className="flex justify-between">
+      <span className="text-muted-foreground">{label}</span>
+      <span className={`font-medium ${isPositive ? "text-green-500" : "text-foreground"}`}>{value}</span>
+    </div>
+  );
+}

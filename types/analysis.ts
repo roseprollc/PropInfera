@@ -1,78 +1,12 @@
 import type { ObjectId } from 'mongodb';
 
 /**
- * Type representing all possible calculator types in the application
+ * Calculator types supported in the application
  */
 export type CalculatorType = 'mortgage' | 'rental' | 'airbnb' | 'wholesale' | 'renters';
 
 /**
- * Type mapping for calculator inputs
- */
-export interface CalculatorInputs {
-  mortgage?: MortgageInputs;
-  rental?: RentalInputs;
-  airbnb?: AirbnbInputs;
-  wholesale?: WholesaleInputs;
-  renters?: RentersInputs;
-}
-
-/**
- * Type mapping for analysis results
- */
-export interface AnalysisResultsMap {
-  mortgage: {
-    loanAmount: number;
-    downPayment: number;
-    monthlyMortgagePayment: number;
-    monthlyExpenses: number;
-    totalMonthlyPayment: number;
-  };
-  airbnb: {
-    loanAmount: number;
-    downPayment: number;
-    monthlyMortgagePayment: number;
-    monthlyRevenue: number;
-    monthlyExpenses: number;
-    monthlyCashFlow: number;
-    capRate: number;
-    cashOnCashReturn: number;
-    roi: number;
-    breakEvenOccupancy: number;
-  };
-  wholesale: {
-    maxOfferAmount: number;
-    potentialProfit: number;
-    repairCostEstimate: number;
-    afterRepairValue: number;
-    assignmentFee: number;
-  };
-  renters: {
-    loanAmount: number;
-    downPayment: number;
-    monthlyMortgagePayment: number;
-    monthlyRevenue: number;
-    monthlyExpenses: number;
-    monthlyCashFlow: number;
-    annualCashFlow: number;
-    capRate: number;
-    cashOnCashReturn: number;
-    roi: number;
-  };
-  rental: {
-    fiveYearProjection?: Array<{
-      year: number;
-      propertyValue: number;
-      yearlyRent: number;
-      operatingExpenses: number;
-      annualCashFlow: number;
-      totalAppreciation: number;
-      roi: number;
-    }>;
-  };
-}
-
-/**
- * Base interface for all calculator inputs
+ * Shared input fields across calculators
  */
 export interface BaseCalculatorInputs {
   propertyAddress?: string;
@@ -84,10 +18,13 @@ export interface BaseCalculatorInputs {
   propertyTaxesYearly: number;
   utilitiesMonthlyCost: number;
   hoa?: number;
+  downPaymentPercent: number;
+  loanTermYears: number;
+  interestRate: number;
 }
 
 /**
- * Type-specific calculator inputs
+ * Input types per calculator
  */
 export interface RentalInputs extends BaseCalculatorInputs {
   monthlyRent: number;
@@ -101,9 +38,6 @@ export interface RentalInputs extends BaseCalculatorInputs {
 export interface AirbnbInputs extends BaseCalculatorInputs {
   averageNightlyRate: number;
   occupancyRatePercent: number;
-  downPaymentPercent: number;
-  loanTermYears: number;
-  interestRate: number;
   cleaningFeePerStay: number;
   averageStayDurationNights: number;
   annualAppreciationPercent?: number;
@@ -118,9 +52,6 @@ export interface WholesaleInputs extends BaseCalculatorInputs {
 }
 
 export interface MortgageInputs extends BaseCalculatorInputs {
-  downPaymentPercent: number;
-  loanTermYears: number;
-  interestRate: number;
   pmi?: number;
   otherMonthlyExpenses?: number;
 }
@@ -129,21 +60,55 @@ export interface RentersInputs extends BaseCalculatorInputs {
   monthlyRent?: number;
   vacancyRatePercent?: number;
   capExReservePercent?: number;
-  downPaymentPercent: number;
-  loanTermYears: number;
-  interestRate: number;
   annualAppreciationPercent?: number;
   annualRentIncreasePercent?: number;
   holdingPeriodYears?: number;
 }
 
 /**
- * Analysis results for each calculator type
+ * Composite type for state management
+ */
+export interface CalculatorInputs {
+  mortgage?: MortgageInputs;
+  rental?: RentalInputs;
+  airbnb?: AirbnbInputs;
+  wholesale?: WholesaleInputs;
+  renters?: RentersInputs;
+}
+
+/**
+ * Monthly breakdown for Airbnb
+ */
+export interface MonthlyBreakdown {
+  month: string;
+  income: number;
+  expenses: number;
+  cashFlow: number;
+  occupancyRate: number;
+}
+
+/**
+ * Rental 5-year projection
+ */
+export interface ProjectionYear {
+  year: number;
+  propertyValue: number;
+  annualRent: number;
+  annualExpenses: number;
+  annualMortgage: number;
+  annualCashFlow: number;
+  equityGrowth: number;
+  totalReturn: number;
+}
+
+/**
+ * Results for each calculator
  */
 export interface RentalAnalysisResults {
   type: 'rental';
   monthlyCashFlow: number;
   annualCashFlow: number;
+  monthlyRevenue: number; // ✅ Added this to fix RentersCalculator error
   capRate: number;
   cashOnCash: number;
   roi: number;
@@ -198,37 +163,20 @@ export interface RentersAnalysisResults {
 }
 
 /**
- * Monthly breakdown for Airbnb analysis
+ * Mapped types for result union
  */
-export interface MonthlyBreakdown {
-  month: string;
-  income: number;
-  expenses: number;
-  cashFlow: number;
-  occupancyRate: number;
+export interface AnalysisResultsMap {
+  mortgage: MortgageAnalysisResults;
+  rental: RentalAnalysisResults;
+  airbnb: AirbnbAnalysisResults;
+  wholesale: WholesaleAnalysisResults;
+  renters: RentersAnalysisResults;
 }
 
-/**
- * Projection data for future years
- */
-export interface ProjectionYear {
-  year: number;
-  propertyValue: number;
-  annualRent: number;
-  annualExpenses: number;
-  annualMortgage: number;
-  annualCashFlow: number;
-  equityGrowth: number;
-  totalReturn: number;
-}
-
-/**
- * Union type of all analysis results
- */
 export type AnalysisResults = AnalysisResultsMap[keyof AnalysisResultsMap];
 
 /**
- * Type guard functions for each calculator type
+ * Type guards for analysis
  */
 export function isRentalResults(results: AnalysisResults): results is RentalAnalysisResults {
   return results.type === 'rental';
@@ -251,7 +199,7 @@ export function isRentersResults(results: AnalysisResults): results is RentersAn
 }
 
 /**
- * Generic analysis interface
+ * Core analysis structure
  */
 export interface Analysis<T extends CalculatorType = CalculatorType> {
   _id?: string | ObjectId;
@@ -265,13 +213,15 @@ export interface Analysis<T extends CalculatorType = CalculatorType> {
 }
 
 /**
- * Type-safe analysis creation payload
+ * Creation & update types
  */
-export type CreateAnalysisPayload<T extends CalculatorType> = Omit<Analysis<T>, '_id' | 'createdAt' | 'updatedAt'>;
+export type CreateAnalysisPayload<T extends CalculatorType> = Omit<
+  Analysis<T>,
+  '_id' | 'createdAt' | 'updatedAt'
+>;
 
-/**
- * Type-safe analysis update payload
- */
-export type UpdateAnalysisPayload<T extends CalculatorType> = Partial<Omit<Analysis<T>, '_id' | 'userId' | 'createdAt' | 'type'>> & {
+export type UpdateAnalysisPayload<T extends CalculatorType> = Partial<
+  Omit<Analysis<T>, '_id' | 'userId' | 'createdAt' | 'type'>
+> & {
   _id: string | ObjectId;
 };

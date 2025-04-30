@@ -1,21 +1,25 @@
 import OpenAI from 'openai';
-import type { Analysis } from '@/lib/data';
+import type { Analysis, CalculatorType } from '@/types/analysis';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+const openaiApiKey = process.env.OPENAI_API_KEY || '';
 
-export async function generateInsights(analysis: Analysis): Promise<string> {
+const openai = openaiApiKey
+  ? new OpenAI({ apiKey: openaiApiKey })
+  : null;
+
+export async function generateInsights<T extends CalculatorType>(analysis: Analysis<T>): Promise<string> {
+  if (!openai) {
+    return 'OpenAI API key is not set. Please provide a valid API key.';
+  }
+
   try {
     const prompt = `Analyze the following real estate investment analysis and provide key insights:
 
-Property Details:
-- Name: ${analysis.propertyName}
-- Address: ${analysis.address}
-- Type: ${analysis.type}
+Investment Type: ${analysis.type}
+Title: ${analysis.title}
 
-Analysis Results:
-${Object.entries(analysis.results)
+Results:
+${Object.entries(analysis.data || {})
   .map(([key, value]) => `- ${key}: ${value}`)
   .join('\n')}
 
@@ -29,24 +33,24 @@ Please provide:
 Format the response in clear, concise bullet points.`;
 
     const completion = await openai.chat.completions.create({
-      model: "gpt-4-turbo-preview",
+      model: 'gpt-4-turbo-preview',
       messages: [
         {
-          role: "system",
-          content: "You are a real estate investment expert providing detailed analysis and insights."
+          role: 'system',
+          content: 'You are a real estate investment expert providing detailed analysis and insights.'
         },
         {
-          role: "user",
+          role: 'user',
           content: prompt
         }
       ],
       temperature: 0.7,
-      max_tokens: 1000,
+      max_tokens: 1000
     });
 
-    return completion.choices[0]?.message?.content || "Unable to generate insights at this time.";
+    return completion.choices[0]?.message?.content || 'Unable to generate insights at this time.';
   } catch (error) {
     console.error('Error generating insights:', error);
-    return "An error occurred while generating insights. Please try again later.";
+    return 'An error occurred while generating insights. Please try again later.';
   }
 }

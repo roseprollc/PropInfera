@@ -1,23 +1,26 @@
-import { Analysis } from '@/types/analysis';
+import type { Analysis, CalculatorType } from '@/types/analysis';
 
-export async function generateInsights(analysis: Analysis): Promise<string[]> {
-  // This is a placeholder implementation
-  // In a real implementation, this would call an AI service or use predefined rules
+export async function generateInsights<T extends CalculatorType>(analysis: Analysis<T>): Promise<string[]> {
   const insights: string[] = [];
 
-  if (analysis.results.monthlyCashFlow > 0) {
-    insights.push('Positive cash flow indicates a potentially profitable investment');
-  } else {
-    insights.push('Negative cash flow suggests the property may not be profitable at current rent levels');
+  // Type guard to safely access rental-specific fields
+  const data = analysis.data as any;
+
+  if (typeof data.monthlyCashFlow === 'number') {
+    insights.push(
+      data.monthlyCashFlow > 0
+        ? 'Positive cash flow indicates a potentially profitable investment.'
+        : 'Negative cash flow suggests the property may not be profitable at current rent levels.'
+    );
   }
 
-  if (analysis.results.cashOnCashReturn > 10) {
-    insights.push('High cash-on-cash return suggests strong investment potential');
+  if (typeof data.cashOnCash === 'number' && data.cashOnCash > 10) {
+    insights.push('High cash-on-cash return suggests strong investment potential.');
   }
 
-  if (analysis.results.capRate > 8) {
-    insights.push('Above-average cap rate indicates good value relative to purchase price');
+  if (typeof data.capRate === 'number' && data.capRate > 8) {
+    insights.push('Above-average cap rate indicates good value relative to purchase price.');
   }
 
   return insights;
-} 
+}

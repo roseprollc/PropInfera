@@ -197,7 +197,7 @@ interface Analysis {
   _id: ObjectId;
   userId: string;
   type: 'rental' | 'airbnb' | 'wholesale' | 'mortgage';
-  propertyName: string;
+  title: string;
   address: string;
   notes?: string;
   inputs: Record<string, any>;
@@ -220,7 +220,7 @@ interface Analysis {
 
 // Text index for search
 {
-  propertyName: 'text',
+  title: 'text',
   address: 'text',
   notes: 'text'
 }

@@ -6,11 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Analysis, AnalysisResults } from "@/types/analysis";
+import type { Analysis, CalculatorType } from "@/types/analysis";
 
 interface EditAnalysisFormProps {
-  analysis: Analysis<AnalysisResults>;
-  onSave: (updatedData: Partial<Analysis<AnalysisResults>>) => Promise<void>;
+  analysis: Analysis<CalculatorType>; // using CalculatorType union, as Cursor expects
+  onSave: (updatedData: Partial<Analysis<CalculatorType>>) => Promise<void>;
 }
 
 export function EditAnalysisForm({ analysis, onSave }: EditAnalysisFormProps) {
@@ -26,7 +26,7 @@ export function EditAnalysisForm({ analysis, onSave }: EditAnalysisFormProps) {
       await onSave({
         title,
         notes,
-        type: analysis.type
+        type: analysis.type, // required to maintain type integrity
       });
       router.push("/dashboard");
     } catch (error) {
@@ -80,4 +80,4 @@ export function EditAnalysisForm({ analysis, onSave }: EditAnalysisFormProps) {
   );
 }
 
-EditAnalysisForm.displayName = "EditAnalysisForm"; 
+EditAnalysisForm.displayName = "EditAnalysisForm";

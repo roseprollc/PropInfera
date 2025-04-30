@@ -1,7 +1,8 @@
 "use client";
 
-import { createContext, useContext, useReducer, ReactNode } from 'react';
-import { Analysis, CalculatorType } from '@/types/analysis';
+import { createContext, useContext, useReducer } from 'react';
+import type { ReactNode } from 'react';
+import type { Analysis, CalculatorType } from '@/types/analysis';
 
 type AnalysisState<T extends CalculatorType> = {
   currentAnalysis: Analysis<T> | null;
@@ -38,14 +39,14 @@ function analysisReducer<T extends CalculatorType>(
       return {
         ...state,
         savedAnalyses: state.savedAnalyses.map((analysis) =>
-          analysis.id === action.payload.id ? action.payload : analysis
+          analysis._id === action.payload._id ? action.payload : analysis
         ),
       };
     case 'DELETE_SAVED_ANALYSIS':
       return {
         ...state,
         savedAnalyses: state.savedAnalyses.filter(
-          (analysis) => analysis.id !== action.payload
+          (analysis) => analysis._id !== action.payload
         ),
       };
     case 'SET_SAVED_ANALYSES':
@@ -77,4 +78,4 @@ export function useAnalysis() {
   return context;
 }
 
-AnalysisProvider.displayName = "AnalysisProvider"; 
+AnalysisProvider.displayName = "AnalysisProvider";

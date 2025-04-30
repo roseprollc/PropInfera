@@ -1,68 +1,75 @@
 "use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useToast } from "@/components/ui/use-toast";
 
-// Mock function to simulate property import
-const importPropertyFromRedfin = async (url: string): Promise<void> => {
-  return new Promise((resolve) => {
+// Mocked async Redfin import (replace with real API call in production)
+const importPropertyFromRedfin = async (url: string): Promise<Record<string, unknown>> => {
+  return new Promise((resolve, reject) => {
     setTimeout(() => {
-      console.log('Importing property from:', url);
-      resolve();
-    }, 1500);
+      if (!url.includes("redfin.com")) {
+        reject(new Error("Invalid Redfin URL"));
+        return;
+      }
+      resolve({
+        propertyAddress: "123 Main St, San Francisco, CA 94105",
+        purchasePrice: 750000,
+        downPaymentPercent: 20,
+        interestRate: 6.5,
+        loanTermYears: 30,
+        closingCostsPercent: 2,
+        propertyTaxesYearly: 9000,
+        insuranceCostMonthly: 150,
+        utilitiesMonthlyCost: 200,
+        maintenancePercent: 5,
+        propertyManagementPercent: 8,
+        monthlyRent: 4500,
+        vacancyRatePercent: 5,
+        capExReservePercent: 5,
+        annualAppreciationPercent: 3,
+        annualRentIncreasePercent: 2,
+        holdingPeriodYears: 5,
+      });
+    }, 1200);
   });
 };
 
-// Mock property data matching CalculatorInputs interface
-const mockPropertyData = {
-  propertyAddress: "123 Main St, San Francisco, CA 94105",
-  purchasePrice: 750000,
-  downPaymentPercent: 20,
-  interestRate: 6.5,
-  loanTerm: 30,
-  closingCosts: 15000,
-  propertyTaxAnnual: 9000,
-  insuranceAnnual: 1800,
-  utilitiesMonthly: 200,
-  maintenancePercent: 5,
-  propertyManagementPercent: 8,
-  monthlyRent: 4500,
-  vacancyRatePercent: 5,
-  capExReservePercent: 5,
-  annualAppreciationPercent: 3,
-  annualRentIncreasePercent: 2,
-  holdingPeriodYears: 5,
-  incomeTaxRate: 25
-};
-
-export default function SmartImport() {
-  const [url, setUrl] = useState('');
-  const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+export default function ImportPage() {
   const router = useRouter();
+  const { toast } = useToast();
+  const [url, setUrl] = useState("");
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const validateUrl = (url: string): boolean => {
-    return url.includes('redfin.com') && url.startsWith('http');
-  };
+  const isValidRedfinUrl = (input: string): boolean =>
+    input.startsWith("http") && input.includes("redfin.com");
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleImport = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
 
-    if (!validateUrl(url)) {
-      setError('Please enter a valid Redfin property URL');
+    if (!isValidRedfinUrl(url)) {
+      setError("Please enter a valid Redfin property URL");
       return;
     }
 
     setIsLoading(true);
+
     try {
-      await importPropertyFromRedfin(url);
-      // Store mock property data in sessionStorage
-      sessionStorage.setItem("importedProperty", JSON.stringify(mockPropertyData));
-      router.push('/renters');
-    } catch (error) {
-      console.error('Import failed:', error);
-      setError('Failed to import property data. Please try again.');
+      const data = await importPropertyFromRedfin(url);
+      sessionStorage.setItem("importedProperty", JSON.stringify(data));
+      toast({ title: "Import Successful", description: "Property data loaded into calculator." });
+      router.push("/renters");
+    } catch (err) {
+      console.error(err);
+      const errorMessage = err instanceof Error ? err.message : "Unable to import property details from Redfin.";
+      toast({
+        title: "Import Failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -70,49 +77,34 @@ export default function SmartImport() {
 
   return (
     <main className="min-h-screen bg-black flex items-center justify-center px-4">
-      <div className="max-w-[600px] w-full">
-        <h1 className="text-3xl font-bold text-white text-center mb-8">
-          Smart Import
-        </h1>
-        
-        <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="w-full max-w-xl">
+        <h1 className="text-4xl font-bold text-white text-center mb-8">Smart Import</h1>
+        <form onSubmit={handleImport} className="space-y-6">
           <div>
-            <label 
-              htmlFor="redfin-url" 
-              className="block text-sm font-medium text-slate-300 mb-2"
-            >
+            <label htmlFor="redfin-url" className="block text-sm font-medium text-slate-300 mb-2">
               Redfin Property URL
             </label>
             <input
-              type="url"
               id="redfin-url"
+              type="url"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               placeholder="https://www.redfin.com/..."
-              className="w-full px-4 py-3 rounded-lg bg-slate-800 text-white border border-gray-700
-                focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent
-                placeholder:text-slate-500"
+              className="w-full px-4 py-3 bg-slate-800 border border-gray-700 rounded-lg text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-green-500"
               disabled={isLoading}
             />
-            {error && (
-              <p className="mt-2 text-sm text-red-500">
-                {error}
-              </p>
-            )}
+            {error && <p className="mt-2 text-sm text-red-500">{error}</p>}
           </div>
 
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-green-500 hover:bg-green-400 text-black font-semibold px-6 py-3 rounded-lg
-              shadow-lg hover:scale-105 transition-all duration-200 ease-in-out
-              focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-black
-              disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-green-500 hover:bg-green-400 text-black font-semibold px-6 py-3 rounded-lg shadow-lg hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-black disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isLoading ? 'Importing...' : 'Import Property'}
+            {isLoading ? "Importing..." : "Import Property"}
           </button>
         </form>
       </div>
     </main>
   );
-} 
+}

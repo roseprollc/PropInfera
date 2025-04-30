@@ -1,25 +1,30 @@
-import { Metadata } from 'next';
+import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getAnalysisById } from '@/lib/data';
-import { SavedAnalysisView } from '@/components/dashboard/SavedAnalysisView';
+import { updateAnalysis } from '@/app/actions/analysis';
+import { EditAnalysisForm } from '@/components/dashboard/EditAnalysisForm';
+import type { Analysis } from '@/types/analysis';
 
 export const metadata: Metadata = {
-  title: 'Analysis Detail | PropInfera',
-  description: 'View your saved property analysis',
+  title: 'Edit Analysis | PropInfera',
+  description: 'Edit your property analysis details.',
 };
 
-interface AnalysisDetailPageProps {
-  params: {
-    id: string;
-  };
-}
-
-export default async function AnalysisDetailPage({ params }: AnalysisDetailPageProps) {
+export default async function EditAnalysisPage({ params }: { params: { id: string } }) {
   const analysis = await getAnalysisById(params.id);
-  
+
   if (!analysis) {
     notFound();
   }
 
-  return <SavedAnalysisView analysis={analysis} />;
-} 
+  const handleSave = async (updatedData: Partial<Analysis>) => {
+    await updateAnalysis(params.id, updatedData);
+  };
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="text-3xl font-bold mb-8">Edit Analysis</h1>
+      <EditAnalysisForm analysis={analysis} onSave={handleSave} />
+    </div>
+  );
+}
