@@ -1,20 +1,12 @@
 import type { Metadata } from 'next';
-import MortgageCalculator from '@/components/calculators/MortgageCalculator';
-import CalculatorLayout from '@/components/layout/CalculatorLayout';
+import MortgagePageClient from '@/components/pages/MortgagePageClient';
 
 export const metadata: Metadata = {
   title: 'Mortgage Calculator | PropInfera',
-  description: 'Estimate your monthly mortgage payments with interest, taxes, insurance, and HOA fees included.',
+  description: 'Calculate your mortgage payments and amortization schedule',
   keywords: 'mortgage calculator, monthly payment, home loan, amortization, mortgage breakdown'
 };
 
 export default function MortgagePage() {
-  return (
-    <CalculatorLayout
-      title="Mortgage Calculator"
-      showImportButton={true}
-    >
-      <MortgageCalculator />
-    </CalculatorLayout>
-  );
+  return <MortgagePageClient />;
 }

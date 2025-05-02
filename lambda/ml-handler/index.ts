@@ -7,8 +7,13 @@ interface MLRequest {
   model: string;
 }
 
+interface MLPrediction {
+  prediction: string;
+  confidence: number;
+}
+
 interface MLResponse {
-  result: any;
+  result: MLPrediction;
   processingTime: number;
 }
 
@@ -32,7 +37,7 @@ export const handler = async (
     // Start processing timer
     const startTime = Date.now();
 
-    // TODO: Implement your ML processing logic here
+    // Process ML request
     const result = await processMLRequest();
 
     // Calculate processing time
@@ -59,7 +64,7 @@ export const handler = async (
   }
 };
 
-async function processMLRequest(): Promise<any> {
+async function processMLRequest(): Promise<MLPrediction> {
   // Implement your ML processing logic here
   // This is a placeholder that returns a mock result
   return {

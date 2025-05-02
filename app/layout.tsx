@@ -4,7 +4,11 @@ import './globals.css';
 import { Providers } from '@/components/providers/providers';
 import Navbar from '@/components/layout/Navbar';
 
-const inter = Inter({ subsets: ['latin'] });
+const inter = Inter({ 
+  subsets: ['latin'],
+  display: 'swap',
+  preload: false
+});
 
 export const metadata: Metadata = {
   title: 'PropInfera - Property Inference Attack Detection',

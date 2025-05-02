@@ -1,18 +1,12 @@
 import type { Metadata } from 'next';
-import WholesaleCalculator from '@/components/calculators/WholesaleCalculator';
-import CalculatorLayout from '@/components/layout/CalculatorLayout';
+import WholesalePageClient from '@/components/pages/WholesalePageClient';
 
 export const metadata: Metadata = {
   title: 'Wholesale Calculator | PropInfera',
-  description: 'Calculate potential profits from wholesale real estate deals.',
-  keywords:
-    'wholesale calculator, real estate investing, property flipping, assignment fee, repair costs',
+  description: 'Calculate maximum offer and potential profits for wholesale deals',
+  keywords: 'wholesale calculator, max offer, ARV, assignment fee, repair cost'
 };
 
 export default function WholesalePage() {
-  return (
-    <CalculatorLayout title="Wholesale Calculator">
-      <WholesaleCalculator />
-    </CalculatorLayout>
-  );
+  return <WholesalePageClient />;
 }

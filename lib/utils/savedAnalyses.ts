@@ -3,13 +3,16 @@ import type { CalculatorInputs, Analysis, CalculatorType } from '@/types/analysi
 export interface SavedAnalysis<T extends CalculatorType> {
   id: string;
   inputs: CalculatorInputs[T];
-  results: any; // Using any since we don't have the exact type
+  results: Analysis<T>['data'];
   createdAt: string;
 }
 
 const STORAGE_KEY = 'propinfera_saved_analyses';
 
-export function saveAnalysis<T extends CalculatorType>(inputs: CalculatorInputs[T], results: any): SavedAnalysis<T> {
+export function saveAnalysis<T extends CalculatorType>(
+  inputs: CalculatorInputs[T],
+  results: Analysis<T>['data']
+): SavedAnalysis<T> {
   const savedAnalysis: SavedAnalysis<T> = {
     id: Date.now().toString(),
     inputs,

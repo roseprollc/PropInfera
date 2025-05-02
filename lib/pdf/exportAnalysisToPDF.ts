@@ -1,7 +1,8 @@
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
+import type { Analysis, CalculatorType } from '@/types/analysis';
 
-export function exportAnalysisToPDF(analysis: any) {
+export function exportAnalysisToPDF<T extends CalculatorType>(analysis: Analysis<T>) {
   const doc = new jsPDF();
   const margin = 20;
   
