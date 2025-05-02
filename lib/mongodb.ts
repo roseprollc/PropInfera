@@ -8,7 +8,7 @@ if (!uri) {
 }
 
 let client: MongoClient;
-let clientPromise: Promise<MongoClient>;
+let mongoClientPromise: Promise<MongoClient>;
 
 // Global is used in development to preserve the MongoClient across hot reloads
 declare global {
@@ -22,11 +22,21 @@ if (process.env.NODE_ENV === "development") {
     client = new MongoClient(uri, options);
     global._mongoClientPromise = client.connect();
   }
-  clientPromise = global._mongoClientPromise;
+  mongoClientPromise = global._mongoClientPromise;
 } else {
   // In production, always create a new client for each invocation
   client = new MongoClient(uri, options);
-  clientPromise = client.connect();
+  mongoClientPromise = client.connect();
 }
 
-export default clientPromise;
+// Stub function for testing
+export const getStubClient = async () => ({
+  db: () => ({
+    collection: () => ({
+      insertOne: async () => ({ insertedId: 'stub' }),
+      updateOne: async () => ({ modifiedCount: 1 })
+    })
+  })
+});
+
+export default mongoClientPromise;
