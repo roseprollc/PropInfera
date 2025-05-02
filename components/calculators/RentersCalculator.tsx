@@ -149,76 +149,76 @@ export default function RentersCalculator() {
         <CardTitle>Renters Calculator</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-4">
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="monthlyRent">Monthly Rent</Label>
                 <Input
                   id="monthlyRent"
-                  type="number"
+              type="number"
                   value={inputs.monthlyRent ?? 0}
-                  onChange={(e) =>
-                    handleInputChange("monthlyRent", Number(e.target.value))
-                  }
-                />
-              </div>
+              onChange={(e) =>
+                handleInputChange("monthlyRent", Number(e.target.value))
+              }
+            />
+          </div>
               <div className="space-y-2">
                 <Label htmlFor="utilitiesMonthlyCost">Monthly Utilities Cost</Label>
                 <Input
                   id="utilitiesMonthlyCost"
-                  type="number"
+              type="number"
                   value={inputs.utilitiesMonthlyCost ?? 0}
-                  onChange={(e) =>
+              onChange={(e) =>
                     handleInputChange("utilitiesMonthlyCost", Number(e.target.value))
-                  }
-                />
-              </div>
+              }
+            />
+          </div>
               <div className="space-y-2">
                 <Label htmlFor="propertyManagementPercent">Property Management %</Label>
                 <Input
                   id="propertyManagementPercent"
-                  type="number"
+              type="number"
                   value={inputs.propertyManagementPercent ?? 0}
-                  onChange={(e) =>
+              onChange={(e) =>
                     handleInputChange("propertyManagementPercent", Number(e.target.value))
-                  }
-                />
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              {results && (
-                <>
-                  <div>
-                    <h3 className="text-lg font-medium text-gray-900">
-                      Monthly Cash Flow
-                    </h3>
-                    <p className="text-2xl font-bold text-green-600">
-                      ${results.monthlyCashFlow.toFixed(2)}
-                    </p>
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-medium text-gray-900">
-                      Annual Cash Flow
-                    </h3>
-                    <p className="text-2xl font-bold text-green-600">
-                      ${results.annualCashFlow.toFixed(2)}
-                    </p>
-                  </div>
-                </>
-              )}
-            </div>
+              }
+            />
           </div>
+        </div>
 
-          <div className="flex justify-end space-x-4">
+        <div className="space-y-4">
+          {results && (
+            <>
+              <div>
+                <h3 className="text-lg font-medium text-gray-900">
+                  Monthly Cash Flow
+                </h3>
+                <p className="text-2xl font-bold text-green-600">
+                  ${results.monthlyCashFlow.toFixed(2)}
+                </p>
+              </div>
+              <div>
+                <h3 className="text-lg font-medium text-gray-900">
+                  Annual Cash Flow
+                </h3>
+                <p className="text-2xl font-bold text-green-600">
+                  ${results.annualCashFlow.toFixed(2)}
+                </p>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+
+      <div className="flex justify-end space-x-4">
             <Button onClick={calculateResults}>
-              Calculate
+          Calculate
             </Button>
             <Button onClick={handleSave} disabled={isSaving}>
-              {isSaving ? "Saving..." : "Save Analysis"}
+          {isSaving ? "Saving..." : "Save Analysis"}
             </Button>
-          </div>
+      </div>
 
           {toastMessage && (
             <Toast
@@ -226,7 +226,7 @@ export default function RentersCalculator() {
               onClose={() => setToastMessage(null)}
             />
           )}
-        </div>
+    </div>
       </CardContent>
     </Card>
   );
