@@ -225,3 +225,11 @@ export type UpdateAnalysisPayload<T extends CalculatorType> = Partial<
 > & {
   _id: string | ObjectId;
 };
+
+export interface Report {
+  _id?: string;
+  email: string;
+  propertyAddress: string;
+  createdAt?: string;
+  metrics: Record<string, any>;
+}
