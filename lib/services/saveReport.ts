@@ -1,34 +1,44 @@
-import type { Report } from '@/types/analysis';
-import { handleApiError } from '@/lib/utils/handleApiError';
-import { getServerSession } from 'next-auth';
-import { NextResponse } from 'next/server';
+import { getCollection } from '@/lib/mongodb';
+import type { MongoReport } from '@/types/mongodb';
+import { handleApiError, DatabaseError, ValidationError } from '@/lib/utils/handleApiError';
+import { requireSession } from '@/lib/utils/session';
 
-export const saveReportToDB = async (data: Partial<Report>, email: string) => {
+interface SaveReportResponse {
+  success: boolean;
+  message: string;
+  reportId?: string;
+  status: number;
+  code?: string;
+}
+
+export async function saveReportToDB(report: Partial<MongoReport>): Promise<SaveReportResponse> {
   try {
-    const session = await getServerSession();
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const session = await requireSession();
+
+    if (!report.propertyAddress) {
+      throw new ValidationError('Property address is required');
     }
 
-    // Mock implementation
-    console.log('Saving report for', email);
-    return { success: true, reportId: 'mock-id' };
-  } catch (e) {
-    return handleApiError(e, 'saveReportToDB');
+    const reports = await getCollection<MongoReport>('reports');
+    
+    try {
+      const result = await reports.insertOne({
+        ...report,
+        email: session.email,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      } as MongoReport);
+
+      return {
+        success: true,
+        message: 'Report saved successfully',
+        reportId: result.insertedId.toString(),
+        status: 200
+      };
+    } catch (dbError) {
+      throw new DatabaseError('Failed to save report to database');
+    }
+  } catch (error) {
+    return handleApiError(error, 'Failed to save report');
   }
-};
-
-export async function saveReportToDB(data: Partial<Analysis>, userId: string) {
-  const client = await clientPromise;
-  const db = client.db();
-  
-  const result = await db.collection('reports').insertOne({
-    ...data,
-    userId,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    _id: new ObjectId()
-  });
-
-  return result.insertedId;
 } 

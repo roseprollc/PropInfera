@@ -1,75 +1,80 @@
 import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
 import { getToken } from 'next-auth/jwt';
-import { rateLimit } from '@/lib/rate-limit';
+import type { NextRequest } from 'next/server';
+
+// Define protected routes that require authentication
+const protectedRoutes = [
+  '/dashboard',
+  '/api/reports',
+  '/api/tiers',
+  '/api/agent',
+  '/api/scrape'
+];
+
+// Define public routes that don't require authentication
+const publicRoutes = [
+  '/',
+  '/api/auth',
+  '/login',
+  '/register'
+];
 
 export async function middleware(request: NextRequest) {
-  const url = request.nextUrl.clone();
-  const pathname = url.pathname;
+  const { pathname } = request.nextUrl;
 
-  // Skip rate limiting for auth routes
-  if (pathname.startsWith('/api/auth/')) {
+  // Check if the route is protected
+  const isProtectedRoute = protectedRoutes.some(route => 
+    pathname.startsWith(route)
+  );
+
+  // Check if the route is public
+  const isPublicRoute = publicRoutes.some(route => 
+    pathname.startsWith(route)
+  );
+
+  // Skip middleware for public routes
+  if (isPublicRoute) {
     return NextResponse.next();
   }
 
-  // Safe IP extraction
-  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || '127.0.0.1';
+  // Get the token
+  const token = await getToken({
+    req: request,
+    secret: process.env.NEXTAUTH_SECRET
+  });
 
-  // Rate limiting
-  try {
-    const { success, limit, remaining, reset } = await rateLimit(ip);
-    if (!success) {
-      const response = new NextResponse('Too Many Requests', { status: 429 });
-      response.headers.set('X-RateLimit-Limit', (limit || 100).toString());
-      response.headers.set('X-RateLimit-Remaining', (remaining || 0).toString());
-      response.headers.set('X-RateLimit-Reset', (reset || Math.ceil(Date.now() / 1000)).toString());
-      return response;
+  // Handle API routes
+  if (pathname.startsWith('/api/')) {
+    if (!token) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
     }
-  } catch (err) {
-    console.error('Rate limiting failed:', err);
-    // Continue with the request if rate limiting fails
     return NextResponse.next();
   }
 
-  // Auth handling
-  const token = await getToken({ req: request });
-  const isProtectedRoute = pathname.startsWith('/dashboard');
-  const isAuthRoute = pathname.startsWith('/auth');
-  const isApiRoute = pathname.startsWith('/api');
-
-  if (isProtectedRoute && !token) {
-    const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = '/auth/signin';
-    return NextResponse.redirect(redirectUrl);
-  }
-
-  if (isAuthRoute && token) {
-    const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = '/dashboard';
-    return NextResponse.redirect(redirectUrl);
-  }
-
-  // Add security headers for API requests
-  if (isApiRoute) {
-    const response = NextResponse.next();
-    response.headers.set('X-Content-Type-Options', 'nosniff');
-    response.headers.set('X-Frame-Options', 'DENY');
-    response.headers.set('X-XSS-Protection', '1; mode=block');
-    response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-    response.headers.set(
-      'Permissions-Policy',
-      'camera=(), microphone=(), geolocation=(), interest-cohort=()'
-    );
-    response.headers.set(
-      'Content-Security-Policy',
-      "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://api.propinfera.com; frame-ancestors 'none';"
-    );
-    return response;
+  // Handle page routes
+  if (isProtectedRoute) {
+    if (!token) {
+      const url = new URL('/login', request.url);
+      url.searchParams.set('callbackUrl', pathname);
+      return NextResponse.redirect(url);
+    }
   }
 
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/api/reports', '/api/tiers/:path*'],
+  matcher: [
+    /*
+     * Match all request paths except:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - public folder
+     */
+    '/((?!_next/static|_next/image|favicon.ico|public/).*)',
+  ],
 };

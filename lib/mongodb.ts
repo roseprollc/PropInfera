@@ -1,41 +1,40 @@
-import { MongoClient } from "mongodb";
+import { MongoClient, Db, Collection } from 'mongodb';
+import type { MongoCollection, MongoUser, MongoReport, MongoAnalysis } from '@/types/mongodb';
+
+if (!process.env.MONGODB_URI) {
+  throw new Error('Please add your Mongo URI to .env.local');
+}
 
 const uri = process.env.MONGODB_URI;
 const options = {};
 
-if (!uri) {
-  throw new Error("⚠️ MONGODB_URI is not defined in the environment variables.");
-}
-
-// Global is used in development to preserve the MongoClient across hot reloads
-declare global {
-  // Allow globalThis._mongoClientPromise to exist as a dev-only workaround
-  // eslint-disable-next-line no-var
-  var _mongoClientPromise: Promise<MongoClient> | undefined;
-}
-
 let client: MongoClient;
-let mongoClientPromise: Promise<MongoClient>;
+let clientPromise: Promise<MongoClient>;
 
-if (process.env.NODE_ENV === "development") {
-  if (!global._mongoClientPromise) {
+if (process.env.NODE_ENV === 'development') {
+  // In development mode, use a global variable so that the value
+  // is preserved across module reloads caused by HMR (Hot Module Replacement).
+  let globalWithMongo = global as typeof globalThis & {
+    _mongoClientPromise?: Promise<MongoClient>;
+  };
+
+  if (!globalWithMongo._mongoClientPromise) {
     client = new MongoClient(uri, options);
-    global._mongoClientPromise = client.connect();
+    globalWithMongo._mongoClientPromise = client.connect();
   }
-  mongoClientPromise = global._mongoClientPromise;
+  clientPromise = globalWithMongo._mongoClientPromise;
 } else {
+  // In production mode, it's best to not use a global variable.
   client = new MongoClient(uri, options);
-  mongoClientPromise = client.connect();
+  clientPromise = client.connect();
 }
 
-// Stub function for testing
-export const getStubClient = async () => ({
-  db: () => ({
-    collection: () => ({
-      insertOne: async () => ({ insertedId: 'stub' }),
-      updateOne: async () => ({ modifiedCount: 1 })
-    })
-  })
-});
+export async function getCollection<T extends MongoUser | MongoReport | MongoAnalysis>(
+  collectionName: string
+): Promise<Collection<T>> {
+  const client = await clientPromise;
+  const db = client.db();
+  return db.collection<T>(collectionName);
+}
 
-export default mongoClientPromise;
+export { clientPromise };
