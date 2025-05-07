@@ -1,4 +1,4 @@
-import { getCollection } from '@/lib/mongodb';
+import { getCollection } from '@/lib/mongodb-dev';
 import type { MongoReport } from '@/types/mongodb';
 import { handleApiError, DatabaseError, ValidationError } from '@/lib/utils/handleApiError';
 import { requireSession } from '@/lib/utils/session';
