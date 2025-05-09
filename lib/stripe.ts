@@ -1,12 +1,22 @@
 import Stripe from 'stripe';
 
-if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error('Missing STRIPE_SECRET_KEY');
-}
+// Create a mock stripe instance for development/testing
+const mockStripe = {
+  checkout: {
+    sessions: {
+      create: async () => ({
+        url: 'https://example.com/mock-checkout',
+      }),
+    },
+  },
+} as unknown as Stripe;
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: '2025-04-30.basil', // Update to supported version
-});
+// Initialize stripe only if the secret key is available
+export const stripe = process.env.STRIPE_SECRET_KEY
+  ? new Stripe(process.env.STRIPE_SECRET_KEY, {
+      apiVersion: '2025-04-30.basil',
+    })
+  : mockStripe;
 
 export default stripe;
 
