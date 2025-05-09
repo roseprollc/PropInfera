@@ -38,12 +38,12 @@ async function getAnalysisById(id: string): Promise<AnalysisWithInsights | null>
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { searchParams } = new URL(request.url);
     const shouldRefresh = searchParams.get('refresh') === 'true';
-    const id = params.id;
+    const id = (await params).id;
     
     if (!id) {
       return NextResponse.json(
