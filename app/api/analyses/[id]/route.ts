@@ -3,7 +3,7 @@ import { clientPromise } from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
 
 export async function PATCH(
-  request: NextRequest,
+  request: Request,
   { params }: { params: { id: string } }
 ) {
   try {
