@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
+import type { ReactNode } from 'react';
 import { Inter } from 'next/font/google';
+import ClientLayout from '@/components/layout/ClientLayout';
 import './globals.css';
-import { Providers } from '@/components/providers/providers';
-import Navbar from '@/components/layout/Navbar';
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -11,14 +11,22 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'PropInfera - Property Inference Attack Detection',
-  description: 'Advanced machine learning model security analysis and inference attack detection',
+  title: 'PropInfera',
+  description: 'Real Estate Investment Analysis Platform',
 };
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
-  return <html><body>{children}</body></html>;
+  return (
+    <html lang="en" className={inter.className}>
+      <body>
+        <ClientLayout>
+          {children}
+        </ClientLayout>
+      </body>
+    </html>
+  );
 }

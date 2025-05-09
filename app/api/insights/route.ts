@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import clientPromise from '@/lib/mongodb';
+import { clientPromise } from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
 import { generateInsights } from '@/lib/ai/generateInsights';
 import type { Analysis } from '@/types/analysis';
