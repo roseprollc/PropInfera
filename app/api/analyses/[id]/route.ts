@@ -7,13 +7,15 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
+    const { id } = params;
+    
     // Connect to MongoDB
     const client = await clientPromise;
     const db = client.db();
     const collection = db.collection('analyses');
 
     // Validate ID
-    if (!ObjectId.isValid(params.id)) {
+    if (!ObjectId.isValid(id)) {
       return NextResponse.json({ error: 'Invalid analysis ID' }, { status: 400 });
     }
 
@@ -30,7 +32,7 @@ export async function PATCH(
 
     // Update the analysis
     const result = await collection.updateOne(
-      { _id: new ObjectId(params.id) },
+      { _id: new ObjectId(id) },
       { $set: updates }
     );
 
