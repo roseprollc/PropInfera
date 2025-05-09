@@ -5,8 +5,8 @@
   "framework": "nextjs",
   "regions": ["iad1"],
   "env": {
-    "NEXTAUTH_SECRET": "your-secure-nextauth-secret-key",
+    "NEXTAUTH_SECRET": "ukJ1LlqTaWRHu6Ss1VTmLYuCWtvD0PFBScZGbxv65lw=",
     "NEXT_PUBLIC_STRIPE_KEY": "pk_test_placeholder",
-    "MONGODB_URI": "@mongodb_uri"
+    "MONGODB_URI": "mongodb+srv://username:password@cluster.mongodb.net/propinfera?retryWrites=true&w=majority"
   }
 } 
