@@ -21,5 +21,5 @@ export const stripe = process.env.STRIPE_SECRET_KEY
 export default stripe;
 
 export function isStripeConfigured(): boolean {
-  return !!process.env.STRIPE_SECRET_KEY && !!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
+  return !!process.env.STRIPE_SECRET_KEY && !!process.env.NEXT_PUBLIC_STRIPE_KEY;
 }
