@@ -10,7 +10,12 @@ export const metadata: Metadata = {
   description: 'View and manage your saved property analysis.',
 };
 
-export default async function SavedAnalysisPage({ params }: { params: { id: string } }) {
+interface PageProps {
+  params: { [key: string]: string };
+  searchParams: { [key: string]: string | string[] | undefined };
+}
+
+export default async function SavedAnalysisPage({ params, searchParams }: PageProps) {
   const analysis = await getAnalysisById(params.id);
 
   if (!analysis) {
