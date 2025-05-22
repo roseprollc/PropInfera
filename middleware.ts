@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
-import { getToken } from 'next-auth/jwt';
 import type { NextRequest } from 'next/server';
+import { getToken } from 'next-auth/jwt';
+import { getEnv } from './lib/env';
 
 // Define protected routes that require authentication
 const protectedRoutes = [
@@ -25,45 +26,40 @@ const publicRoutes = [
 ];
 
 export async function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
-
-  // Check if the route is protected
-  const isProtectedRoute = protectedRoutes.some(route => 
-    pathname.startsWith(route)
-  );
-
-  // Check if the route is public
-  const isPublicRoute = publicRoutes.some(route => 
-    pathname.startsWith(route)
-  );
-
-  // Skip middleware for public routes
-  if (isPublicRoute) {
-    return NextResponse.next();
-  }
-
-  // Get the token
   const token = await getToken({
     req: request,
-    secret: process.env.NEXTAUTH_SECRET
+    secret: getEnv('NEXTAUTH_SECRET'),
   });
 
-  // Handle API routes
-  if (pathname.startsWith('/api/')) {
+  // Check if the request is for an API route
+  if (request.nextUrl.pathname.startsWith('/api/')) {
+    // Allow public API routes
+    if (request.nextUrl.pathname.startsWith('/api/public/')) {
+      return NextResponse.next();
+    }
+
+    // Protect all other API routes
     if (!token) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
+      return new NextResponse(
+        JSON.stringify({ error: 'Authentication required' }),
+        {
+          status: 401,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
       );
     }
-    return NextResponse.next();
   }
 
-  // Handle page routes
-  if (isProtectedRoute) {
+  // Check if the request is for a protected page
+  if (
+    request.nextUrl.pathname.startsWith('/dashboard') ||
+    request.nextUrl.pathname.startsWith('/settings')
+  ) {
     if (!token) {
-      const url = new URL('/login', request.url);
-      url.searchParams.set('callbackUrl', pathname);
+      const url = new URL('/auth/signin', request.url);
+      url.searchParams.set('callbackUrl', request.url);
       return NextResponse.redirect(url);
     }
   }
@@ -73,13 +69,8 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public folder
-     */
-    '/((?!_next/static|_next/image|favicon.ico|public/).*)',
+    '/dashboard/:path*',
+    '/settings/:path*',
+    '/api/:path*',
   ],
 };

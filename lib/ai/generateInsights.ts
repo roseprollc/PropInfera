@@ -9,12 +9,11 @@ import {
   isRentersResults,
   isValidAnalysis
 } from '@/types/analysis';
+import { getEnv } from '../env';
 
-const openaiApiKey = process.env.OPENAI_API_KEY || '';
-
-const openai = openaiApiKey
-  ? new OpenAI({ apiKey: openaiApiKey })
-  : null;
+const openai = new OpenAI({
+  apiKey: getEnv('OPENAI_API_KEY'),
+});
 
 export async function generateInsights<T extends CalculatorType>(
   analysis: Analysis<T>
@@ -24,23 +23,47 @@ export async function generateInsights<T extends CalculatorType>(
   }
 
   try {
-    switch (analysis.type) {
-      case 'rental':
-        return generateRentalInsights(analysis as Analysis<'rental'>);
-      case 'airbnb':
-        return generateAirbnbInsights(analysis as Analysis<'airbnb'>);
-      case 'wholesale':
-        return generateWholesaleInsights(analysis as Analysis<'wholesale'>);
-      case 'mortgage':
-        return generateMortgageInsights(analysis as Analysis<'mortgage'>);
-      case 'renters':
-        return generateRentersInsights(analysis as Analysis<'renters'>);
-      default:
-        throw new Error(`Unsupported calculator type: ${analysis.type}`);
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4-turbo-preview",
+      messages: [
+        {
+          role: "system",
+          content: "You are a real estate investment analysis expert. Analyze the provided data and generate key insights. Respond ONLY with a valid JSON object matching the GPTInsight type."
+        },
+        {
+          role: "user",
+          content: JSON.stringify(analysis)
+        }
+      ],
+      temperature: 0.7,
+      max_tokens: 1000
+    });
+
+    const content = completion.choices[0].message.content;
+    if (!content) {
+      throw new Error('No content received from OpenAI');
+    }
+
+    try {
+      return JSON.parse(content) as GPTInsight;
+    } catch (e) {
+      // fallback to a mock
+      return {
+        summary: content,
+        roiAnalysis: '',
+        marketComparison: '',
+        riskFlags: [],
+        strategyAdvice: '',
+        recommendations: [],
+        mode: analysis.type,
+        isMock: true,
+        analysisId: analysis._id?.toString() ?? '',
+        createdAt: new Date().toISOString()
+      };
     }
   } catch (error) {
     console.error('Error generating insights:', error);
-    return generateFallbackInsights(analysis);
+    throw error;
   }
 }
 

@@ -2,7 +2,7 @@ import { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import GoogleProvider from "next-auth/providers/google";
 import { compare } from "bcrypt";
-import { connectToDatabase } from '@/lib/mongodb';
+import { getDb } from '@/lib/mongodb';
 import { User, UserTier } from '@/types/user';
 
 const users = [
@@ -22,7 +22,7 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
-        const { db } = await connectToDatabase();
+        const db = await getDb();
         const user = await db.collection('users').findOne({ email: credentials.email });
 
         if (!user) {

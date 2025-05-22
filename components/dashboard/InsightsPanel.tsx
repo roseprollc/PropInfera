@@ -48,6 +48,31 @@ export default function InsightsPanel<T extends CalculatorType>({
     };
   }, []);
 
+  const handleInsightUpdate = (newInsight: GPTInsight) => {
+    setInsight(newInsight);
+  };
+
+  const fetchInsights = async () => {
+    try {
+      const response = await fetch('/api/agent', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(analysis),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch insights');
+      }
+
+      const data = await response.json();
+      handleInsightUpdate(data.insight);
+    } catch (error) {
+      console.error('Error fetching insights:', error);
+    }
+  };
+
   if (userTier === 'free') {
     return (
       <Card>

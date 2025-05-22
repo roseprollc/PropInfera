@@ -1,13 +1,14 @@
-import { MongoClient, Document, Db } from 'mongodb';
+import { MongoClient, Document } from 'mongodb';
+import { getEnv } from './env';
 
 if (!process.env.MONGODB_URI) {
-  throw new Error('Please add your Mongo URI to .env.local');
+  throw new Error('Please define the MONGODB_URI environment variable inside .env');
 }
 
-const uri = process.env.MONGODB_URI;
+const uri = getEnv('MONGODB_URI');
 const options = {};
 
-let client: MongoClient;
+let client;
 let clientPromise: Promise<MongoClient>;
 
 if (process.env.NODE_ENV === 'development') {
@@ -28,15 +29,17 @@ if (process.env.NODE_ENV === 'development') {
   clientPromise = client.connect();
 }
 
-export { clientPromise };
+// Export a module-scoped MongoClient promise. By doing this in a
+// separate module, the client can be shared across functions.
+export default clientPromise;
 
-export async function connectToDatabase(): Promise<{ client: MongoClient; db: Db }> {
+export const getDb = async () => {
   const client = await clientPromise;
-  const db = client.db(process.env.MONGODB_DB);
-  return { client, db };
-}
+  return client.db(getEnv('MONGODB_DB'));
+};
 
 // Mock getCollection function
 export async function getCollection<T extends Document>(collectionName: string) {
+  const client = await clientPromise;
   return client.db().collection<T>(collectionName);
 } 
