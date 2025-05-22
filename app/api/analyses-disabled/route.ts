@@ -43,7 +43,7 @@ function sanitizeText(text: string): string {
 }
 
 // GET handler
-export async function GET(request: NextRequest) {
+export async function GET(request: NextRequest): Promise<NextResponse> {
   try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get("userId");
@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
 
     const client = await clientPromise;
     const db = client.db("propinfera");
-    const collection = db.collection<Analysis>("analyses");
+    const collection = db.collection<Analysis<CalculatorType>>("analyses");
 
     const query = userId ? { userId } : {};
     const analyses = await collection.find(query).sort({ createdAt: -1 }).toArray();
@@ -79,7 +79,7 @@ export async function GET(request: NextRequest) {
 }
 
 // POST handler
-export async function POST(request: NextRequest) {
+export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     const body = await request.json() as IncomingSaveAnalysisBase;
     const { userId, type, data, title, notes } = body;
@@ -123,26 +123,48 @@ export async function POST(request: NextRequest) {
 
     // Validate type and cast safely
     let validatedData: AnalysisResults;
+    let metrics = { roi: 0, cashFlow: 0, capRate: 0 };
     switch (type) {
       case "mortgage":
         if (!isMortgageResults(data)) return invalidTypeResponse();
         validatedData = data as MortgageAnalysisResults;
+        metrics = { roi: 0, cashFlow: 0, capRate: 0 };
         break;
       case "rental":
         if (!isRentalResults(data)) return invalidTypeResponse();
         validatedData = data as RentalAnalysisResults;
+        metrics = {
+          roi: validatedData.roi ?? 0,
+          cashFlow: validatedData.cashFlow ?? 0,
+          capRate: validatedData.capRate ?? 0
+        };
         break;
       case "airbnb":
         if (!isAirbnbResults(data)) return invalidTypeResponse();
         validatedData = data as AirbnbAnalysisResults;
+        metrics = {
+          roi: (validatedData as any).roi ?? 0,
+          cashFlow: (validatedData as any).cashFlow ?? 0,
+          capRate: (validatedData as any).capRate ?? 0
+        };
         break;
       case "wholesale":
         if (!isWholesaleResults(data)) return invalidTypeResponse();
         validatedData = data as WholesaleAnalysisResults;
+        metrics = {
+          roi: validatedData.returnOnInvestment ?? 0,
+          cashFlow: 0,
+          capRate: 0
+        };
         break;
       case "renters":
         if (!isRentersResults(data)) return invalidTypeResponse();
         validatedData = data as RentersAnalysisResults;
+        metrics = {
+          roi: validatedData.roi ?? 0,
+          cashFlow: validatedData.cashFlow ?? 0,
+          capRate: validatedData.capRate ?? 0
+        };
         break;
       default:
         return invalidTypeResponse();
@@ -150,16 +172,18 @@ export async function POST(request: NextRequest) {
 
     const client = await clientPromise;
     const db = client.db("propinfera");
-    const collection = db.collection<Analysis>("analyses");
+    const collection = db.collection<Analysis<CalculatorType>>("analyses");
 
-    const newAnalysis: Analysis = {
+    const newAnalysis: Analysis<CalculatorType> = {
       userId,
       type,
       title: sanitizedTitle,
       notes: sanitizedNotes,
-      data: validatedData,
-      createdAt: new Date(),
-      updatedAt: new Date()
+      data: validatedData as any,
+      metrics,
+      mode: type,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     };
 
     const result = await collection.insertOne(newAnalysis);

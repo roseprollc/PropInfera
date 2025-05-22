@@ -55,16 +55,30 @@ export function calculateAirbnbMetrics(inputs: AirbnbInputs): Omit<AirbnbAnalysi
   const breakEvenOccupancy = ((monthlyOperatingExpenses + monthlyPayment) / (averageNightlyRate + cleaningFeePerStay / averageStayDurationNights)) / daysPerMonth * 100;
 
   return {
-    monthlyAirbnbIncome: monthlyRevenue,
-    annualCashFlow,
-    roi,
-    netOperatingIncome,
+    purchasePrice: inputs.purchasePrice,
+    downPayment: inputs.purchasePrice * (inputs.downPaymentPercent / 100),
+    loanAmount: inputs.purchasePrice * (1 - inputs.downPaymentPercent / 100),
+    interestRate: inputs.interestRate,
+    loanTerm: inputs.loanTermYears,
+    nightlyRate: inputs.averageNightlyRate,
+    occupancyRate: inputs.occupancyRatePercent,
+    cleaningFees: inputs.cleaningFeePerStay,
+    propertyTaxes: inputs.propertyTaxesYearly / 12,
+    insurance: inputs.insuranceCostMonthly,
+    hoaFees: inputs.hoa ?? 0,
+    maintenance: inputs.purchasePrice * (inputs.maintenancePercent / 100) / 12,
+    managementFees: inputs.averageNightlyRate * (inputs.propertyManagementPercent / 100),
+    utilities: inputs.utilitiesMonthlyCost,
+    otherExpenses: 0,
+    monthlyMortgage: monthlyPayment,
     totalOperatingExpenses: monthlyOperatingExpenses,
-    monthlyMortgagePayment: monthlyPayment,
-    totalCashInvestment,
-    breakEvenOccupancy,
-    averageDailyRate: averageNightlyRate,
-    projectedAnnualIncome: monthlyRevenue * 12,
-    monthlyBreakdown: []
+    grossRevenue: monthlyRevenue,
+    netProfit: monthlyCashFlow,
+    annualCashFlow: annualCashFlow,
+    monthlyAirbnbIncome: monthlyRevenue,
+    seasonalVariation: 0,
+    breakEvenOccupancy: breakEvenOccupancy,
+    monthlyBreakdown: [],
+    averageDailyRate: inputs.averageNightlyRate
   };
 } 

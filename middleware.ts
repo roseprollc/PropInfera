@@ -5,6 +5,9 @@ import type { NextRequest } from 'next/server';
 // Define protected routes that require authentication
 const protectedRoutes = [
   '/dashboard',
+  '/renters',
+  '/airbnb',
+  '/wholesale',
   '/api/reports',
   '/api/tiers',
   '/api/agent',
@@ -16,7 +19,9 @@ const publicRoutes = [
   '/',
   '/api/auth',
   '/login',
-  '/register'
+  '/signup',
+  '/pricing',
+  '/auth/error'
 ];
 
 export async function middleware(request: NextRequest) {
@@ -69,7 +74,7 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     /*
-     * Match all request paths except:
+     * Match all request paths except for the ones starting with:
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)

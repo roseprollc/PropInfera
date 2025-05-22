@@ -1,6 +1,6 @@
 "use client";
 
-import React, { Suspense, useState } from 'react';
+import React, { Suspense, useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import dynamic from 'next/dynamic';
 import type { Analysis, CalculatorType } from '@/types/analysis';
@@ -20,8 +20,9 @@ const SavedAnalysisView = dynamic(
 );
 
 interface SavedAnalysesListProps<T extends CalculatorType> {
-  analyses: Analysis<T>[];
-  onSelect: (analysis: Analysis<T>) => void;
+  analyses?: Analysis<T>[];
+  onSelect?: (analysis: Analysis<T>) => void;
+  userId?: string;
 }
 
 class SavedAnalysesErrorBoundary extends React.Component<
@@ -55,14 +56,28 @@ class SavedAnalysesErrorBoundary extends React.Component<
 }
 
 export default function SavedAnalysesList<T extends CalculatorType>({ 
-  analyses, 
-  onSelect 
+  analyses = [], 
+  onSelect = () => {},
+  userId
 }: SavedAnalysesListProps<T>) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [userAnalyses, setUserAnalyses] = useState<Analysis<T>[]>([]);
+
+  useEffect(() => {
+    if (userId) {
+      // Fetch analyses for the user
+      fetch(`/api/analyses?userId=${userId}`)
+        .then(res => res.json())
+        .then(data => setUserAnalyses(data))
+        .catch(error => console.error('Error fetching analyses:', error));
+    }
+  }, [userId]);
+
+  const displayAnalyses = analyses.length > 0 ? analyses : userAnalyses;
 
   // Defensive check for invalid data
-  if (!Array.isArray(analyses)) {
-    console.error('Invalid analyses data:', analyses);
+  if (!Array.isArray(displayAnalyses)) {
+    console.error('Invalid analyses data:', displayAnalyses);
     return (
       <div className="p-4 bg-red-500/10 border border-red-500 rounded-lg">
         <p className="text-red-400">Error: Invalid data received. Please try refreshing the page.</p>
@@ -70,7 +85,7 @@ export default function SavedAnalysesList<T extends CalculatorType>({
     );
   }
 
-  if (analyses.length === 0) {
+  if (displayAnalyses.length === 0) {
     return (
       <div className="text-center py-12">
         <h3 className="text-xl font-semibold text-gray-300 mb-2">No Saved Analyses</h3>
@@ -82,7 +97,7 @@ export default function SavedAnalysesList<T extends CalculatorType>({
   return (
     <SavedAnalysesErrorBoundary>
       <div className="space-y-4">
-        {analyses.map((analysis) => {
+        {displayAnalyses.map((analysis) => {
           const id = analysis._id?.toString() || '';
           return (
             <div
@@ -98,7 +113,7 @@ export default function SavedAnalysesList<T extends CalculatorType>({
               }}
             >
               <div className="flex justify-between items-start">
-                <h3 className="font-medium">{analysis.title || 'Untitled Analysis'}</h3>
+                <h3 className="font-medium">{analysis.source || 'Untitled Analysis'}</h3>
                 <span className="text-sm">
                   {format(new Date(analysis.createdAt), 'MMM d, yyyy')}
                 </span>

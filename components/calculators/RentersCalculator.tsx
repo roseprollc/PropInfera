@@ -95,20 +95,32 @@ export default function RentersCalculator() {
   const calculateResults = () => {
     const results: RentalAnalysisResults = {
       type: "rental",
-      monthlyCashFlow: inputs.monthlyRent ?? 0,
-      annualCashFlow: (inputs.monthlyRent ?? 0) * 12,
-      capRate: 0,
-      cashOnCash: 0,
-      roi: 0,
-      totalCashInvestment: 0,
+      purchasePrice: inputs.purchasePrice,
+      downPayment: inputs.purchasePrice * (inputs.downPaymentPercent / 100),
+      loanAmount: inputs.purchasePrice * (1 - inputs.downPaymentPercent / 100),
+      interestRate: inputs.interestRate,
+      loanTerm: inputs.loanTermYears,
+      monthlyRent: inputs.monthlyRent ?? 0,
+      vacancyRate: inputs.vacancyRatePercent ?? 0,
+      propertyTaxes: inputs.propertyTaxesYearly / 12,
+      insurance: inputs.insuranceCostMonthly,
+      hoaFees: inputs.hoa ?? 0,
+      maintenance: inputs.purchasePrice * (inputs.maintenancePercent / 100) / 12,
+      managementFees: inputs.monthlyRent ? inputs.monthlyRent * (inputs.propertyManagementPercent / 100) : 0,
+      utilities: inputs.utilitiesMonthlyCost,
+      otherExpenses: 0,
+      monthlyMortgage: 0,
+      totalMonthlyExpenses: 0,
       netOperatingIncome: (inputs.monthlyRent ?? 0) * 12,
-      monthlyRevenue: inputs.monthlyRent ?? 0,
-      totalOperatingExpenses: 0,
-      monthlyMortgagePayment: 0,
+      cashFlow: inputs.monthlyRent ?? 0,
+      capRate: 0,
+      roi: 0,
       breakEvenOccupancy: 0,
-      irr: 0,
+      cashOnCashReturn: 0,
       grossRentMultiplier: 0,
-      debtServiceCoverageRatio: 0
+      debtServiceCoverageRatio: 0,
+      monthlyCashFlow: inputs.monthlyRent ?? 0,
+      annualCashFlow: (inputs.monthlyRent ?? 0) * 12
     };
 
     dispatch({

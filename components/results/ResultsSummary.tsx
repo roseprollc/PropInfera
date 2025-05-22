@@ -2,7 +2,8 @@
 
 import { formatCurrency, formatPercentage } from '@/lib/utils/formatting';
 import type { AnalysisResults } from '@/types/analysis';
-import { isRentalResults, isAirbnbResults, isWholesaleResults, isMortgageResults, isRentersResults } from '@/types/analysis';
+import { isRentalResults, isAirbnbResults, isWholesaleResults, isMortgageResults } from '@/types/analysis';
+import { Stat } from './Stat';
 
 interface ResultsSummaryProps {
   results: AnalysisResults;
@@ -27,58 +28,50 @@ export default function ResultsSummary({ results, title, highlightKeys = [] }: R
   const getResultsEntries = (): [string, number][] => {
     if (isRentalResults(results)) {
       return Object.entries({
-        monthlyCashFlow: results.monthlyCashFlow,
-        annualCashFlow: results.annualCashFlow,
+        cashFlow: results.cashFlow,
         capRate: results.capRate,
-        cashOnCash: results.cashOnCash,
         roi: results.roi,
-        totalCashInvestment: results.totalCashInvestment,
         netOperatingIncome: results.netOperatingIncome,
-        totalOperatingExpenses: results.totalOperatingExpenses,
-        monthlyMortgagePayment: results.monthlyMortgagePayment,
+        totalMonthlyExpenses: results.totalMonthlyExpenses,
+        monthlyMortgage: results.monthlyMortgage,
         breakEvenOccupancy: results.breakEvenOccupancy,
-        irr: results.irr,
         grossRentMultiplier: results.grossRentMultiplier,
         debtServiceCoverageRatio: results.debtServiceCoverageRatio
       });
     }
     if (isAirbnbResults(results)) {
       return Object.entries({
+        grossRevenue: results.grossRevenue,
+        occupancyRate: results.occupancyRate,
+        netProfit: results.netProfit,
         monthlyAirbnbIncome: results.monthlyAirbnbIncome,
         annualCashFlow: results.annualCashFlow,
-        roi: results.roi,
-        netOperatingIncome: results.netOperatingIncome,
         totalOperatingExpenses: results.totalOperatingExpenses,
-        monthlyMortgagePayment: results.monthlyMortgagePayment,
-        totalCashInvestment: results.totalCashInvestment,
-        breakEvenOccupancy: results.breakEvenOccupancy,
-        averageDailyRate: results.averageDailyRate,
-        projectedAnnualIncome: results.projectedAnnualIncome
+        monthlyMortgage: results.monthlyMortgage,
+        breakEvenOccupancy: results.breakEvenOccupancy
       });
     }
     if (isWholesaleResults(results)) {
       return Object.entries({
         assignmentFee: results.assignmentFee,
-        roi: results.roi,
+        estimatedRepairCost: results.estimatedRepairCost,
         profit: results.profit,
-        totalInvestment: results.totalInvestment,
+        arv: results.arv,
+        purchasePrice: results.purchasePrice,
         holdingCosts: results.holdingCosts,
-        netProfit: results.netProfit,
+        totalInvestment: results.totalInvestment,
         returnOnInvestment: results.returnOnInvestment
       });
     }
     if (isMortgageResults(results)) {
       return Object.entries({
-        monthlyPayment: results.monthlyPayment,
-        principalAndInterest: results.principalAndInterest,
+        monthlyMortgage: results.monthlyMortgage,
+        interest: results.interest,
+        totalPaid: results.totalPaid,
+        loanAmount: results.loanAmount,
+        interestRate: results.interestRate,
+        loanTerm: results.loanTerm,
         totalMonthlyPayment: results.totalMonthlyPayment
-      });
-    }
-    if (isRentersResults(results)) {
-      return Object.entries({
-        monthlyCashFlow: results.monthlyCashFlow,
-        annualCashFlow: results.annualCashFlow,
-        monthlyRevenue: results.monthlyRevenue
       });
     }
     return [];

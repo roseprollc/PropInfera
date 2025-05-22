@@ -1,59 +1,79 @@
-import { MongoClient, ObjectId } from 'mongodb';
-import type { Analysis } from '@/types/analysis';
+import { MongoClient, ObjectId, WithId, Document } from 'mongodb';
+import type { Analysis, CalculatorType } from '@/types/analysis';
+import { connectToDatabase } from './mongodb';
+import { parseAnalysis, parseAnalyses, isValidCreatePayload, isValidUpdatePayload } from './utils/db/parsers';
 
 export type { Analysis };
 
 const client = new MongoClient(process.env.MONGODB_URI || '');
 const db = client.db('propinfera');
 
-export async function getAnalysisById(id: string): Promise<Analysis | null> {
+export async function getAnalysisById<T extends CalculatorType>(
+  id: string
+): Promise<Analysis<T> | null> {
   try {
-    await client.connect();
-    const analysis = await db.collection('analyses').findOne<Analysis>({ _id: new ObjectId(id) });
-    return analysis;
+    const { db } = await connectToDatabase();
+    const objectId = new ObjectId(id);
+    const doc = await db.collection('analyses').findOne({ _id: objectId });
+    if (!doc) return null;
+    return parseAnalysis<T>(doc);
   } catch (error) {
     console.error('Error fetching analysis:', error);
     return null;
-  } finally {
-    await client.close();
   }
 }
 
-export async function saveAnalysis(analysis: Omit<Analysis, '_id'>): Promise<Analysis | null> {
+export async function saveAnalysis<T extends CalculatorType>(
+  analysis: Omit<Analysis<T>, '_id'>
+): Promise<Analysis<T> | null> {
   try {
-    await client.connect();
+    if (!isValidCreatePayload(analysis)) {
+      throw new Error('Invalid analysis data');
+    }
+
+    const { db } = await connectToDatabase();
     const result = await db.collection('analyses').insertOne(analysis);
-    return { ...analysis, _id: result.insertedId.toHexString() };
+    if (!result.insertedId) {
+      throw new Error('Failed to insert analysis');
+    }
+    return getAnalysisById<T>(result.insertedId.toString());
   } catch (error) {
     console.error('Error saving analysis:', error);
     return null;
-  } finally {
-    await client.close();
   }
 }
 
-export async function updateAnalysis(id: string, updates: Partial<Analysis>): Promise<Analysis | null> {
+export async function updateAnalysis<T extends CalculatorType>(
+  id: string,
+  data: Partial<Omit<Analysis<T>, '_id' | 'userId' | 'createdAt' | 'type'>>
+): Promise<Analysis<T> | null> {
   try {
-    await client.connect();
+    if (!isValidUpdatePayload({ ...data, _id: id })) {
+      throw new Error('Invalid update data');
+    }
+
+    const { db } = await connectToDatabase();
+    const objectId = new ObjectId(id);
     const result = await db.collection('analyses').findOneAndUpdate(
-      { _id: new ObjectId(id) },
-      { $set: updates },
+      { _id: objectId },
+      { $set: { ...data, updatedAt: new Date().toISOString() } },
       { returnDocument: 'after' }
     );
-    return result?.value as Analysis | null;
+
+    if (!result?.value) return null;
+    return parseAnalysis<T>(result.value);
   } catch (error) {
     console.error('Error updating analysis:', error);
     return null;
-  } finally {
-    await client.close();
   }
 }
 
 export async function updateInsightsById(id: string, insights: string): Promise<boolean> {
   try {
-    await client.connect();
+    const { db } = await connectToDatabase();
+    const objectId = new ObjectId(id);
     const result = await db.collection('analyses').updateOne(
-      { _id: new ObjectId(id) },
+      { _id: objectId },
       { 
         $set: { 
           insights,
@@ -65,23 +85,34 @@ export async function updateInsightsById(id: string, insights: string): Promise<
   } catch (error) {
     console.error('Error updating insights:', error);
     return false;
-  } finally {
-    await client.close();
   }
 }
 
-export async function getSavedAnalyses(): Promise<Analysis[]> {
+export async function deleteAnalysis(id: string): Promise<boolean> {
   try {
-    await client.connect();
-    const analyses = await db.collection('analyses')
-      .find({})
+    const { db } = await connectToDatabase();
+    const objectId = new ObjectId(id);
+    const result = await db.collection('analyses').deleteOne({ _id: objectId });
+    return result.deletedCount === 1;
+  } catch (error) {
+    console.error('Error deleting analysis:', error);
+    return false;
+  }
+}
+
+export async function getSavedAnalyses<T extends CalculatorType>(
+  userId?: string
+): Promise<Analysis<T>[]> {
+  try {
+    const { db } = await connectToDatabase();
+    const query = userId ? { userId } : {};
+    const docs = await db.collection('analyses')
+      .find<WithId<Document>>(query)
       .sort({ createdAt: -1 })
       .toArray();
-    return analyses as Analysis[];
+    return parseAnalyses<T>(docs);
   } catch (error) {
     console.error('Error fetching saved analyses:', error);
     return [];
-  } finally {
-    await client.close();
   }
 } 

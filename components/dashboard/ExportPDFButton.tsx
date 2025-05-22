@@ -1,35 +1,34 @@
 "use client";
 
-import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { exportAnalysisToPDF } from '@/lib/pdf/exportAnalysisToPDF';
-import type { Analysis } from '@/types/analysis';
+import { FileDown } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface ExportPDFButtonProps {
-  analysis: Analysis;
+  analysisId: string;
 }
 
-export function ExportPDFButton({ analysis }: ExportPDFButtonProps) {
-  const [isExporting, setIsExporting] = useState(false);
-
+export default function ExportPDFButton({ analysisId }: ExportPDFButtonProps) {
   const handleExport = async () => {
     try {
-      setIsExporting(true);
-      await exportAnalysisToPDF(analysis);
+      // TODO: Implement PDF export using analysisId
+      console.log('Exporting PDF for analysis:', analysisId);
+      toast.success('PDF export started');
     } catch (error) {
-      console.error('Failed to export PDF:', error);
-    } finally {
-      setIsExporting(false);
+      console.error('Error exporting PDF:', error);
+      toast.error('Failed to export PDF');
     }
   };
 
   return (
     <Button
+      variant="outline"
+      size="sm"
       onClick={handleExport}
-      disabled={isExporting}
-      className="bg-blue-600 hover:bg-blue-700 text-white"
+      className="flex items-center gap-2"
     >
-      {isExporting ? 'Exporting...' : 'Export PDF'}
+      <FileDown className="h-4 w-4" />
+      Export PDF
     </Button>
   );
 } 

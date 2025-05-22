@@ -1,9 +1,9 @@
-import type { ObjectId } from 'mongodb';
+import { ObjectId } from 'mongodb';
 
 /**
  * Calculator types supported in the application
  */
-export type CalculatorType = 'mortgage' | 'rental' | 'airbnb' | 'wholesale' | 'renters';
+export type CalculatorType = 'rental' | 'airbnb' | 'wholesale' | 'mortgage' | 'renters';
 
 /**
  * Shared input fields across calculators
@@ -106,60 +106,121 @@ export interface ProjectionYear {
  */
 export interface RentalAnalysisResults {
   type: 'rental';
-  monthlyCashFlow: number;
-  annualCashFlow: number;
-  monthlyRevenue: number; // ✅ Added this to fix RentersCalculator error
-  capRate: number;
-  cashOnCash: number;
-  roi: number;
-  totalCashInvestment: number;
+  purchasePrice: number;
+  downPayment: number;
+  loanAmount: number;
+  interestRate: number;
+  loanTerm: number;
+  monthlyRent: number;
+  vacancyRate: number;
+  propertyTaxes: number;
+  insurance: number;
+  hoaFees: number;
+  maintenance: number;
+  managementFees: number;
+  utilities: number;
+  otherExpenses: number;
+  monthlyMortgage: number;
+  totalMonthlyExpenses: number;
   netOperatingIncome: number;
-  totalOperatingExpenses: number;
-  monthlyMortgagePayment: number;
+  cashFlow: number;
+  capRate: number;
+  roi: number;
   breakEvenOccupancy: number;
-  irr: number;
+  cashOnCashReturn: number;
   grossRentMultiplier: number;
   debtServiceCoverageRatio: number;
+  monthlyCashFlow: number;
+  annualCashFlow: number;
 }
 
 export interface AirbnbAnalysisResults {
   type: 'airbnb';
-  monthlyAirbnbIncome: number;
-  annualCashFlow: number;
-  roi: number;
-  netOperatingIncome: number;
+  purchasePrice: number;
+  downPayment: number;
+  loanAmount: number;
+  interestRate: number;
+  loanTerm: number;
+  nightlyRate: number;
+  occupancyRate: number;
+  cleaningFees: number;
+  propertyTaxes: number;
+  insurance: number;
+  hoaFees: number;
+  maintenance: number;
+  managementFees: number;
+  utilities: number;
+  otherExpenses: number;
+  monthlyMortgage: number;
   totalOperatingExpenses: number;
-  monthlyMortgagePayment: number;
-  totalCashInvestment: number;
+  grossRevenue: number;
+  netProfit: number;
+  annualCashFlow: number;
+  monthlyAirbnbIncome: number;
+  seasonalVariation: number;
   breakEvenOccupancy: number;
-  averageDailyRate: number;
-  projectedAnnualIncome: number;
   monthlyBreakdown: MonthlyBreakdown[];
+  averageDailyRate: number;
 }
 
 export interface WholesaleAnalysisResults {
   type: 'wholesale';
+  purchasePrice: number;
+  estimatedRepairCost: number;
+  arv: number;
   assignmentFee: number;
-  roi: number;
-  profit: number;
-  totalInvestment: number;
+  closingCosts: number;
   holdingCosts: number;
-  netProfit: number;
+  marketingCosts: number;
+  totalInvestment: number;
+  profit: number;
   returnOnInvestment: number;
+  profitMargin: number;
+  roi: number;
+  repairCosts: number;
 }
 
 export interface MortgageAnalysisResults {
   type: 'mortgage';
+  purchasePrice: number;
+  downPayment: number;
+  loanAmount: number;
+  interestRate: number;
+  loanTerm: number;
+  propertyTaxes: number;
+  insurance: number;
+  pmi: number;
+  hoaFees: number;
+  monthlyMortgage: number;
+  totalMonthlyPayment: number;
+  interest: number;
+  totalPaid: number;
   monthlyPayment: number;
   principalAndInterest: number;
-  totalMonthlyPayment: number;
 }
 
 export interface RentersAnalysisResults {
   type: 'renters';
-  monthlyCashFlow: number;
-  annualCashFlow: number;
-  monthlyRevenue: number;
+  purchasePrice: number;
+  downPayment: number;
+  loanAmount: number;
+  interestRate: number;
+  loanTerm: number;
+  monthlyRent: number;
+  propertyTaxes: number;
+  insurance: number;
+  hoaFees: number;
+  maintenance: number;
+  managementFees: number;
+  utilities: number;
+  otherExpenses: number;
+  monthlyMortgage: number;
+  totalMonthlyExpenses: number;
+  netOperatingIncome: number;
+  cashFlow: number;
+  capRate: number;
+  roi: number;
+  occupancyRate: number;
 }
 
 /**
@@ -173,43 +234,61 @@ export interface AnalysisResultsMap {
   renters: RentersAnalysisResults;
 }
 
-export type AnalysisResults = AnalysisResultsMap[keyof AnalysisResultsMap];
+export type AnalysisResults =
+  | RentalAnalysisResults
+  | AirbnbAnalysisResults
+  | WholesaleAnalysisResults
+  | MortgageAnalysisResults
+  | RentersAnalysisResults;
 
 /**
  * Type guards for analysis
  */
-export function isRentalResults(results: AnalysisResults): results is RentalAnalysisResults {
-  return results.type === 'rental';
+export function isRentalResults(data: AnalysisResults): data is RentalAnalysisResults {
+  return data.type === 'rental';
 }
 
-export function isAirbnbResults(results: AnalysisResults): results is AirbnbAnalysisResults {
-  return results.type === 'airbnb';
+export function isAirbnbResults(data: AnalysisResults): data is AirbnbAnalysisResults {
+  return data.type === 'airbnb';
 }
 
-export function isWholesaleResults(results: AnalysisResults): results is WholesaleAnalysisResults {
-  return results.type === 'wholesale';
+export function isWholesaleResults(data: AnalysisResults): data is WholesaleAnalysisResults {
+  return data.type === 'wholesale';
 }
 
-export function isMortgageResults(results: AnalysisResults): results is MortgageAnalysisResults {
-  return results.type === 'mortgage';
+export function isMortgageResults(data: AnalysisResults): data is MortgageAnalysisResults {
+  return data.type === 'mortgage';
 }
 
-export function isRentersResults(results: AnalysisResults): results is RentersAnalysisResults {
-  return results.type === 'renters';
+export function isRentersResults(data: AnalysisResults): data is RentersAnalysisResults {
+  return data.type === 'renters';
 }
 
 /**
  * Core analysis structure
  */
 export interface Analysis<T extends CalculatorType = CalculatorType> {
-  _id?: string | ObjectId;
-  type: T;
-  data: AnalysisResultsMap[T];
-  title: string;
-  notes?: string;
-  createdAt: Date;
-  updatedAt: Date;
+  _id?: ObjectId | string;
   userId: string;
+  type: T;
+  data: T extends 'rental' ? RentalAnalysisResults :
+        T extends 'airbnb' ? AirbnbAnalysisResults :
+        T extends 'wholesale' ? WholesaleAnalysisResults :
+        T extends 'mortgage' ? MortgageAnalysisResults :
+        T extends 'renters' ? RentersAnalysisResults : never;
+  metrics: {
+    roi: number;
+    cashFlow: number;
+    capRate: number;
+  };
+  mode: T;
+  createdAt: string | Date;
+  updatedAt: string | Date;
+  title?: string;
+  notes?: string;
+  source?: string;
+  insights?: string;
+  insightsLastGeneratedAt?: string | Date;
 }
 
 /**
@@ -232,4 +311,50 @@ export interface Report {
   propertyAddress: string;
   createdAt?: string;
   metrics: Record<string, any>;
+}
+
+export function isRentalAnalysis(results: AnalysisResults): results is RentalAnalysisResults {
+  return results.type === 'rental';
+}
+
+export function isAirbnbAnalysis(results: AnalysisResults): results is AirbnbAnalysisResults {
+  return results.type === 'airbnb';
+}
+
+export function isWholesaleAnalysis(results: AnalysisResults): results is WholesaleAnalysisResults {
+  return results.type === 'wholesale';
+}
+
+export interface AnalysisMetrics {
+  cashFlow?: number;
+  roi?: number;
+  capRate?: number;
+  netIncome?: number;
+  totalExpenses?: number;
+  grossIncome?: number;
+  occupancyRate?: number;
+  breakEvenOccupancy?: number;
+  profitMargin?: number;
+  monthlyPayment?: number;
+  totalInvestment?: number;
+  annualCashFlow?: number;
+  monthlyCashFlow?: number;
+  cashOnCashReturn?: number;
+  grossRentMultiplier?: number;
+  debtServiceCoverageRatio?: number;
+}
+
+// Type guard for Analysis object
+export function isValidAnalysis(analysis: any): analysis is Analysis {
+  return (
+    analysis &&
+    typeof analysis === 'object' &&
+    typeof analysis.userId === 'string' &&
+    typeof analysis.type === 'string' &&
+    typeof analysis.data === 'object' &&
+    typeof analysis.metrics === 'object' &&
+    typeof analysis.mode === 'string' &&
+    (typeof analysis.createdAt === 'string' || analysis.createdAt instanceof Date) &&
+    (typeof analysis.updatedAt === 'string' || analysis.updatedAt instanceof Date)
+  );
 }

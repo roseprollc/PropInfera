@@ -70,18 +70,24 @@ export default function WholesaleCalculator() {
       const profit = arv - totalInvestment;
       const roi = (profit / totalInvestment) * 100;
 
-      const wholesaleResults: WholesaleAnalysisResults = {
+      const result: WholesaleAnalysisResults = {
         type: 'wholesale',
-        totalInvestment,
-        profit,
-        roi,
-        holdingCosts: closingCosts,
-        netProfit: profit,
+        purchasePrice: inputs.purchasePrice,
+        estimatedRepairCost: inputs.estimatedRepairCost,
+        arv: inputs.arv,
+        assignmentFee: inputs.assignmentFee,
+        closingCosts: inputs.purchasePrice * (inputs.closingCostsPercent / 100),
+        holdingCosts: inputs.purchasePrice * 0.01,
+        marketingCosts: inputs.purchasePrice * 0.005,
+        totalInvestment: totalInvestment,
+        profit: profit,
         returnOnInvestment: roi,
-        assignmentFee
+        profitMargin: (profit / inputs.arv) * 100,
+        roi: roi,
+        repairCosts: inputs.estimatedRepairCost
       };
 
-      dispatch({ type: 'SET_RESULTS', payload: { wholesaleResults } });
+      dispatch({ type: 'SET_RESULTS', payload: { wholesaleResults: result } });
     } catch (error) {
       setToastMessage("An error occurred while calculating results");
     }

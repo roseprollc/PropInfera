@@ -1,1 +1,1 @@
-export { calculateRentalMetrics } from '@/lib/calculators/rental';
+export { calculateRental } from '@/lib/calculators/rental';

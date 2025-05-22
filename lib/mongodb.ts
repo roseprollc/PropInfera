@@ -1,22 +1,42 @@
-import { MongoClient, Document } from 'mongodb';
+import { MongoClient, Document, Db } from 'mongodb';
 
-// Mock MongoDB client for deployment
-const mockClient = {
-  db: () => ({
-    collection: () => ({
-      find: () => ({ toArray: async () => [] }),
-      findOne: async () => null,
-      insertOne: async () => ({ insertedId: 'mock-id' }),
-      updateOne: async () => ({ matchedCount: 0 }),
-      deleteOne: async () => ({ deletedCount: 0 }),
-    }),
-  }),
-  close: async () => {},
-} as unknown as MongoClient;
+if (!process.env.MONGODB_URI) {
+  throw new Error('Please add your Mongo URI to .env.local');
+}
 
-export const clientPromise = Promise.resolve(mockClient);
+const uri = process.env.MONGODB_URI;
+const options = {};
+
+let client: MongoClient;
+let clientPromise: Promise<MongoClient>;
+
+if (process.env.NODE_ENV === 'development') {
+  // In development mode, use a global variable so that the value
+  // is preserved across module reloads caused by HMR (Hot Module Replacement).
+  let globalWithMongo = global as typeof globalThis & {
+    _mongoClientPromise?: Promise<MongoClient>;
+  };
+
+  if (!globalWithMongo._mongoClientPromise) {
+    client = new MongoClient(uri, options);
+    globalWithMongo._mongoClientPromise = client.connect();
+  }
+  clientPromise = globalWithMongo._mongoClientPromise;
+} else {
+  // In production mode, it's best to not use a global variable.
+  client = new MongoClient(uri, options);
+  clientPromise = client.connect();
+}
+
+export { clientPromise };
+
+export async function connectToDatabase(): Promise<{ client: MongoClient; db: Db }> {
+  const client = await clientPromise;
+  const db = client.db(process.env.MONGODB_DB);
+  return { client, db };
+}
 
 // Mock getCollection function
 export async function getCollection<T extends Document>(collectionName: string) {
-  return mockClient.db().collection<T>(collectionName);
+  return client.db().collection<T>(collectionName);
 } 

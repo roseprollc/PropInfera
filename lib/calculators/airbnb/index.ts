@@ -1,10 +1,10 @@
 import { calculateLoanAmount, calculateMonthlyMortgage, calculateAnnualPrincipalPayment } from '../mortgage/amortization';
 import { calculateNOI, calculateROI, calculateBreakEvenOccupancy } from './metrics';
-import type { AirbnbInputs, AirbnbAnalysisResults, MonthlyBreakdown, RentalInputs } from '@/types/analysis';
+import type { AirbnbInputs, AirbnbAnalysisResults, MonthlyBreakdown } from '@/types/analysis';
 import { generateAirbnbProjection } from "./projection";
 
-export function calculateAirbnbMetrics(inputs: AirbnbInputs): AirbnbAnalysisResults {
-  const loanInputs: RentalInputs = {
+export function calculateAirbnb(inputs: AirbnbInputs): AirbnbAnalysisResults {
+  const loanAmount = calculateLoanAmount({
     ...inputs,
     monthlyRent: 0,
     vacancyRatePercent: 0,
@@ -12,10 +12,18 @@ export function calculateAirbnbMetrics(inputs: AirbnbInputs): AirbnbAnalysisResu
     annualAppreciationPercent: 0,
     annualRentIncreasePercent: 0,
     holdingPeriodYears: inputs.holdingPeriodYears || 0
-  };
+  });
 
-  const loanAmount = calculateLoanAmount(loanInputs);
-  const monthlyMortgage = calculateMonthlyMortgage(loanInputs, loanAmount);
+  const monthlyMortgage = calculateMonthlyMortgage({
+    ...inputs,
+    monthlyRent: 0,
+    vacancyRatePercent: 0,
+    capExReservePercent: 0,
+    annualAppreciationPercent: 0,
+    annualRentIncreasePercent: 0,
+    holdingPeriodYears: inputs.holdingPeriodYears || 0
+  }, loanAmount);
+
   const monthlyInterestRate = inputs.interestRate / 100 / 12;
 
   const projectedAnnualIncome = inputs.averageNightlyRate * (inputs.occupancyRatePercent / 100) * 365;
@@ -30,7 +38,6 @@ export function calculateAirbnbMetrics(inputs: AirbnbInputs): AirbnbAnalysisResu
   const closingCosts = inputs.purchasePrice * (inputs.closingCostsPercent / 100);
   const totalCashInvestment = downPayment + closingCosts;
 
-  // Calculate ROI components
   const annualAppreciation = inputs.purchasePrice * ((inputs.annualAppreciationPercent || 0) / 100);
   const annualPrincipalPaydown = calculateAnnualPrincipalPayment(loanAmount, monthlyInterestRate, 1, monthlyMortgage);
 
@@ -57,17 +64,31 @@ export function calculateAirbnbMetrics(inputs: AirbnbInputs): AirbnbAnalysisResu
   }));
 
   return {
-    type: "airbnb",
-    monthlyAirbnbIncome: Math.round(monthlyAirbnbIncome * 100) / 100,
-    annualCashFlow: Math.round(annualCashFlow),
-    roi: Math.round(roi * 100) / 100,
-    netOperatingIncome: Math.round(noi),
-    totalOperatingExpenses: Math.round(totalOperatingExpenses),
-    monthlyMortgagePayment: Math.round(monthlyMortgage * 100) / 100,
-    totalCashInvestment: Math.round(totalCashInvestment),
-    breakEvenOccupancy: Math.round(breakEvenOccupancy * 100) / 100,
-    averageDailyRate: Math.round(inputs.averageNightlyRate * 100) / 100,
-    projectedAnnualIncome: Math.round(projectedAnnualIncome),
-    monthlyBreakdown,
+    type: 'airbnb',
+    purchasePrice: inputs.purchasePrice,
+    downPayment: inputs.purchasePrice * (inputs.downPaymentPercent / 100),
+    loanAmount: inputs.purchasePrice * (1 - inputs.downPaymentPercent / 100),
+    interestRate: inputs.interestRate,
+    loanTerm: inputs.loanTermYears,
+    nightlyRate: inputs.averageNightlyRate,
+    occupancyRate: inputs.occupancyRatePercent,
+    cleaningFees: inputs.cleaningFeePerStay,
+    propertyTaxes: inputs.propertyTaxesYearly / 12,
+    insurance: inputs.insuranceCostMonthly,
+    hoaFees: inputs.hoa ?? 0,
+    maintenance: inputs.purchasePrice * (inputs.maintenancePercent / 100) / 12,
+    managementFees: inputs.averageNightlyRate * (inputs.propertyManagementPercent / 100),
+    utilities: inputs.utilitiesMonthlyCost,
+    otherExpenses: 0,
+    monthlyMortgage: monthlyMortgage,
+    totalOperatingExpenses: totalOperatingExpenses,
+    grossRevenue: projectedAnnualIncome,
+    netProfit: annualCashFlow,
+    annualCashFlow: annualCashFlow,
+    monthlyAirbnbIncome: monthlyAirbnbIncome,
+    seasonalVariation: 0,
+    breakEvenOccupancy: breakEvenOccupancy,
+    monthlyBreakdown: monthlyBreakdown,
+    averageDailyRate: inputs.averageNightlyRate
   };
 }

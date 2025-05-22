@@ -76,11 +76,26 @@ export default function MortgageCalculator() {
     const totalMonthlyPayment =
       monthlyPayment + inputs.insuranceCostMonthly + inputs.propertyTaxesYearly / 12 + (inputs.hoa ?? 0);
 
+    const totalInterest = (monthlyPayment * numberOfPayments) - loanAmount;
+    const totalPaid = totalInterest + loanAmount;
+
     const result: MortgageAnalysisResults = {
-      type: "mortgage",
-      monthlyPayment: Math.round(monthlyPayment * 100) / 100,
-      principalAndInterest: Math.round(monthlyPayment * 100) / 100,
-      totalMonthlyPayment: Math.round(totalMonthlyPayment * 100) / 100,
+      type: 'mortgage',
+      purchasePrice: inputs.purchasePrice,
+      downPayment: inputs.purchasePrice * (inputs.downPaymentPercent / 100),
+      loanAmount: inputs.purchasePrice * (1 - inputs.downPaymentPercent / 100),
+      interestRate: inputs.interestRate,
+      loanTerm: inputs.loanTermYears,
+      propertyTaxes: inputs.propertyTaxesYearly / 12,
+      insurance: inputs.insuranceCostMonthly,
+      pmi: inputs.pmi ?? 0,
+      hoaFees: inputs.hoa ?? 0,
+      monthlyMortgage: monthlyPayment,
+      totalMonthlyPayment: totalMonthlyPayment,
+      interest: totalInterest,
+      totalPaid: totalPaid,
+      monthlyPayment: monthlyPayment,
+      principalAndInterest: monthlyPayment
     };
 
     setResults(result);
