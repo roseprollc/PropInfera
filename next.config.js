@@ -12,7 +12,6 @@ const nextConfig = {
       // For strict type checking
       ignoreBuildErrors: false
     },
-    output: 'standalone', // Optimized for AWS Lambda deployment
     poweredByHeader: false // Security best practice
   };
   
