@@ -11,12 +11,13 @@ export const metadata: Metadata = {
 };
 
 interface PageProps {
-  params: { [key: string]: string };
+  params: Promise<{ [key: string]: string }>;
   searchParams: { [key: string]: string | string[] | undefined };
 }
 
 export default async function SavedAnalysisPage({ params, searchParams }: PageProps) {
-  const analysis = await getAnalysisById(params.id);
+  const resolvedParams = await params;
+  const analysis = await getAnalysisById(resolvedParams.id);
 
   if (!analysis) {
     notFound();
@@ -35,7 +36,7 @@ export default async function SavedAnalysisPage({ params, searchParams }: PagePr
         throw new Error('Notes must be less than 1000 characters');
       }
 
-      await updateAnalysis(params.id, updatedData);
+      await updateAnalysis(resolvedParams.id, updatedData);
       redirect('/dashboard/saved');
     } catch (error) {
       console.error('Error updating analysis:', error);
